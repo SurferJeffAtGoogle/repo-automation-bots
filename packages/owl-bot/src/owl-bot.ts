@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {Application} from 'probot';
+import {Firestore} from '@google-cloud/firestore';
 
 const CONFIGURATION_FILE_PATH = 'owl-bot.yml';
 

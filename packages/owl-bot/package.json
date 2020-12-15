@@ -27,6 +27,7 @@
     "lint": "gts check"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^4.8.0",
     "gcf-utils": "^6.0.0"
   },
   "devDependencies": {
