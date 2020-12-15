@@ -21,7 +21,7 @@ interface Configuration {
 }
 
 export = (app: Application) => {
-  app.on(['issues.opened', 'pull_request.opened'], async context => {
+  app.on('pull_request.opened', async context => {
     const config = (await context.config(
       CONFIGURATION_FILE_PATH,
       {}

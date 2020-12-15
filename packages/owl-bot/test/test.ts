@@ -65,14 +65,5 @@ describe('owl-bot', () => {
       requests.done();
       assert.ok(true);
     });
-
-    it('responds to issues', async () => {
-      const payload = require(resolve(fixturesPath, './events/issue_opened'));
-      const requests = nock('https://api.github.com')
-        .get('/repos/testOwner/testRepo/contents/.github%2Fowl-bot.yml')
-        .reply(200, config);
-      await probot.receive({name: 'issues.opened', payload, id: 'abc123'});
-      requests.done();
-    });
   });
 });
