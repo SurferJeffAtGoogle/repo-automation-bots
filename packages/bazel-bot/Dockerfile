@@ -44,12 +44,12 @@ RUN pyenv install 3.6.1 && \
 # RUN apt-get install -y python3 python3-distutils python3-apt
 
 # dotnet core  https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#1804-
-RUN curl https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -o packages-microsoft-prod.deb
-RUN dpkg -i packages-microsoft-prod.deb
+# RUN curl https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -o packages-microsoft-prod.deb
+# RUN dpkg -i packages-microsoft-prod.deb
 
-RUN apt-get install -y apt-transport-https && \
-  apt-get update && \
-  apt-get install -y dotnet-sdk-5.0
+# RUN apt-get install -y apt-transport-https && \
+#   apt-get update && \
+#   apt-get install -y dotnet-sdk-5.0
 
 # googleapis/googleapis
 WORKDIR /home/bazel-bot
