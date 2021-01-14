@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# build with:
-# docker built -t gcr.io/repo-automation-bots/bazel-bot .
-FROM gcr.io/gapic-images/googleapis-bazel
+git clone https://github.com/googleapis/googleapis
+git clone https://github.com/googleapis/googleapis-gen
 
-COPY generate-googleapis-gen.sh /generate-googleapis-gen.sh
-COPY docker-main.sh /docker-main.sh
+export GOOGLEAPIS=googleapis
+export GOOGLEAPIS_GEN=googleapis-gen
+export BAZEL_REMOTE_CACHE=https://storage.googleapis.com/repo-automation-bots-bazel-cache
 
-ENTRYPOINT ["/bin/bash", "docker-main.sh"]
+# TODO: install git credentials.
+
+bash -x generate-googleapis-gen.sh
+

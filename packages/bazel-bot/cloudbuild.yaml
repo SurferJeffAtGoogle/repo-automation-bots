@@ -13,19 +13,5 @@
 # limitations under the License.
 
 steps:
-  - name: 'gcr.io/cloud-builders/git'
-    id: "clone-googleapis"
-    args: ['clone', 'https://github.com/googleapis/googleapis']
-
-  - name: 'gcr.io/gapic-images/googleapis-bazel' # 'gcr.io/cloud-builders/bazel'
-    id: "bazel-build-all"
-    waitFor: ["clone-googleapis"]
-    dir: 'googleapis'
-    entrypoint: 'bazel'
-    args: [
-      'build',
-      '--remote_cache=https://storage.googleapis.com/surferjeff-test2-bazel-cache',
-      '--google_default_credentials',
-      '...'
-    ]
+  - name: 'gcr.io/repo-automation-bots/bazel-bot'
 
