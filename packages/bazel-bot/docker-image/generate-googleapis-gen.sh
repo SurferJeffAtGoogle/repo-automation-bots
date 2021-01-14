@@ -28,7 +28,20 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
           --remote_cache=https://storage.googleapis.com/surferjeff-test2-bazel-cache \
           --google_default_credentials)
     
-    # TODO: Copy the generated source files into googleapis-gen.
+    # Copy the generated source files into googleapis-gen.
+    tars_gzs=(cd googleapis/bazel-out/k8-fastbuild && `find . -name "*.tar.gz"`)
+    for tar_gz in $tars_gzs: do
+        # Strip the .tar.gz to get the relative dir.
+        tar="${tar_gz%.*}"
+        relative_dir="${tar%.*}"
+        # Clear out the existing contents.
+        rm -rf "googleapis-gen/$relative_dir"
+        # Create the parent directory if it doesn't already exist.
+        parent_dir=`dirname $tar_gz`
+        target_dir="googleapis-gen/$parent_dir"
+        mkdir -p $target_dir
+        tar -xf "googleapis/bazel-out/k8-fastbuild/$tar" -C $target_dir
+    done
 
     # Commit and push the files to github.
     # Copy the commit message from the commit in googleapis.
@@ -36,8 +49,8 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     echo "Source-Link: https://github.com/googleapis/googleapis/commit/$sha" >> commit-msg.txt
     git -C googleapis-gen add -A
     git -C googleapis-gen commit -F commit-msg.txt
-    git -C googleapis-gen pull --rebase
     git -C googleapis-gen tag "googleapis-$sha"
+    git -C googleapis-gen pull
     git -C googleapis-gen push "googleapis-$sha"
     git -C googleapis-gen push
 
