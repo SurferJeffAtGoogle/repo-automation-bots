@@ -8,7 +8,7 @@ cd test-workdir
     [ -d "googleapis" ] || git clone https://github.com/googleapis/googleapis
 
     # Select the sha for HEAD~2
-    sha=git -C googleapis log -3 --format=%H | tail -1
+    sha=$(git -C googleapis log -3 --format=%H | tail -1)
 
     # Create a fake googleapis-gen with the sha tag.
     rm -rf googleapis-gen googleapis-gen-clone

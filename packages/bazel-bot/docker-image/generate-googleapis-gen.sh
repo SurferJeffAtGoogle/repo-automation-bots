@@ -19,7 +19,7 @@ git -C "$GOOGLEAPIS" pull
 git -C "$GOOGLEAPIS_GEN" pull
 
 # Collect the history of googleapis.
-shas=($(git -C "$GOOGLEAPIS" log --format=%H))
+shas=$(git -C "$GOOGLEAPIS" log --format=%H)
 
 # Collect shas from googleapis for which we haven't yet generated code in googleapis-gen.
 git -C "$GOOGLEAPIS_GEN" tag > tags.txt
@@ -32,6 +32,9 @@ for sha in $shas; do
         ungenerated_shas+=($sha)
     fi
 done
+
+echo $ungenerated_shas
+exit 0;
 
 # Iterate over the ungenerated_shas from oldest to newest.
 for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
