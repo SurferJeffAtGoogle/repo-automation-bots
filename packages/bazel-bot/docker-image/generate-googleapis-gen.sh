@@ -70,7 +70,7 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     echo "Source-Link: https://github.com/googleapis/googleapis/commit/$sha" >> commit-msg.txt
 
     git -C "$GOOGLEAPIS_GEN" add -A
-    git -C "$GOOGLEAPIS_GEN" commit -F commit-msg.txt
+    git -C "$GOOGLEAPIS_GEN" commit -F ../commit-msg.txt
     git -C "$GOOGLEAPIS_GEN" tag "googleapis-$sha"
     git -C "$GOOGLEAPIS_GEN" pull
     git -C "$GOOGLEAPIS_GEN" push origin "googleapis-$sha"
