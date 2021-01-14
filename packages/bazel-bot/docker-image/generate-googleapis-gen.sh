@@ -33,9 +33,6 @@ for sha in $shas; do
     fi
 done
 
-echo $ungenerated_shas
-exit 0;
-
 # Iterate over the ungenerated_shas from oldest to newest.
 for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     sha="${ungenerated_shas[idx]}"
