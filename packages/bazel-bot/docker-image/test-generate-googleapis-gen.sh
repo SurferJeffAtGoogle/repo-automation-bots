@@ -31,3 +31,6 @@ cd test-workdir
 }
 
 popd
+
+# Display the state of googleapis-gen
+git -C test-workdir/googleapis-gen log main
