@@ -39,11 +39,12 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
 
     # Rebuild at the sha.
     git -C "$GOOGLEAPIS" checkout "$sha"
-    if [[ -z "$BUILD_TARGETS" ]]; then
-        targets=(cd "$GOOGLEAPIS" && bazel query 'filter('.*\.tar\.gz$', kind("generated file", //...:*))')
-    else
-        targets="$BUILD_TARGETS"
-    fi
+    # if [[ -z "$BUILD_TARGETS" ]] ; then
+    #     exit 0;
+    #     targets=(cd "$GOOGLEAPIS" && bazel query 'filter(".*\.tar\.gz$", kind("generated file", //...:*))')
+    # else
+          targets="$BUILD_TARGETS"
+    # fi
     (cd "$GOOGLEAPIS" && bazel build \
           --remote_cache=$BAZEL_REMOTE_CACHE \
           --google_default_credentials $targets)
@@ -72,13 +73,8 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     git -C "$GOOGLEAPIS_GEN" commit -F commit-msg.txt
     git -C "$GOOGLEAPIS_GEN" tag "googleapis-$sha"
     git -C "$GOOGLEAPIS_GEN" pull
-    git -C "$GOOGLEAPIS_GEN" push "googleapis-$sha"
-    git -C "$GOOGLEAPIS_GEN" push
+    git -C "$GOOGLEAPIS_GEN" push origin "googleapis-$sha"
+    git -C "$GOOGLEAPIS_GEN" push origin
 
     # TODO: If something failed, open an issue on github/googleapis-gen.
 done
-
-
-
-
-
