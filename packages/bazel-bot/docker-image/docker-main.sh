@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO: install git credentials.
-
 git clone https://github.com/googleapis/googleapis.git
-git clone git@github.com:googleapis/googleapis-gen.git
+git clone https://github.com/googleapis/googleapis-gen.git
+# Switch to SSL for later pushes.
+git -C googleapis-gen remote set-url origin git@github.com:googleapis/googleapis-gen.git
 
 export BAZEL_REMOTE_CACHE=https://storage.googleapis.com/repo-automation-bots-bazel-cache
 
