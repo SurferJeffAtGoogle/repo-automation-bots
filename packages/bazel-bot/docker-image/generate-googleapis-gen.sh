@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This script:
+#  1. Scans googleapis-gen and compares to googleapis to see if any new changes to
+#     to the APIs need for their client library code to be regenerated.
+#  2. Regenerates the client library code by invoking bazel build on select targets.
+#  3. Pushes changes to googleapis-gen.
+
 # Optional environment variables used for testing.
 #
 # BUILD_TARGETS: Build targets to rebuild.  Example: 
@@ -96,6 +102,7 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     # TODO: Check that bazel didn't completely fail.  If it did, we'd generate
     # TODO: about a thousand PRs to delete all the API source code.
     set -e
+
 
     # Commit and push the files to github.
     # Copy the commit message from the commit in googleapis.
