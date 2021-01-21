@@ -86,11 +86,12 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     # Invoke bazel build.
     (cd "$GOOGLEAPIS" && bazel build -k $remote_cache $targets)
 
-    # TODO: Check that bazel didn't completely fail.  If it did, we'd generate
-    # TODO: about a thousand PRs to delete all the API source code.
+    let target_count=0
+    let failed_target_count=0
 
     # Copy the generated source files into $GOOGLEAPIS_GEN.
     for target in $targets ; do
+        let target_count++
         tar_gz=$(echo "${target:2}" | tr ":" "/")
         # Strip the .tar.gz to get the relative dir.
         tar="${tar_gz%.*}"
@@ -99,10 +100,18 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
         parent_dir=`dirname $tar_gz`
         target_dir="$GOOGLEAPIS_GEN/$parent_dir"
         mkdir -p "$target_dir"
-        tar -xf "$GOOGLEAPIS/bazel-bin/$tar_gz" -C "$target_dir"
+        tar -xf "$GOOGLEAPIS/bazel-bin/$tar_gz" -C "$target_dir" || let failed_target_count++
     done
 
+    let failed_percent="100 * $failed_target_count / $target_count"
     set -e
+    echo "$failed_percent% of targets failed to build."
+    if [ $failed_percent -gt 10 ] ; then
+        echo "TODO: use gh to report an issue."
+        continue
+    fi
+
+
     git -C "$GOOGLEAPIS_GEN" add -A
 
     # Credentials only last 10 minutes, so install them right before git pushing.
