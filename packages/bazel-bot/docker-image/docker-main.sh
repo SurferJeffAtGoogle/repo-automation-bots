@@ -15,8 +15,6 @@
 
 git clone https://github.com/googleapis/googleapis.git
 git clone https://github.com/googleapis/googleapis-gen.git
-# Switch to SSL for later pushes.
-git -C googleapis-gen remote set-url origin git@github.com:googleapis/googleapis-gen.git
 
 export BAZEL_REMOTE_CACHE=https://storage.googleapis.com/repo-automation-bots-bazel-cache
 

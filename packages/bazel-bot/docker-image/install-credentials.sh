@@ -28,6 +28,6 @@ GITHUB_TOKEN=$(curl -X POST \
 git config --global user.email "bazel-bot-development[bot]@users.noreply.github.com"
 git config --global user.name "Bazel Bot"
 
-echo "https://${GITHUB_TOKEN}:@github.com" >> ~/.git-credentials
+echo "https://x-access-token:${GITHUB_TOKEN}:@github.com" >> ~/.git-credentials
 git config --global credential.helper 'store --file ~/.git-credentials'
 
