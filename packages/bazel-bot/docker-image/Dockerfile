@@ -35,9 +35,11 @@ RUN apt-get update
 RUN apt-get install -y gh jq
 
 COPY generate-googleapis-gen.sh /generate-googleapis-gen.sh
+COPY install-credentials.sh /install-credentials.sh
 COPY docker-main.sh /docker-main.sh
 COPY bazel-bot-key.pem /bazel-bot-key.pem
 
+# TODO: Move these into cloudbuild.yaml and build secrets.
 ENV GITHUB_APP_SECRET=/bazel-bot-key.pem
 ENV GITHUB_APP_ID=97063
 
