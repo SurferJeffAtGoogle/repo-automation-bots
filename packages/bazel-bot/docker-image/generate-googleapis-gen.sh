@@ -87,10 +87,13 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
         (cd "$GOOGLEAPIS" && bazel build -k $targets)
     fi
 
+    # Clear out the existing contents of googleapis-gen before we copy back into it,
+    # so that deleted APIs will be be removed.
+    rm -rf "$GOOGLEAPIS_GEN/external" "$GOOGLEAPIS_GEN/google" "$GOOGLEAPIS_GEN/grafeas"
+    
+    # Copy the generated source files into googleapis-gen.
     let target_count=0
     let failed_target_count=0
-
-    # Copy the generated source files into $GOOGLEAPIS_GEN.
     for target in $targets ; do
         let target_count++
         tar_gz=$(echo "${target:2}" | tr ":" "/")
