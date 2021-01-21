@@ -27,7 +27,7 @@ RUN cargo build --release
 FROM gcr.io/gapic-images/googleapis-bazel
 COPY --from=0 /jwt-cli/target/release/jwt /bin/jwt
 
-# Install the github command line tool.
+# Install the github command line tool, and jq to parse json responses.
 RUN apt-get install -y software-properties-common
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
 RUN apt-add-repository https://cli.github.com/packages

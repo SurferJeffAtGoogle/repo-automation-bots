@@ -24,3 +24,10 @@ GITHUB_TOKEN=$(curl -X POST \
     -H "Accept: application/vnd.github.v3+json" \
     https://api.github.com/app/installations/$GITHUB_APP_INSTALLATION_ID/access_tokens \
     | jq -r .token)
+
+git config --global user.email "bazel-bot-development[bot]@users.noreply.github.com"
+git config --global user.name "Bazel Bot"
+
+echo "https://${GITHUB_TOKEN}:@github.com" >> ~/.git-credentials
+git config --global credential.helper 'store --file ~/.git-credentials'
+
