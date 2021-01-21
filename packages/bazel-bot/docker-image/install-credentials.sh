@@ -16,4 +16,11 @@
 # This script uses the github app secret to authenticate with git SSL and the 'gh'
 # comand line tool.
 
-export GITHUB_TOKEN=$(jwt encode --secret "$GITHUB_APP_SECRET" --iss "$GITHUB_APP_ID" --exp "+10 min" --alg RS256)
+GITHUB_APP_INSTALLATION_ID=14207619
+JWT=$(jwt encode --secret "$GITHUB_APP_SECRET" --iss "$GITHUB_APP_ID" --exp "+10 min" --alg RS256)
+
+GITHUB_TOKEN=$(curl -X POST \
+    -H "Authorization: Bearer $JWT" \
+    -H "Accept: application/vnd.github.v3+json" \
+    https://api.github.com/app/installations/$GITHUB_APP_INSTALLATION_ID/access_tokens \
+    | jq -r .token)
