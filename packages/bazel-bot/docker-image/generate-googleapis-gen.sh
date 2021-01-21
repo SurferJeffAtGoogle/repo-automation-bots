@@ -32,13 +32,14 @@ set -e
 
 # path to clone of https://github.com/googleapis/googleapis with
 #   master branch checked out.
-GOOGLEAPIS=${GOOGLEAPIS:="googleapis"}
+export GOOGLEAPIS=${GOOGLEAPIS:=`realpath googleapis`}
 
 # path to clone of https://github.com/googleapis/googleapis-gen
 #   with master branch checked out.
-#   Git credentials must have been installed so that a git push to $GOOGLEAPIS_GEN
-#   will succeed.
-GOOGLEAPIS_GEN=${GOOGLEAPIS_GEN:="googleapis-gen"}
+export GOOGLEAPIS_GEN=${GOOGLEAPIS_GEN:=`realpath googleapis-gen`}
+
+# Override in tests.
+INSTALL_CREDENTIALS=${INSTALL_CREDENTIALS:=`realpath install-credentials.sh`}
 
 # Pull both repos to make sure we're up to date.
 git -C "$GOOGLEAPIS" pull
@@ -110,6 +111,8 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     echo "Source-Link: https://github.com/googleapis/googleapis/commit/$sha" >> commit-msg.txt
 
     git -C "$GOOGLEAPIS_GEN" add -A
+    # Credentials only last 10 minutes, so install them right before git pushing.
+    $INSTALL_CREDENTIALS
     if git -C "$GOOGLEAPIS_GEN" diff-index --quiet HEAD ; then
         # No changes to commit or push.
         git -C "$GOOGLEAPIS_GEN" tag "googleapis-$sha"
