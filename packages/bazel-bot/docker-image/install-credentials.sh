@@ -16,4 +16,4 @@
 # This script uses the github app secret to authenticate with git SSL and the 'gh'
 # comand line tool.
 
-jwt encode --secret "$GITHUB_APP_SECRET" --iss "$GITHUB_APP_ID" --exp 600 --alg RS256
+export GITHUB_TOKEN=$(jwt encode --secret "$GITHUB_APP_SECRET" --iss "$GITHUB_APP_ID" --exp "+10 min" --alg RS256)

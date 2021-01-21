@@ -36,5 +36,9 @@ RUN apt-get install -y gh
 
 COPY generate-googleapis-gen.sh /generate-googleapis-gen.sh
 COPY docker-main.sh /docker-main.sh
+COPY bazel-bot-key.pem /bazel-bot-key.pem
+
+ENV GITHUB_APP_SECRET=/bazel-bot-key.pem
+ENV GITHUB_APP_ID=97063
 
 ENTRYPOINT ["/bin/bash"]
