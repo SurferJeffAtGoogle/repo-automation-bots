@@ -82,11 +82,13 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     rm -f $(find -L "$GOOGLEAPIS/bazel-bin" -name "*.tar.gz")
     # Some API always fails to build.  One failing API should not prevent all other
     # APIs from being updated.
-    # TODO: file a bug when something fails to build.
     set +e
     # Invoke bazel build.
     (cd "$GOOGLEAPIS" && bazel build -k $remote_cache $targets)
-    
+
+    # TODO: Check that bazel didn't completely fail.  If it did, we'd generate
+    # TODO: about a thousand PRs to delete all the API source code.
+
     # Copy the generated source files into $GOOGLEAPIS_GEN.
     for target in $targets ; do
         tar_gz=$(echo "${target:2}" | tr ":" "/")
@@ -100,25 +102,21 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
         tar -xf "$GOOGLEAPIS/bazel-bin/$tar_gz" -C "$target_dir"
     done
 
-    # TODO: Check that bazel didn't completely fail.  If it did, we'd generate
-    # TODO: about a thousand PRs to delete all the API source code.
     set -e
-
-
-    # Commit and push the files to github.
-    # Copy the commit message from the commit in googleapis.
-    git -C "$GOOGLEAPIS" log -1 --format=%s%n%b > commit-msg.txt
-    echo "Source-Link: https://github.com/googleapis/googleapis/commit/$sha" >> commit-msg.txt
-
     git -C "$GOOGLEAPIS_GEN" add -A
+
     # Credentials only last 10 minutes, so install them right before git pushing.
     $INSTALL_CREDENTIALS
+
     if git -C "$GOOGLEAPIS_GEN" diff-index --quiet HEAD ; then
-        # No changes to commit or push.
+        # No changes to commit, so just push the tag.
         git -C "$GOOGLEAPIS_GEN" tag "googleapis-$sha"
         git -C "$GOOGLEAPIS_GEN" push origin "googleapis-$sha"
     else
         # Commit changes and push them.
+        # Copy the commit message from the commit in googleapis.
+        git -C "$GOOGLEAPIS" log -1 --format=%s%n%n%b > commit-msg.txt
+        echo "Source-Link: https://github.com/googleapis/googleapis/commit/$sha" >> commit-msg.txt
         git -C "$GOOGLEAPIS_GEN" commit -F "$(realpath commit-msg.txt)"
         git -C "$GOOGLEAPIS_GEN" tag "googleapis-$sha"
         git -C "$GOOGLEAPIS_GEN" pull
