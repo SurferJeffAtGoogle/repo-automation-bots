@@ -16,7 +16,9 @@
 # This script uses the github app secret to authenticate with git SSL and the 'gh'
 # comand line tool.
 
+# TODO: put this in the build yaml.
 GITHUB_APP_INSTALLATION_ID=14207619
+
 JWT=$(jwt encode --secret "$GITHUB_APP_SECRET" --iss "$GITHUB_APP_ID" --exp "+10 min" --alg RS256)
 
 GITHUB_TOKEN=$(curl -X POST \
@@ -24,10 +26,3 @@ GITHUB_TOKEN=$(curl -X POST \
     -H "Accept: application/vnd.github.v3+json" \
     https://api.github.com/app/installations/$GITHUB_APP_INSTALLATION_ID/access_tokens \
     | jq -r .token)
-
-git config --global user.email "bazel-bot-development[bot]@users.noreply.github.com"
-git config --global user.name "Bazel Bot"
-
-echo "https://x-access-token:${GITHUB_TOKEN}:@github.com" >> ~/.git-credentials
-git config --global credential.helper 'store --file ~/.git-credentials'
-
