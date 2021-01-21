@@ -74,17 +74,18 @@ for (( idx=${#ungenerated_shas[@]}-1 ; idx>=0 ; idx-- )) ; do
     else
         targets="$BUILD_TARGETS"
     fi
-    # Prepare parameters to use the remote cache, if provided.
-    if [[-n "$BAZEL_REMOTE_CACHE"]] ; then
-        remote_cache="--google_default_credentials --remote_cache='$BAZEL_REMOTE_CACHE'"
-    fi
     # Clean out all the source packages from the previous build.
     rm -f $(find -L "$GOOGLEAPIS/bazel-bin" -name "*.tar.gz")
     # Some API always fails to build.  One failing API should not prevent all other
     # APIs from being updated.
     set +e
     # Invoke bazel build.
-    (cd "$GOOGLEAPIS" && bazel build -k $remote_cache $targets)
+    if [[ -n "$BAZEL_REMOTE_CACHE" ]] ; then
+        (cd "$GOOGLEAPIS" && bazel build --google_default_credentials \
+            "--remote_cache=$BAZEL_REMOTE_CACHE" -k $targets)
+    else
+        (cd "$GOOGLEAPIS" && bazel build -k $targets)
+    fi
 
     let target_count=0
     let failed_target_count=0
