@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Ajv from 'ajv';
+import owlBotYamlSchema from './owl-bot-yaml-schema.json';
+
 // The .github/.OwlBot.lock.yaml is stored on each repository that OwlBot
 // is configured for, and indicates the docker container that should be run
 // for post processing:
@@ -59,7 +62,12 @@ export interface OwlBotYaml {
 export const owlBotYamlPath = '.github/.OwlBot.yaml';
 
 // Throws an exception if the object does not have the necessary structure.
-// Otherwise, returns the same object as an OwlBotLock.
+// Otherwise, returns the same object as an OwlBotYaml.
 export function owlBotYamlFrom(o: any): OwlBotYaml {
-  
+  const validate = (new Ajv()).compile(owlBotYamlSchema);
+  if (validate(o)) {
+    return o as OwlBotYaml;
+  } else {
+    throw validate.errors;
+  }
 }

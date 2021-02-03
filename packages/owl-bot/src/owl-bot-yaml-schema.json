@@ -3,10 +3,12 @@
   "title": ".OwlBot.yaml Settings Config",
   "description": "Schema for defining the .OwlBot.yaml config",
   "additionalProperties": false,
+  "required": ["docker"],
   "properties": {
     "docker": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["image"],
       "properties": {
         "image": {
           "description": "Name of the docker image to run to post-process this repo, with tag.",
