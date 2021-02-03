@@ -39,3 +39,27 @@ export function owlBotLockFrom(o: any): OwlBotLock {
   }
   return o as OwlBotLock;
 }
+
+export interface CopyDir {
+  source: string,
+  dest: string,
+}
+
+// The .github/.OwlBot.yaml is stored on each repository that OwlBot
+// is configured for, and indicates the docker container that should be run
+// for post processing and which files from googleapis-gen should be copied.
+export interface OwlBotYaml {
+  docker: {
+    image: string;
+  },
+  'copy-dirs': CopyDir[];
+}
+
+// The default path where .OwlBot.yaml is expected to be found.
+export const owlBotYamlPath = '.github/.OwlBot.yaml';
+
+// Throws an exception if the object does not have the necessary structure.
+// Otherwise, returns the same object as an OwlBotLock.
+export function owlBotYamlFrom(o: any): OwlBotYaml {
+  
+}
