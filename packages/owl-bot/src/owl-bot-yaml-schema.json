@@ -22,6 +22,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
+        "required": ["source", "dest"],
         "properties": {
           "source": {
             "description": "Source directory to copy from googleapis-gen.",
