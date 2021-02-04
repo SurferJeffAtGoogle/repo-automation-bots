@@ -45,8 +45,8 @@ export function owlBotLockFrom(o: Record<string, any>): OwlBotLock {
 }
 
 export interface CopyDir {
-  source: string,
-  dest: string,
+  source: string;
+  dest: string;
 }
 
 // The .github/.OwlBot.yaml is stored on each repository that OwlBot
@@ -55,7 +55,7 @@ export interface CopyDir {
 export interface OwlBotYaml {
   docker: {
     image: string;
-  },
+  };
   'copy-dirs': CopyDir[];
 }
 
@@ -66,7 +66,7 @@ export const owlBotYamlPath = '.github/.OwlBot.yaml';
 // Otherwise, returns the same object as an OwlBotYaml.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function owlBotYamlFrom(o: Record<string, any>): OwlBotYaml {
-  const validate = (new Ajv()).compile(owlBotYamlSchema);
+  const validate = new Ajv().compile(owlBotYamlSchema);
   if (validate(o)) {
     return o as OwlBotYaml;
   } else {

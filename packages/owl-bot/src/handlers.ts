@@ -12,9 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { OwlBotLock } from "./config-files";
-import { findReposWithPostProcessor, Configs, Db, findPullRequestForUpdatingLock, recordPullRequestForUpdatingLock } from "./database";
-import { Octokit } from '@octokit/rest';
+import {OwlBotLock} from './config-files';
+import {
+  findReposWithPostProcessor,
+  Configs,
+  Db,
+  findPullRequestForUpdatingLock,
+  recordPullRequestForUpdatingLock,
+} from './database';
+import {Octokit} from '@octokit/rest';
 
 /**
  * Invoked when a new pubsub message arrives because a new post processor
@@ -29,25 +35,28 @@ export async function onPostProcessorPublished(
   db: Db,
   dockerImageName: string,
   dockerImageDigest: string,
-  logger = console): Promise<void> {
-  // Examine all the repos that use the specified docker image for post 
+  logger = console
+): Promise<void> {
+  // Examine all the repos that use the specified docker image for post
   // processing.
-  let repos: [string, Configs][] =
-    await findReposWithPostProcessor(db, dockerImageName);
+  const repos: [string, Configs][] = await findReposWithPostProcessor(
+    db,
+    dockerImageName
+  );
   for (const [repo, configs] of repos) {
     let stale = true;
     // The lock file may be missing, for example when a new repo is created.
     try {
       stale = configs.lock!.docker.digest != dockerImageDigest;
     } catch (e) {
-      logger.log(repo + " did not have a valid .OwlBot.yaml.lock file.");
+      logger.log(repo + ' did not have a valid .OwlBot.yaml.lock file.');
     }
     if (stale) {
       const lock: OwlBotLock = {
         docker: {
           digest: dockerImageDigest,
-          image: dockerImageName
-        }
+          image: dockerImageName,
+        },
       };
       // TODO(bcoe): construct an octokit with configs.installationId or
       // pass an octokit into this function.
@@ -55,7 +64,6 @@ export async function onPostProcessorPublished(
     }
   }
 }
-
 
 /**
  * Creates a pull request to update .OwlBot.lock.yaml, if one doesn't already
@@ -66,9 +74,17 @@ export async function onPostProcessorPublished(
  * @param lock: The new contents of the lock file.
  * @returns: the uri of the new or existing pull request
  */
-async function createOnePullRequestForUpdatingLock(db: Db, octokit: Octokit,
-  repo: string, lock: OwlBotLock): Promise<string> {
-  const existingPullRequest = await findPullRequestForUpdatingLock(db, repo, lock);
+async function createOnePullRequestForUpdatingLock(
+  db: Db,
+  octokit: Octokit,
+  repo: string,
+  lock: OwlBotLock
+): Promise<string> {
+  const existingPullRequest = await findPullRequestForUpdatingLock(
+    db,
+    repo,
+    lock
+  );
   if (existingPullRequest) {
     return existingPullRequest;
   }

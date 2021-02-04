@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { owlBotYamlFrom } from '../src/config-files';
-import { describe, it } from 'mocha';
+import {owlBotYamlFrom} from '../src/config-files';
+import {describe, it} from 'mocha';
 import yaml from 'js-yaml';
 import * as assert from 'assert';
 
@@ -30,8 +30,8 @@ docker:
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const config = owlBotYamlFrom(yaml.load(text) as Record<string, any>);
     assert.deepStrictEqual(config, {
-      'copy-dirs': [{ source: '/google/cloud/vision', dest: '/src' }],
-      docker: { image: 'gcr.io/cloud-devrel-resources/synthtool-nodejs:prod' }
+      'copy-dirs': [{source: '/google/cloud/vision', dest: '/src'}],
+      docker: {image: 'gcr.io/cloud-devrel-resources/synthtool-nodejs:prod'},
     });
   });
 
@@ -47,4 +47,4 @@ docker:
     const config = yaml.load(text) as Record<string, any>;
     assert.throws(() => owlBotYamlFrom(config));
   });
-})
+});
