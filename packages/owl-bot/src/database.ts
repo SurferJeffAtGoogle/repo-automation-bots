@@ -24,7 +24,7 @@ export interface Configs {
   commithash: string
 };
 
-type Db = admin.firestore.Firestore;
+export type Db = admin.firestore.Firestore;
 
 const YAMLS = 'owl-bot-yamls';
 
@@ -55,8 +55,8 @@ export async function storeConfigs(db: Db, repo: string, configs: Configs,
   return updatedDoc;
 }
 
-export async function findReposWithPostProcessor(db: Db, dockerImageName: string): Promise<string[]> {
+export async function findReposWithPostProcessor(db: Db, dockerImageName: string): Promise<[string, Configs][]> {
   const ref = db.collection(YAMLS);
   const got = await ref.where('yaml.docker.image', '==', dockerImageName).get();
-  return got.docs.map(doc => doc.id);
+  return got.docs.map(doc => [doc.id, doc.data() as Configs]);
 }  

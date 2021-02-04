@@ -13,9 +13,12 @@
 // limitations under the License.
 
 import { OwlBotLock } from "./config-files";
-import { findReposWithPostProcessor, Configs } from "./database";
+import { findReposWithPostProcessor, Configs, Db } from "./database";
+import {Octokit} from '@octokit/rest';
+import {exec} from "child_process";
 
-export async function onPostProcessorPublished(dockerImageName: string,
+export async function onPostProcessorPublished(db: Db, 
+  dockerImageName: string,
   dockerImageDigest: string): Promise<void>
 {
   // Examine all the repos that use the specified docker image for post 
@@ -24,32 +27,31 @@ export async function onPostProcessorPublished(dockerImageName: string,
     await findReposWithPostProcessor(db, dockerImageName);
   for (const [repo, configs] of repos) {
     let stale = true;
-    try {  // The lock file may be missing.
+    // The lock file may be missing, for example when a new repo is created.
+    try {
       stale = configs.lock!.docker.digest != dockerImageDigest;
     } catch (e) {
-      // This will happen when repos are first created.  It's ok, but worth
-      // noting.
       console.log(repo + " did not have a valid .OwlBot.yaml.lock file.");
     }
     if (stale) {
-      // Kick off a build to see if 
-      const buildExists = await findBuildForUpdatingImageDigest(db, repo,
-        dockerImageName, dockerImageDigest);
-      if (!buildExists) {
-        const buildId = await createBuildForUpdatingImageDigest(repo,
-          dockerImageDigest, dockerImageDigest);
-        await recordBuildForUpdatingImageDigest(db, repo, dockerImageName,
-          dockerImageDigest, buildId);
-      }
+      const lock: OwlBotLock = {
+        docker: {
+          digest: dockerImageDigest,
+          image: dockerImageName
+        }
+      };
+      createOnePullRequestForUpdatingLock(db, repo, lock);
     }
   }
 }
 
-export async function onBuildForUpdatingImageDigestComplete(repo: string,
-  repoCommithash: string, dockerImageName: string, dockerImageDigest: string,
-  buildSucceeded: boolean, buildProducedChanges: boolean): Promise<void>
+async function createOnePullRequestForUpdatingLock(db: Db, octokit: Octokit,
+  installationId:number, repo: string,  lock: OwlBotLock): Promise<string>
 {
-  if (buildProducedChanges) {
-    
+  const existingPullRequest = findPullRequestForUpdatingLock(db, repo, lock);
+  if (existingPullRequest) {
+    return existingPullRequest;
   }
+  // Clone the repo.
+  
 }
