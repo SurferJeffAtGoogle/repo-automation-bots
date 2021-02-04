@@ -64,7 +64,8 @@ export const owlBotYamlPath = '.github/.OwlBot.yaml';
 
 // Throws an exception if the object does not have the necessary structure.
 // Otherwise, returns the same object as an OwlBotYaml.
-export function owlBotYamlFrom(o: any): OwlBotYaml {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function owlBotYamlFrom(o: Record<string, any>): OwlBotYaml {
   const validate = (new Ajv()).compile(owlBotYamlSchema);
   if (validate(o)) {
     return o as OwlBotYaml;

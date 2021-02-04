@@ -27,8 +27,8 @@ copy-dirs:
 docker:
   image: gcr.io/cloud-devrel-resources/synthtool-nodejs:prod
 `;
-    const config = owlBotYamlFrom(yaml.load(text));
-    console.log(config);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const config = owlBotYamlFrom(yaml.load(text) as Record<string, any>);
     assert.deepStrictEqual(config, {
       'copy-dirs': [{ source: '/google/cloud/vision', dest: '/src' }],
       docker: { image: 'gcr.io/cloud-devrel-resources/synthtool-nodejs:prod' }
@@ -43,7 +43,8 @@ copy-dirs:
 docker:
   image: gcr.io/cloud-devrel-resources/synthtool-nodejs:prod
 `;
-    const config = yaml.load(text);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const config = yaml.load(text) as Record<string, any>;
     assert.throws(() => owlBotYamlFrom(config));
   });
 })
