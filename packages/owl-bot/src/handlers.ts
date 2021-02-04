@@ -13,16 +13,23 @@
 // limitations under the License.
 
 import { OwlBotLock } from "./config-files";
-import { findReposWithPostProcessor, Configs, Db } from "./database";
-import {Octokit} from '@octokit/rest';
-import {exec} from "child_process";
+import { findReposWithPostProcessor, Configs, Db, findPullRequestForUpdatingLock, recordPullRequestForUpdatingLock } from "./database";
+import { Octokit } from '@octokit/rest';
 
+/**
+ * Invoked when a new pubsub message arrives because a new post processor
+ * docker image has been published to Google Container Registry.
+ * @param db: database
+ * @param dockerImageName: the name of the docker image that was updated.
+ *   example: "gcr.io/repo-automation-bots/nodejs-post-processor:latest"
+ * @param dockerImageDigest: the new digest for the image.
+ *   example: "sha256:1245151230998"
+ */
 export async function onPostProcessorPublished(
-  db: Db, 
+  db: Db,
   dockerImageName: string,
   dockerImageDigest: string,
-  logger = console): Promise<void>
-{
+  logger = console): Promise<void> {
   // Examine all the repos that use the specified docker image for post 
   // processing.
   let repos: [string, Configs][] =
@@ -42,18 +49,30 @@ export async function onPostProcessorPublished(
           image: dockerImageName
         }
       };
-      createOnePullRequestForUpdatingLock(db, repo, lock);
+      // TODO(bcoe): construct an octokit with configs.installationId or
+      // pass an octokit into this function.
+      createOnePullRequestForUpdatingLock(db, octokit, repo, lock);
     }
   }
 }
 
+
+/**
+ * Creates a pull request to update .OwlBot.lock.yaml, if one doesn't already
+ * exist.
+ * @param db: database
+ * @param octokit: Octokit.
+ * @param repo: full repo name like "googleapis/nodejs-vision"
+ * @param lock: The new contents of the lock file.
+ * @returns: the uri of the new or existing pull request
+ */
 async function createOnePullRequestForUpdatingLock(db: Db, octokit: Octokit,
-  installationId:number, repo: string,  lock: OwlBotLock): Promise<string>
-{
-  const existingPullRequest = findPullRequestForUpdatingLock(db, repo, lock);
+  repo: string, lock: OwlBotLock): Promise<string> {
+  const existingPullRequest = await findPullRequestForUpdatingLock(db, repo, lock);
   if (existingPullRequest) {
     return existingPullRequest;
   }
-  // Clone the repo.
-  
+  const newPullRequest: string = null; // TODO(bcoe): create the pull request.
+  await recordPullRequestForUpdatingLock(db, repo, lock, newPullRequest);
+  return newPullRequest;
 }
