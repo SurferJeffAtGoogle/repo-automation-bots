@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { owlBotYamlFrom } from '../src/config-files';
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it } from 'mocha';
 import yaml from 'js-yaml';
 import * as assert from 'assert';
 
