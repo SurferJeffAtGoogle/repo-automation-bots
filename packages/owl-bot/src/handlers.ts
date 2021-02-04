@@ -17,9 +17,11 @@ import { findReposWithPostProcessor, Configs, Db } from "./database";
 import {Octokit} from '@octokit/rest';
 import {exec} from "child_process";
 
-export async function onPostProcessorPublished(db: Db, 
+export async function onPostProcessorPublished(
+  db: Db, 
   dockerImageName: string,
-  dockerImageDigest: string): Promise<void>
+  dockerImageDigest: string,
+  logger = console): Promise<void>
 {
   // Examine all the repos that use the specified docker image for post 
   // processing.
@@ -31,7 +33,7 @@ export async function onPostProcessorPublished(db: Db,
     try {
       stale = configs.lock!.docker.digest != dockerImageDigest;
     } catch (e) {
-      console.log(repo + " did not have a valid .OwlBot.yaml.lock file.");
+      logger.log(repo + " did not have a valid .OwlBot.yaml.lock file.");
     }
     if (stale) {
       const lock: OwlBotLock = {
