@@ -28,7 +28,9 @@ export interface Configs {
 
 export type Db = admin.firestore.Firestore;
 
+// Collections.
 const YAMLS = 'owl-bot-yamls';
+const LOCK_UPDATE_PRS = 'owl-bot-lock-update-prs';
 
 export async function getConfigs(
   db: Db,
@@ -87,7 +89,11 @@ export async function findPullRequestForUpdatingLock(
   repo: string,
   lock: OwlBotLock
 ): Promise<string | undefined> {
-  return 'TODO(SurferJeffAtGoogle): implement.';
+  const docRef = db
+    .collection(LOCK_UPDATE_PRS)
+    .doc(newUpdateLockKey(repo, lock));
+  const got = await docRef.get();
+  return got.exists ? (got.data() as UpdateLockPr).pullRequestId : undefined;
 }
 
 /**
@@ -109,6 +115,25 @@ export async function recordPullRequestForUpdatingLock(
   lock: OwlBotLock,
   pullRequestId: string
 ): Promise<boolean> {
-  // TODO(SurferJeffAtGoogle): implement.
-  return true;
+  const docRef = db
+    .collection(LOCK_UPDATE_PRS)
+    .doc(newUpdateLockKey(repo, lock));
+  const data: UpdateLockPr = {pullRequestId: pullRequestId};
+  let setData = false;
+  await db.runTransaction(async t => {
+    const doc = await t.get(docRef);
+    if (!doc.exists) {
+      t.set(docRef, data);
+      setData = true;
+    }
+  });
+  return setData;
+}
+
+interface UpdateLockPr {
+  pullRequestId: string;
+}
+
+function newUpdateLockKey(repo: string, lock: OwlBotLock): string {
+  return [repo, lock.docker.image, lock.docker.digest].join('⁘');
 }
