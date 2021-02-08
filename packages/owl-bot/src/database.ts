@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
-import { OwlBotLock } from './config-files';
+import {OwlBotLock} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
 export type Db = admin.firestore.Firestore;
 
@@ -21,108 +21,87 @@ export type Db = admin.firestore.Firestore;
 const YAMLS = 'owl-bot-yamls';
 const LOCK_UPDATE_PRS = 'owl-bot-lock-update-prs';
 
-export async function getConfigs(
-  db: Db,
-  repo: string
-): Promise<Configs | undefined> {
-  const docRef = db.collection(YAMLS).doc(repo);
-  const doc = await docRef.get();
-  // Should we verify the data?
-  return doc.data() as Configs;
-}
-
-// Returns true if the store succeeded.
-// Returns false if replaceCommithash differed from the commithash in the
-// db, and therefore nothing was stored.
-export async function storeConfigs(
-  db: Db,
-  repo: string,
-  configs: Configs,
-  replaceCommithash: string | null
-): Promise<boolean> {
-  const docRef = db.collection(YAMLS).doc(repo);
-  let updatedDoc = false;
-  await db.runTransaction(async t => {
-    const doc = await t.get(docRef);
-    const prevConfigs = doc.data() as Configs | undefined;
-    if (
-      (prevConfigs && prevConfigs.commithash === replaceCommithash) ||
-      (!prevConfigs && replaceCommithash === null)
-    ) {
-      t.update(docRef, configs);
-      updatedDoc = true;
-    }
-  });
-  return updatedDoc;
-}
-
-// Returns a list of [repo-name, config].
-export async function findReposWithPostProcessor(
-  db: Db,
-  dockerImageName: string
-): Promise<[string, Configs][]> {
-  const ref = db.collection(YAMLS);
-  const got = await ref.where('yaml.docker.image', '==', dockerImageName).get();
-  return got.docs.map(doc => [doc.id, doc.data() as Configs]);
-}
-
-/**
- * Finds a previously recorded pull request or returns undefined.
- * @param db: database
- * @param repo: full repo name like "googleapis/nodejs-vision"
- * @param lock: The new contents of the lock file.
- * @returns: the string passed to recordPullRequestForUpdatingLock().
- */
-export async function findPullRequestForUpdatingLock(
-  db: Db,
-  repo: string,
-  lock: OwlBotLock
-): Promise<string | undefined> {
-  const docRef = db
-    .collection(LOCK_UPDATE_PRS)
-    .doc(makeUpdateLockKey(repo, lock));
-  const got = await docRef.get();
-  return got.exists ? (got.data() as UpdateLockPr).pullRequestId : undefined;
-}
-
-/**
- * Finds a previously recorded pull request or returns undefined.
- * @param db: database
- * @param repo: full repo name like "googleapis/nodejs-vision"
- * @param lock: The new contents of the lock file.
- * @param pullRequestId the string that will be later returned by
- *  findPullRequestForUpdatingLock().
- * @returns true if this pull request was recorded.  Returns false if a
- *   pull request was not recorded because a pull request already exists,
- *   a rare but possible race condition.
- *   In case of false, the caller should close the pull request they
- *   created, to avoid annoying maintainers with duplicate pull requests.
- */
-export async function recordPullRequestForUpdatingLock(
-  db: Db,
-  repo: string,
-  lock: OwlBotLock,
-  pullRequestId: string
-): Promise<boolean> {
-  const docRef = db
-    .collection(LOCK_UPDATE_PRS)
-    .doc(makeUpdateLockKey(repo, lock));
-  const data: UpdateLockPr = { pullRequestId: pullRequestId };
-  let setData = false;
-  await db.runTransaction(async t => {
-    const doc = await t.get(docRef);
-    if (!doc.exists) {
-      t.set(docRef, data);
-      setData = true;
-    }
-  });
-  return setData;
-}
-
 interface UpdateLockPr {
   pullRequestId: string;
 }
 
 function makeUpdateLockKey(repo: string, lock: OwlBotLock): string {
   return [repo, lock.docker.image, lock.docker.digest].join('⁘');
+}
+
+export class FirestoreConfigsStore implements ConfigsStore {
+  private db: Db;
+
+  constructor(db: Db) {
+    this.db = db;
+  }
+
+  async getConfigs(repo: string): Promise<Configs | undefined> {
+    const docRef = this.db.collection(YAMLS).doc(repo);
+    const doc = await docRef.get();
+    // Should we verify the data?
+    return doc.data() as Configs;
+  }
+
+  async storeConfigs(
+    repo: string,
+    configs: Configs,
+    replaceCommithash: string | null
+  ): Promise<boolean> {
+    const docRef = this.db.collection(YAMLS).doc(repo);
+    let updatedDoc = false;
+    await this.db.runTransaction(async t => {
+      const doc = await t.get(docRef);
+      const prevConfigs = doc.data() as Configs | undefined;
+      if (
+        (prevConfigs && prevConfigs.commithash === replaceCommithash) ||
+        (!prevConfigs && replaceCommithash === null)
+      ) {
+        t.update(docRef, configs);
+        updatedDoc = true;
+      }
+    });
+    return updatedDoc;
+  }
+
+  async findReposWithPostProcessor(
+    dockerImageName: string
+  ): Promise<[string, Configs][]> {
+    const ref = this.db.collection(YAMLS);
+    const got = await ref
+      .where('yaml.docker.image', '==', dockerImageName)
+      .get();
+    return got.docs.map(doc => [doc.id, doc.data() as Configs]);
+  }
+
+  async findPullRequestForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock
+  ): Promise<string | undefined> {
+    const docRef = this.db
+      .collection(LOCK_UPDATE_PRS)
+      .doc(makeUpdateLockKey(repo, lock));
+    const got = await docRef.get();
+    return got.exists ? (got.data() as UpdateLockPr).pullRequestId : undefined;
+  }
+
+  async recordPullRequestForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock,
+    pullRequestId: string
+  ): Promise<string> {
+    const docRef = this.db
+      .collection(LOCK_UPDATE_PRS)
+      .doc(makeUpdateLockKey(repo, lock));
+    const data: UpdateLockPr = {pullRequestId: pullRequestId};
+    await this.db.runTransaction(async t => {
+      const got = await t.get(docRef);
+      if (got.exists) {
+        t.set(docRef, data);
+      } else {
+        pullRequestId = (got.data() as UpdateLockPr).pullRequestId;
+      }
+    });
+    return pullRequestId;
+  }
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { OwlBotLock, OwlBotYaml } from './config-files';
+import {OwlBotLock, OwlBotYaml} from './config-files';
 
 export interface Configs {
   // The body of .Owlbot.lock.yaml.
@@ -26,37 +26,63 @@ export interface Configs {
 }
 
 export interface ConfigsStore {
-    // Returns a list of [repo-name, config].
-    findReposWithPostProcessor(
-      dockerImageName: string
-    ): Promise<[string, Configs][]>;
-  
-    /**
-     * Finds a previously recorded pull request or returns undefined.
-     * @param repo: full repo name like "googleapis/nodejs-vision"
-     * @param lock: The new contents of the lock file.
-     * @returns: the string passed to recordPullRequestForUpdatingLock().
-     */
-    findPullRequestForUpdatingLock(
-      repo: string,
-      lock: OwlBotLock
-    ): Promise<string | undefined>;
-  
-    /**
-     * Finds a previously recorded pull request or returns undefined.
-     * @param repo: full repo name like "googleapis/nodejs-vision"
-     * @param lock: The new contents of the lock file.
-     * @param pullRequestId the string that will be later returned by
-     *  findPullRequestForUpdatingLock().
-     * @returns pullRequestId, which may differ from the argument if there
-     *   already was a pull request recorded.
-     *   In that case, the caller should close the pull request they
-     *   created, to avoid annoying maintainers with duplicate pull requests.
-     */
-    recordPullRequestForUpdatingLock(
-      repo: string,
-      lock: OwlBotLock,
-      pullRequestId: string
-    ): Promise<string>;
-  }
-  
+  /**
+   * Gets the configuration files contents for the given repo.
+   * @param repo full repo name like "googleapis/nodejs-vision"
+   */
+  getConfigs(repo: string): Promise<Configs | undefined>;
+
+  /**
+   * Stores configuration files contents into the database.
+   * @param repo full repo name like "googleapis/nodejs-vision"
+   * @param configs the contents of the configuration files.
+   * @param replaceCommithash the commithash as returned by an earlier
+   *   call to getConfigs.  Enables atomic updates.
+   * @returns true if replaceCommithash matched the commithash in the database
+   *   and the configs were stored; otherwise false and the configs were
+   *   not stored.
+   */
+  storeConfigs(
+    repo: string,
+    configs: Configs,
+    replaceCommithash: string | null
+  ): Promise<boolean>;
+
+  /**
+   * Finds repos with their docker.image set to dockerImaegname in their
+   * .OwlBot.lock.yaml files.
+   * @param dockerImageName the name of the post-processore docker image
+   * @returns a list of [repo-name, config].
+   */
+  findReposWithPostProcessor(
+    dockerImageName: string
+  ): Promise<[string, Configs][]>;
+
+  /**
+   * Finds a previously recorded pull request or returns undefined.
+   * @param repo full repo name like "googleapis/nodejs-vision"
+   * @param lock The new contents of the lock file.
+   * @returns: the string passed to recordPullRequestForUpdatingLock().
+   */
+  findPullRequestForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock
+  ): Promise<string | undefined>;
+
+  /**
+   * Finds a previously recorded pull request or returns undefined.
+   * @param repo full repo name like "googleapis/nodejs-vision"
+   * @param lock The new contents of the lock file.
+   * @param pullRequestId the string that will be later returned by
+   *  findPullRequestForUpdatingLock().
+   * @returns pullRequestId, which may differ from the argument if there
+   *   already was a pull request recorded.
+   *   In that case, the caller should close the pull request they
+   *   created, to avoid annoying maintainers with duplicate pull requests.
+   */
+  recordPullRequestForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock,
+    pullRequestId: string
+  ): Promise<string>;
+}

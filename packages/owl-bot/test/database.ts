@@ -15,11 +15,9 @@
 import {describe, it, before} from 'mocha';
 
 describe('database', () => {
-    before(function() {
-        this.skip();
-    });
+  before(function () {
+    this.skip();
+  });
 
-    it('works', () => {
-        
-    });
+  it('works', () => {});
 });

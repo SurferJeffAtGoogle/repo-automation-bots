@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {OwlBotLock} from './config-files';
-import {Configs, ConfigsStore} from './database';
+import {Configs, ConfigsStore} from './configs-store';
 import {Octokit} from '@octokit/rest';
 
 /**
