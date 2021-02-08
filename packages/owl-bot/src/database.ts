@@ -16,11 +16,6 @@ import admin from 'firebase-admin';
 import {OwlBotLock} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
 export type Db = admin.firestore.Firestore;
-
-// Collections.
-const YAMLS = 'owl-bot-yamls';
-const LOCK_UPDATE_PRS = 'owl-bot-lock-update-prs';
-
 interface UpdateLockPr {
   pullRequestId: string;
 }
@@ -31,13 +26,20 @@ function makeUpdateLockKey(repo: string, lock: OwlBotLock): string {
 
 export class FirestoreConfigsStore implements ConfigsStore {
   private db: Db;
+  readonly yamls: string;
+  readonly lock_update_prs: string;
 
-  constructor(db: Db) {
+  /**
+   * @param collectionsPrefix should only be overridden in tests.
+   */
+  constructor(db: Db, collectionsPrefix = 'owl-bot-') {
     this.db = db;
+    this.yamls = collectionsPrefix + 'yamls';
+    this.lock_update_prs = collectionsPrefix + 'lock-update-prs';
   }
 
   async getConfigs(repo: string): Promise<Configs | undefined> {
-    const docRef = this.db.collection(YAMLS).doc(repo);
+    const docRef = this.db.collection(this.yamls).doc(repo);
     const doc = await docRef.get();
     // Should we verify the data?
     return doc.data() as Configs;
@@ -48,7 +50,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
     configs: Configs,
     replaceCommithash: string | null
   ): Promise<boolean> {
-    const docRef = this.db.collection(YAMLS).doc(repo);
+    const docRef = this.db.collection(this.yamls).doc(repo);
     let updatedDoc = false;
     await this.db.runTransaction(async t => {
       const doc = await t.get(docRef);
@@ -64,10 +66,17 @@ export class FirestoreConfigsStore implements ConfigsStore {
     return updatedDoc;
   }
 
+  async clearConfigs(
+    repo: string,
+  ): Promise<void> {
+    const docRef = this.db.collection(this.yamls).doc(repo);
+    await docRef.delete();
+  }
+
   async findReposWithPostProcessor(
     dockerImageName: string
   ): Promise<[string, Configs][]> {
-    const ref = this.db.collection(YAMLS);
+    const ref = this.db.collection(this.yamls);
     const got = await ref
       .where('yaml.docker.image', '==', dockerImageName)
       .get();
@@ -79,7 +88,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
     lock: OwlBotLock
   ): Promise<string | undefined> {
     const docRef = this.db
-      .collection(LOCK_UPDATE_PRS)
+      .collection(this.lock_update_prs)
       .doc(makeUpdateLockKey(repo, lock));
     const got = await docRef.get();
     return got.exists ? (got.data() as UpdateLockPr).pullRequestId : undefined;
@@ -91,7 +100,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
     pullRequestId: string
   ): Promise<string> {
     const docRef = this.db
-      .collection(LOCK_UPDATE_PRS)
+      .collection(this.lock_update_prs)
       .doc(makeUpdateLockKey(repo, lock));
     const data: UpdateLockPr = {pullRequestId: pullRequestId};
     await this.db.runTransaction(async t => {
