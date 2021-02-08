@@ -21,8 +21,22 @@ interface UpdateLockPr {
   pullRequestId: string;
 }
 
+/**
+ * When firebase sees a / in a doc id, it interprets it as a collection name.
+ * So, we have to escape them.  Also escape +s because we use them for combining
+ * strings into keys.  And use a format that can be decoded by decodeURI.
+ */
+function firestore_encode(s: string): string {
+  return s.replace('%', '%25').replace('/', '%2F').replace('+', '%2B');
+}
+
+function firestore_decode(s: string): string {
+  return decodeURIComponent(s);
+}
+
+
 function makeUpdateLockKey(repo: string, lock: OwlBotLock): string {
-  return [repo, lock.docker.image, lock.docker.digest].join('⁘');
+  return [repo, lock.docker.image, lock.docker.digest].map(firestore_encode).join('+');
 }
 
 export class FirestoreConfigsStore implements ConfigsStore {
@@ -40,7 +54,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
   }
 
   async getConfigs(repo: string): Promise<Configs | undefined> {
-    const docRef = this.db.collection(this.yamls).doc(repo);
+    const docRef = this.db.collection(this.yamls).doc(firestore_encode(repo));
     const doc = await docRef.get();
     // Should we verify the data?
     return doc.data() as Configs;
@@ -51,7 +65,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
     configs: Configs,
     replaceCommithash: string | null
   ): Promise<boolean> {
-    const docRef = this.db.collection(this.yamls).doc(repo);
+    const docRef = this.db.collection(this.yamls).doc(firestore_encode(repo));
     let updatedDoc = false;
     await this.db.runTransaction(async t => {
       const doc = await t.get(docRef);
@@ -70,7 +84,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
   async clearConfigs(
     repo: string,
   ): Promise<void> {
-    const docRef = this.db.collection(this.yamls).doc(repo);
+    const docRef = this.db.collection(this.yamls).doc(firestore_encode(repo));
     await docRef.delete();
   }
 
@@ -81,7 +95,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
     const got = await ref
       .where('yaml.docker.image', '==', dockerImageName)
       .get();
-    return got.docs.map(doc => [doc.id, doc.data() as Configs]);
+    return got.docs.map(doc => [firestore_decode(doc.id), doc.data() as Configs]);
   }
 
   async findPullRequestForUpdatingLock(
