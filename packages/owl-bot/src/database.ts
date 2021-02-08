@@ -74,7 +74,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
         (prevConfigs && prevConfigs.commithash === replaceCommithash) ||
         (!prevConfigs && replaceCommithash === null)
       ) {
-        t.update(docRef, configs);
+        t.set(docRef, configs);
         updatedDoc = true;
       }
     });
