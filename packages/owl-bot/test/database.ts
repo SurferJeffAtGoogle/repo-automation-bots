@@ -13,11 +13,23 @@
 // limitations under the License.
 
 import {describe, it, before} from 'mocha';
+import admin from 'firebase-admin';
+import { FirestoreConfigsStore } from '../src/database';
+import { v4 as uuidv4 } from 'uuid';
+import * as assert from 'assert';
 
 describe('database', () => {
   before(function () {
-    this.skip();
   });
 
-  it('works', () => {});
+  it('works', async () => {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault()
+    });
+    const db = admin.firestore();
+    const store = new FirestoreConfigsStore(db, "test-");
+    const repo = "googleapis/" + uuidv4();
+    const configs = await store.getConfigs(repo);
+    assert.strictEqual(configs, undefined);
+  });
 });

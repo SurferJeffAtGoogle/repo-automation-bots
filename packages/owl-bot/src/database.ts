@@ -15,6 +15,7 @@
 import admin from 'firebase-admin';
 import {OwlBotLock} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
+
 export type Db = admin.firestore.Firestore;
 interface UpdateLockPr {
   pullRequestId: string;
