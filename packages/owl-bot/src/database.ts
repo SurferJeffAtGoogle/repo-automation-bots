@@ -13,19 +13,8 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
-import { OwlBotLock, OwlBotYaml } from './config-files';
-
-export interface Configs {
-  // The body of .Owlbot.lock.yaml.
-  lock: OwlBotLock | undefined;
-  // The body of .Owlbot.yaml.
-  yaml: OwlBotYaml | undefined;
-  // The commit hash from which the config files were retrieved.
-  commithash: string;
-  // The installation id for our github app and this repo.
-  installationId: number;
-}
-
+import { OwlBotLock } from './config-files';
+import {Configs, ConfigsStore} from './configs-store';
 export type Db = admin.firestore.Firestore;
 
 // Collections.
@@ -136,38 +125,4 @@ interface UpdateLockPr {
 
 function makeUpdateLockKey(repo: string, lock: OwlBotLock): string {
   return [repo, lock.docker.image, lock.docker.digest].join('⁘');
-}
-export interface ConfigsStore {
-  // Returns a list of [repo-name, config].
-  findReposWithPostProcessor(
-    dockerImageName: string
-  ): Promise<[string, Configs][]>;
-
-  /**
-   * Finds a previously recorded pull request or returns undefined.
-   * @param repo: full repo name like "googleapis/nodejs-vision"
-   * @param lock: The new contents of the lock file.
-   * @returns: the string passed to recordPullRequestForUpdatingLock().
-   */
-  findPullRequestForUpdatingLock(
-    repo: string,
-    lock: OwlBotLock
-  ): Promise<string | undefined>;
-
-  /**
-   * Finds a previously recorded pull request or returns undefined.
-   * @param repo: full repo name like "googleapis/nodejs-vision"
-   * @param lock: The new contents of the lock file.
-   * @param pullRequestId the string that will be later returned by
-   *  findPullRequestForUpdatingLock().
-   * @returns pullRequestId, which may differ from the argument if there
-   *   already was a pull request recorded.
-   *   In that case, the caller should close the pull request they
-   *   created, to avoid annoying maintainers with duplicate pull requests.
-   */
-  recordPullRequestForUpdatingLock(
-    repo: string,
-    lock: OwlBotLock,
-    pullRequestId: string
-  ): Promise<string>;
 }
