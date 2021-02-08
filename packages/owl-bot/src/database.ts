@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
-import {OwlBotLock, OwlBotYaml} from './config-files';
+import { OwlBotLock, OwlBotYaml } from './config-files';
 
 export interface Configs {
   // The body of .Owlbot.lock.yaml.
@@ -57,7 +57,7 @@ export async function storeConfigs(
     const doc = await t.get(docRef);
     const prevConfigs = doc.data() as Configs | undefined;
     if (
-      (prevConfigs && prevConfigs.commithash == replaceCommithash) ||
+      (prevConfigs && prevConfigs.commithash === replaceCommithash) ||
       (!prevConfigs && replaceCommithash === null)
     ) {
       t.update(docRef, configs);
@@ -91,7 +91,7 @@ export async function findPullRequestForUpdatingLock(
 ): Promise<string | undefined> {
   const docRef = db
     .collection(LOCK_UPDATE_PRS)
-    .doc(newUpdateLockKey(repo, lock));
+    .doc(makeUpdateLockKey(repo, lock));
   const got = await docRef.get();
   return got.exists ? (got.data() as UpdateLockPr).pullRequestId : undefined;
 }
@@ -117,8 +117,8 @@ export async function recordPullRequestForUpdatingLock(
 ): Promise<boolean> {
   const docRef = db
     .collection(LOCK_UPDATE_PRS)
-    .doc(newUpdateLockKey(repo, lock));
-  const data: UpdateLockPr = {pullRequestId: pullRequestId};
+    .doc(makeUpdateLockKey(repo, lock));
+  const data: UpdateLockPr = { pullRequestId: pullRequestId };
   let setData = false;
   await db.runTransaction(async t => {
     const doc = await t.get(docRef);
@@ -134,6 +134,40 @@ interface UpdateLockPr {
   pullRequestId: string;
 }
 
-function newUpdateLockKey(repo: string, lock: OwlBotLock): string {
+function makeUpdateLockKey(repo: string, lock: OwlBotLock): string {
   return [repo, lock.docker.image, lock.docker.digest].join('⁘');
+}
+export interface ConfigsStore {
+  // Returns a list of [repo-name, config].
+  findReposWithPostProcessor(
+    dockerImageName: string
+  ): Promise<[string, Configs][]>;
+
+  /**
+   * Finds a previously recorded pull request or returns undefined.
+   * @param repo: full repo name like "googleapis/nodejs-vision"
+   * @param lock: The new contents of the lock file.
+   * @returns: the string passed to recordPullRequestForUpdatingLock().
+   */
+  findPullRequestForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock
+  ): Promise<string | undefined>;
+
+  /**
+   * Finds a previously recorded pull request or returns undefined.
+   * @param repo: full repo name like "googleapis/nodejs-vision"
+   * @param lock: The new contents of the lock file.
+   * @param pullRequestId the string that will be later returned by
+   *  findPullRequestForUpdatingLock().
+   * @returns pullRequestId, which may differ from the argument if there
+   *   already was a pull request recorded.
+   *   In that case, the caller should close the pull request they
+   *   created, to avoid annoying maintainers with duplicate pull requests.
+   */
+  recordPullRequestForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock,
+    pullRequestId: string
+  ): Promise<string>;
 }
