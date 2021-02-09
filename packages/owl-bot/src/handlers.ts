@@ -14,10 +14,16 @@
 
 import {createPullRequest} from 'code-suggester';
 import {dump} from 'js-yaml';
-import {OwlBotLock, owlBotLockFrom, owlBotLockPath, owlBotYamlFrom, owlBotYamlPath} from './config-files';
+import {
+  OwlBotLock,
+  owlBotLockFrom,
+  owlBotLockPath,
+  owlBotYamlFrom,
+  owlBotYamlPath,
+} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
-import {OctokitType} from './core';
-import {Octokit, RestEndpointMethodTypes} from '@octokit/rest';
+import {OctokitType, getFileContent} from './core';
+import {Octokit} from '@octokit/rest';
 import yaml from 'js-yaml';
 
 /**
@@ -138,30 +144,32 @@ export async function createOnePullRequestForUpdatingLock(
 /**
  * Scans a whole github org for config files, and updates stale entries in
  * the config store.
- * @param db: database
- * @param octokit Octokit.
+ * @param configStore where to store config file contents
+ * @param octokit Octokit
  * @param githubOrg the name of the github org whose repos will be scanned
  * @param orgInstallationId the installation id of the github app.
  *   Won't need to be specified in production once the database has recorded
  *   the installation id for any repo in the org.
  */
-export async function scanGithubForConfigs(configsStore: ConfigsStore,
-    octokit: OctokitType, githubOrg: string, orgInstallationId?: number,
-    logger=console): Promise<void>
-{
+export async function scanGithubForConfigs(
+  configsStore: ConfigsStore,
+  octokit: OctokitType,
+  githubOrg: string,
+  orgInstallationId?: number,
+  logger = console
+): Promise<void> {
   // Some configurations may not have an installationId yet.
   // TODO: Revisit them after we have collected an installationId.
   const configsWithoutInstallationIds: [unknown, Configs?][] = [];
 
   // TODO: traverse pages returned by listForOrg().
-  const { data: repoData } = await octokit.repos.listForOrg({org: githubOrg});
+  const {data: repoData} = await octokit.repos.listForOrg({org: githubOrg});
   for (const repo of repoData) {
-
     // Load the current configs from the db.
     const configs = await configsStore.getConfigs(repo.full_name);
 
     // Observe the installationId.
-    const installationId = configs?.installationId ?? orgInstallationId;
+    const installationId = orgInstallationId ?? configs?.installationId;
     if (!installationId) {
       configsWithoutInstallationIds.push([repoData, configs]);
       continue;
@@ -174,11 +182,16 @@ export async function scanGithubForConfigs(configsStore: ConfigsStore,
 
     // Query github for the commit hash of the default branch.
     const defaultBranch = repo.default_branch ?? 'master';
-    const { data: branchData } = await octokit.repo.branch.get({branchName: defaultBranch});
+    const {data: branchData} = await octokit.repo.branch.get({
+      branchName: defaultBranch,
+    });
     const commitHash = branchData.commit.sha;
 
-    if (configs?.commitHash === commitHash && configs?.branchName === defaultBranch) {
-      continue;  // configsStore is up to date.
+    if (
+      configs?.commitHash === commitHash &&
+      configs?.branchName === defaultBranch
+    ) {
+      continue; // configsStore is up to date.
     }
 
     // Update the configs.
@@ -189,43 +202,55 @@ export async function scanGithubForConfigs(configsStore: ConfigsStore,
     };
 
     // Query github for the contents of the lock file.
-    const {data: lockData} = await octokit.repos.getContent({
-      owner: githubOrg,
-      repo: repo.name,
-      path: owlBotLockPath,
-      ref: commitHash
-    });
-    if (lockData.content) {
+    const lockContent = await getFileContent(
+      githubOrg,
+      repo.name,
+      owlBotLockPath,
+      commitHash,
+      octokit
+    );
+    if (lockContent) {
       try {
-        const text = Buffer.from(lockData.content, 'base64').toString();
-        newConfigs.lock = owlBotLockFrom(yaml.load(text) as Record<string, any>);
+        newConfigs.lock = owlBotLockFrom(
+          yaml.load(lockContent) as Record<string, any>
+        );
       } catch (e) {
-        console.error(`${repo.full_name} has an invalid ${owlBotLockPath} file: ${e}`);
+        console.error(
+          `${repo.full_name} has an invalid ${owlBotLockPath} file: ${e}`
+        );
       }
     }
 
     // Query github for the contents of the yaml file.
-    const {data: configData} = await octokit.repos.getContent({
-      owner: githubOrg,
-      repo: repo.name,
-      path: owlBotYamlPath,
-      ref: commitHash
-    });
-    if (configData.content) {
+    const yamlContent = await getFileContent(
+      githubOrg,
+      repo.name,
+      owlBotYamlPath,
+      commitHash,
+      octokit
+    );
+    if (yamlContent) {
       try {
-        const text = Buffer.from(configData.content, 'base64').toString();
-        newConfigs.yaml = owlBotYamlFrom(yaml.load(text) as Record<string, any>);
+        newConfigs.lock = owlBotLockFrom(
+          yaml.load(yamlContent) as Record<string, any>
+        );
       } catch (e) {
-        console.error(`${repo.full_name} has an invalid ${owlBotYamlPath} file: ${e}`);
+        console.error(
+          `${repo.full_name} has an invalid ${owlBotYamlPath} file: ${e}`
+        );
       }
     }
 
     // Store the new configs back into the database.
-    const stored = await configsStore.storeConfigs(repo.full_name, newConfigs,
-      configs?.commitHash ?? null);
+    const stored = await configsStore.storeConfigs(
+      repo.full_name,
+      newConfigs,
+      configs?.commitHash ?? null
+    );
     if (!stored) {
-      console.warn(`Mid-air collision!  ${repo.full_name}'s configs were already updated.`);
+      console.info(
+        `Mid-air collision!  ${repo.full_name}'s configs were already updated.`
+      );
     }
-  }  
+  }
 }
-
