@@ -133,3 +133,15 @@ export async function createOnePullRequestForUpdatingLock(
   );
   return newPullRequest;
 }
+
+/**
+ * Scans a whole github org for config files.
+ * @param db: database
+ * @param octokit: Octokit.
+ */
+export async function scanGithubForConfigs(configsStore: ConfigsStore,
+    octokit: OctokitType, githubOrg: string): Promise<void>
+{
+  
+}
+
