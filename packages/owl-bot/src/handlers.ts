@@ -209,14 +209,18 @@ export async function scanGithubForConfigs(
   }
 }
 
+
 /**
- *
+ * If the configs in the repo are newer than the configs in the configStore,
+ * update the configStore.
  * @param configStore where to store config file contents
+ * @param configs the configs recently fetch from the configStore; may be
+ *   undefined if there were no configs in the configStore.
  * @param octokit Octokit
  * @param githubOrg the name of the github org whose repos will be scanned
- * @param orgInstallationId the installation id of the github app.
- *   Won't need to be specified in production once the database has recorded
- *   the installation id for any repo in the org.
+ * @param repoName the name of the repo; ex: "nodejs-vision".
+ * @param defaultBranch the name of the repo's default branch; ex: "main"
+ * @param installationId the installation id of the github app.
  */
 export async function refreshConfigs(
   configsStore: ConfigsStore,
