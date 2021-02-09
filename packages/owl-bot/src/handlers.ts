@@ -160,16 +160,26 @@ export async function scanGithubForConfigs(
 ): Promise<void> {
   // Some configurations may not have an installationId yet.
   // TODO: Revisit them after we have collected an installationId.
-  const configsWithoutInstallationIds: [unknown, Configs?][] = [];
+  const refreshLaters: [function(number): Promise<void>][] = [];
 
   // TODO: traverse pages returned by listForOrg().
   const {data: repoData} = await octokit.repos.listForOrg({org: githubOrg});
   for (const repo of repoData) {
     // Load the current configs from the db.
-    const configs = await configsStore.getConfigs(repo.full_name);
+    const repoFull = `${githubOrg}/${repo.name}`;
+    const configs = await configsStore.getConfigs(repoFull);
+    const defaultBranch = repo.default_branch ?? 'master';
 
     // Observe the installationId.
     const installationId = orgInstallationId ?? configs?.installationId;
+    const refresh = (installationId: number) => {
+      return refreshConfigs(configsStore, configs, octokit, githubOrg, repo.name,
+        defaultBranch, installationId);
+    };
+    if (installationId) {
+      await refresh(installationId);
+    } else {
+      refre
     if (!installationId) {
       configsWithoutInstallationIds.push([repoData, configs]);
       continue;
@@ -180,8 +190,28 @@ export async function scanGithubForConfigs(
         ${installationId} !== ${configs?.installationId}`);
     }
 
+  }
+}
+
+/**
+ * 
+ * @param configStore where to store config file contents
+ * @param octokit Octokit
+ * @param githubOrg the name of the github org whose repos will be scanned
+ * @param orgInstallationId the installation id of the github app.
+ *   Won't need to be specified in production once the database has recorded
+ *   the installation id for any repo in the org.
+ */
+export async function refreshConfigs(
+  configsStore: ConfigsStore,
+  configs?: Configs,
+  octokit: OctokitType,
+  githubOrg: string,
+  repoName: string,
+  defaultBranch: string,
+  installationId: number
+): Promise<void> {
     // Query github for the commit hash of the default branch.
-    const defaultBranch = repo.default_branch ?? 'master';
     const {data: branchData} = await octokit.repo.branch.get({
       branchName: defaultBranch,
     });
@@ -191,7 +221,7 @@ export async function scanGithubForConfigs(
       configs?.commitHash === commitHash &&
       configs?.branchName === defaultBranch
     ) {
-      continue; // configsStore is up to date.
+      return;   // configsStore is up to date.
     }
 
     // Update the configs.
@@ -201,10 +231,12 @@ export async function scanGithubForConfigs(
       commitHash: commitHash,
     };
 
+    const repoFull = `${githubOrg}/${repoName}`;
+
     // Query github for the contents of the lock file.
     const lockContent = await getFileContent(
       githubOrg,
-      repo.name,
+      repoName,
       owlBotLockPath,
       commitHash,
       octokit
@@ -216,7 +248,7 @@ export async function scanGithubForConfigs(
         );
       } catch (e) {
         console.error(
-          `${repo.full_name} has an invalid ${owlBotLockPath} file: ${e}`
+          `${repoFull} has an invalid ${owlBotLockPath} file: ${e}`
         );
       }
     }
@@ -224,7 +256,7 @@ export async function scanGithubForConfigs(
     // Query github for the contents of the yaml file.
     const yamlContent = await getFileContent(
       githubOrg,
-      repo.name,
+      repoName,
       owlBotYamlPath,
       commitHash,
       octokit
@@ -236,20 +268,20 @@ export async function scanGithubForConfigs(
         );
       } catch (e) {
         console.error(
-          `${repo.full_name} has an invalid ${owlBotYamlPath} file: ${e}`
+          `${repoFull} has an invalid ${owlBotYamlPath} file: ${e}`
         );
       }
     }
 
     // Store the new configs back into the database.
     const stored = await configsStore.storeConfigs(
-      repo.full_name,
+      repoFull,
       newConfigs,
       configs?.commitHash ?? null
     );
     if (!stored) {
       console.info(
-        `Mid-air collision!  ${repo.full_name}'s configs were already updated.`
+        `Mid-air collision! ${repoFull}'s configs were already updated.`
       );
     }
   }
