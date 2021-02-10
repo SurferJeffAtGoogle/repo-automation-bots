@@ -429,7 +429,7 @@ describe('scanGithubForConfigs', () => {
       },
       listForOrg: {
         endpoint: {
-          merge() {return "merge"; }
+          merge() { return "merge"; }
         }
       },
     },
@@ -446,8 +446,10 @@ describe('scanGithubForConfigs', () => {
           {
             name: 'python-iap',
             default_branch: 'master',
-          },
-        ];
+          }
+        ].map(configs => {
+          return Promise.resolve({ data: [configs]});
+        });
       }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
