@@ -305,5 +305,18 @@ describe('refreshConfigs', function () {
     ]]));
   });  
 
+  it("stores nothing when the configs are up to date", async function () {
+    const configs: Configs = {
+      branchName: 'main',
+      commitHash: '123',
+      installationId: 42,
+    };
+    const configsStore = new FakeConfigStore();
+    sandbox.stub(core, 'getFileContent').resolves(undefined);
 
+    await refreshConfigs(configsStore, configs, octokitSha123, "googleapis",
+      "nodejs-vision", "main", 77);
+
+    assert.deepStrictEqual(configsStore.configs, new Map());
+  });
 });

@@ -229,18 +229,21 @@ export async function refreshConfigs(
   githubOrg: string,
   repoName: string,
   defaultBranch: string,
-  installationId: number
+  installationId: number,
+  logger=console
 ): Promise<void> {
+
   // Query github for the commit hash of the default branch.
   const {data: branchData} = await octokit.repo.branch.get({
     branchName: defaultBranch,
   });
   const commitHash = branchData.commit.sha;
-
+  const repoFull = `${githubOrg}/${repoName}`;
   if (
     configs?.commitHash === commitHash &&
     configs?.branchName === defaultBranch
   ) {
+    logger.info(`Configs for ${repoFull} or up to date.`);
     return; // configsStore is up to date.
   }
 
@@ -250,8 +253,6 @@ export async function refreshConfigs(
     installationId: installationId,
     commitHash: commitHash,
   };
-
-  const repoFull = `${githubOrg}/${repoName}`;
 
   // Query github for the contents of the lock file.
   const lockContent = await core.getFileContent(
@@ -268,7 +269,7 @@ export async function refreshConfigs(
         yaml.load(lockContent) as Record<string, any>
       );
     } catch (e) {
-      console.error(`${repoFull} has an invalid ${owlBotLockPath} file: ${e}`);
+      logger.error(`${repoFull} has an invalid ${owlBotLockPath} file: ${e}`);
     }
   }
 
@@ -287,7 +288,7 @@ export async function refreshConfigs(
         yaml.load(yamlContent) as Record<string, any>
       );
     } catch (e) {
-      console.error(`${repoFull} has an invalid ${owlBotYamlPath} file: ${e}`);
+      logger.error(`${repoFull} has an invalid ${owlBotYamlPath} file: ${e}`);
     }
   }
   // Store the new configs back into the database.
@@ -296,8 +297,10 @@ export async function refreshConfigs(
     newConfigs,
     configs?.commitHash ?? null
   );
-  if (!stored) {
-    console.info(
+  if (stored) {
+    logger.info(`Stored new configs for ${repoFull}`);
+  } else {
+    logger.info(
       `Mid-air collision! ${repoFull}'s configs were already updated.`
     );
   }
