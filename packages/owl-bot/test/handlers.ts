@@ -266,4 +266,20 @@ describe('refreshConfigs', function () {
       }
     ]]));
   });
+
+  it('stores empty config files', async function () {
+    const configsStore = new FakeConfigStore();
+    sandbox.stub(core, 'getFileContent').resolves(undefined);
+
+    await refreshConfigs(configsStore, undefined, octokitSha123, "googleapis",
+      "nodejs-vision", "main", 42);
+
+    assert.deepStrictEqual(configsStore.configs, new Map([[
+      'googleapis/nodejs-vision', {
+        branchName: 'main',
+        commitHash: '123',
+        installationId: 42,
+      }
+    ]]));
+  });  
 });
