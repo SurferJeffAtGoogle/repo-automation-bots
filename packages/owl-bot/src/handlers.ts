@@ -25,6 +25,11 @@ import {Configs, ConfigsStore} from './configs-store';
 import {OctokitType, core} from './core';
 import {Octokit} from '@octokit/rest';
 import yaml from 'js-yaml';
+// Conflicting linters think the next line is extraneous or necessary.
+// eslint-disable-next-line node/no-extraneous-import
+import {Endpoints} from '@octokit/types';
+
+type ListReposResponse = Endpoints['GET /orgs/{org}/repos']['response'];
 
 /**
  * Invoked when a new pubsub message arrives because a new post processor
@@ -163,51 +168,53 @@ export async function scanGithubForConfigs(
   type refreshFunction = (installationId: number) => Promise<void>;
   const refreshLaters: refreshFunction[] = [];
 
-  // TODO: traverse pages returned by listForOrg().
-  const {data: repoData} = await octokit.repos.listForOrg({org: githubOrg});
-  for (const repo of repoData) {
-    // Load the current configs from the db.
-    const repoFull = `${githubOrg}/${repo.name}`;
-    const configs = await configsStore.getConfigs(repoFull);
-    const defaultBranch = repo.default_branch ?? 'master';
+  const repos = octokit.repos.listForOrg.endpoint.merge({org: githubOrg});
+  for await (const response of octokit.paginate.iterator(repos)) {
+    const repos = response.data as ListReposResponse['data'];
+    for (const repo of repos) {
+      // Load the current configs from the db.
+      const repoFull = `${githubOrg}/${repo.name}`;
+      const configs = await configsStore.getConfigs(repoFull);
+      const defaultBranch = repo.default_branch ?? 'master';
 
-    // Compose the refresh function.
-    const refresh = (installationId: number) => {
-      return refreshConfigs(
-        configsStore,
-        configs,
-        octokit,
-        githubOrg,
-        repo.name,
-        defaultBranch,
-        installationId
-      );
-    };
+      // Compose the refresh function.
+      const refresh = (installationId: number) => {
+        return refreshConfigs(
+          configsStore,
+          configs,
+          octokit,
+          githubOrg,
+          repo.name,
+          defaultBranch,
+          installationId
+        );
+      };
 
-    // Observe the installationId.
-    if (configs?.installationId) {
-      if (!orgInstallationId) {
-        orgInstallationId = configs.installationId;
-      } else if (orgInstallationId !== configs.installationId) {
-        logger.warn(`Saw two different installation ids for ${repoFull}: \
+      // Observe the installationId.
+      if (configs?.installationId) {
+        if (!orgInstallationId) {
+          orgInstallationId = configs.installationId;
+        } else if (orgInstallationId !== configs.installationId) {
+          logger.warn(`Saw two different installation ids for ${repoFull}: \
         ${orgInstallationId} !== ${configs.installationId}`);
+        }
+      }
+      const installationId = orgInstallationId ?? configs?.installationId;
+      if (installationId) {
+        // Refresh now.
+        await refresh(installationId);
+      } else {
+        // Can't refresh yet because we don't have an installationId.
+        refreshLaters.push(refresh);
       }
     }
-    const installationId = orgInstallationId ?? configs?.installationId;
-    if (installationId) {
-      // Refresh now.
-      await refresh(installationId);
-    } else {
-      // Can't refresh yet because we don't have an installationId.
-      refreshLaters.push(refresh);
-    }
-  }
-  if (refreshLaters.length > 0) {
-    if (!orgInstallationId) {
-      logger.error(`No installation id found for ${githubOrg}.`);
-    } else {
-      for (const refresh of refreshLaters) {
-        await refresh(orgInstallationId);
+    if (refreshLaters.length > 0) {
+      if (!orgInstallationId) {
+        logger.error(`No installation id found for ${githubOrg}.`);
+      } else {
+        for (const refresh of refreshLaters) {
+          await refresh(orgInstallationId);
+        }
       }
     }
   }
