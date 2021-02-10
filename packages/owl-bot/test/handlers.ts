@@ -360,12 +360,44 @@ describe('scanGithubForConfigs', function () {
   } as any) as InstanceType<typeof Octokit>;
 
 
-  it('works', async function () {
+  it('works with an installationId', async function () {
     const configsStore = new FakeConfigStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
     `);
     await scanGithubForConfigs(configsStore, octokitWithRepos, "googleapis", 45);
+
+    assert.deepStrictEqual(configsStore.configs, new Map([[
+      'googleapis/java-speech', {
+        branchName: 'master',
+        commitHash: '123',
+        installationId: 45,
+        yaml: {
+          docker: {
+            image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
+          }
+        }
+      }],
+    ['googleapis/nodejs-vision', {
+      branchName: 'main',
+      commitHash: '123',
+      installationId: 45,
+      yaml: {
+        docker: {
+          image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
+        }
+      }
+    }],
+    ['googleapis/python-iap', {
+      branchName: 'master',
+      commitHash: '123',
+      installationId: 45,
+      yaml: {
+        docker: {
+          image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
+        }
+      }
+    }]]));
   });
 });
