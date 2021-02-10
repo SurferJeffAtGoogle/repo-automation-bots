@@ -200,30 +200,31 @@ describe('refreshConfigs', function () {
     sandbox.restore();
   });
 
-  it('works', async function () {
+  const octokitSha123 = ({
+    repo: {
+      branch: {
+        get() {
+          return {
+            data: {
+              commit: {
+                sha: '123'
+              }
+            }
+          };
+        }
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any) as InstanceType<typeof Octokit>;
+
+  it('stores a good yaml', async function () {
     const configsStore = new FakeConfigStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
     `);
-    const octokit = ({
-      repo: {
-        branch: {
-          get() {
-            return {
-              data: {
-                commit: {
-                  sha: '123'
-                }
-              }
-            };
-          }
-        }
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any) as InstanceType<typeof Octokit>;
 
-    await refreshConfigs(configsStore, undefined, octokit, "googleapis",
+    await refreshConfigs(configsStore, undefined, octokitSha123, "googleapis",
       "nodejs-vision", "main", 42);
 
     assert.deepStrictEqual(configsStore.configs, new Map([[
@@ -233,6 +234,32 @@ describe('refreshConfigs', function () {
         installationId: 42,
         yaml: {
           docker: {
+            image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
+          }
+        }
+      }
+    ]]));
+  });
+
+  it('stores a good lock.yaml', async function () {
+    const configsStore = new FakeConfigStore();
+    sandbox.stub(core, 'getFileContent').resolves(`
+      docker:
+        image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
+        digest: sha256:abcdef
+    `);
+
+    await refreshConfigs(configsStore, undefined, octokitSha123, "googleapis",
+      "nodejs-vision", "main", 42);
+
+    assert.deepStrictEqual(configsStore.configs, new Map([[
+      'googleapis/nodejs-vision', {
+        branchName: 'main',
+        commitHash: '123',
+        installationId: 42,
+        lock: {
+          docker: {
+            digest: 'sha256:abcdef',
             image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
           }
         }
