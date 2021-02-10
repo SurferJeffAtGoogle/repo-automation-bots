@@ -15,7 +15,7 @@
 import * as assert from 'assert';
 import { describe, it, afterEach } from 'mocha';
 
-import { createOnePullRequestForUpdatingLock, refreshConfigs } from '../src/handlers';
+import { createOnePullRequestForUpdatingLock, refreshConfigs, scanGithubForConfigs } from '../src/handlers';
 import { Configs, ConfigsStore } from '../src/configs-store';
 import { dump } from 'js-yaml';
 import * as suggester from 'code-suggester';
@@ -23,7 +23,9 @@ import { Octokit } from '@octokit/rest';
 
 import * as sinon from 'sinon';
 import { OwlBotLock } from '../src/config-files';
-import { core } from '../src/core';
+import { core, getAuthenticatedOctokit, getGitHubShortLivedAccessToken } from '../src/core';
+import { promisify } from 'util';
+import { readFile } from 'fs';
 const sandbox = sinon.createSandbox();
 
 type Changes = Array<[string, { content: string; mode: string }]>;
@@ -318,5 +320,22 @@ describe('refreshConfigs', function () {
       "nodejs-vision", "main", 77);
 
     assert.deepStrictEqual(configsStore.configs, new Map());
+  });
+});
+
+describe('scanGithubForConfigs', function () {
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('works', async function() {
+    const configsStore = new FakeConfigStore();
+    const readFileAsync = promisify(readFile);
+    const privateKey = await readFileAsync('private-key.pem', 'utf8');
+    const installationId = 14395202;
+    const token = await getGitHubShortLivedAccessToken(privateKey, 97063,
+      installationId);
+    const octokit = await getAuthenticatedOctokit(token.token);
+    await scanGithubForConfigs(configsStore, octokit, "googleapis", installationId);
   });
 });
