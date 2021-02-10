@@ -12,23 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // import * as assert from 'assert';
-import * as assert from 'assert';
-import { describe, it, afterEach } from 'mocha';
 
-import { createOnePullRequestForUpdatingLock, refreshConfigs, scanGithubForConfigs } from '../src/handlers';
-import { Configs, ConfigsStore } from '../src/configs-store';
-import { dump } from 'js-yaml';
+// There are lots of unused args on fake functions, and that's ok.
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+import * as assert from 'assert';
+import {describe, it, afterEach} from 'mocha';
+
+import {
+  createOnePullRequestForUpdatingLock,
+  refreshConfigs,
+  scanGithubForConfigs,
+} from '../src/handlers';
+import {Configs, ConfigsStore} from '../src/configs-store';
+import {dump} from 'js-yaml';
 import * as suggester from 'code-suggester';
-import { Octokit } from '@octokit/rest';
+import {Octokit} from '@octokit/rest';
 
 import * as sinon from 'sinon';
-import { OwlBotLock } from '../src/config-files';
-import { core, getAuthenticatedOctokit, getGitHubShortLivedAccessToken } from '../src/core';
-import { promisify } from 'util';
-import { readFile } from 'fs';
+import {OwlBotLock} from '../src/config-files';
+import {
+  core,
+  getAuthenticatedOctokit,
+  getGitHubShortLivedAccessToken,
+} from '../src/core';
+import {promisify} from 'util';
+import {readFile} from 'fs';
 const sandbox = sinon.createSandbox();
 
-type Changes = Array<[string, { content: string; mode: string }]>;
+type Changes = Array<[string, {content: string; mode: string}]>;
 
 describe('handlers', () => {
   afterEach(() => {
@@ -164,7 +176,6 @@ describe('handlers', () => {
   });
 });
 
-
 class FakeConfigStore implements ConfigsStore {
   readonly configs: Map<string, Configs>;
 
@@ -176,9 +187,13 @@ class FakeConfigStore implements ConfigsStore {
     return Promise.resolve(this.configs.get(repo));
   }
 
-  storeConfigs(repo: string, configs: Configs, replaceCommithash: string | null): Promise<boolean> {
+  storeConfigs(
+    repo: string,
+    configs: Configs,
+    replaceCommithash: string | null
+  ): Promise<boolean> {
     const existingCommitHash = this.configs.get(repo)?.commitHash ?? null;
-    if (existingCommitHash == replaceCommithash) {
+    if (existingCommitHash === replaceCommithash) {
       this.configs.set(repo, configs);
       return Promise.resolve(true);
     } else {
@@ -186,18 +201,27 @@ class FakeConfigStore implements ConfigsStore {
     }
   }
 
-  findReposWithPostProcessor(dockerImageName: string): Promise<[string, Configs][]> {
+  findReposWithPostProcessor(
+    dockerImageName: string
+  ): Promise<[string, Configs][]> {
     throw new Error('Method not implemented.');
   }
-  findPullRequestForUpdatingLock(repo: string, lock: OwlBotLock): Promise<string | undefined> {
+  findPullRequestForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock
+  ): Promise<string | undefined> {
     throw new Error('Method not implemented.');
   }
-  recordPullRequestForUpdatingLock(repo: string, lock: OwlBotLock, pullRequestId: string): Promise<string> {
+  recordPullRequestForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock,
+    pullRequestId: string
+  ): Promise<string> {
     throw new Error('Method not implemented.');
   }
 }
 
-describe('refreshConfigs', function () {
+describe('refreshConfigs', () => {
   afterEach(() => {
     sandbox.restore();
   });
@@ -208,40 +232,54 @@ describe('refreshConfigs', function () {
         return {
           data: {
             commit: {
-              sha: '123'
-            }
-          }
+              sha: '123',
+            },
+          },
         };
-      }
-    }
+      },
+    },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any) as InstanceType<typeof Octokit>;
 
-  it('stores a good yaml', async function () {
+  it('stores a good yaml', async () => {
     const configsStore = new FakeConfigStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
     `);
 
-    await refreshConfigs(configsStore, undefined, octokitSha123, "googleapis",
-      "nodejs-vision", "main", 42);
+    await refreshConfigs(
+      configsStore,
+      undefined,
+      octokitSha123,
+      'googleapis',
+      'nodejs-vision',
+      'main',
+      42
+    );
 
-    assert.deepStrictEqual(configsStore.configs, new Map([[
-      'googleapis/nodejs-vision', {
-        branchName: 'main',
-        commitHash: '123',
-        installationId: 42,
-        yaml: {
-          docker: {
-            image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
-          }
-        }
-      }
-    ]]));
+    assert.deepStrictEqual(
+      configsStore.configs,
+      new Map([
+        [
+          'googleapis/nodejs-vision',
+          {
+            branchName: 'main',
+            commitHash: '123',
+            installationId: 42,
+            yaml: {
+              docker: {
+                image:
+                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+              },
+            },
+          },
+        ],
+      ])
+    );
   });
 
-  it('stores a good lock.yaml', async function () {
+  it('stores a good lock.yaml', async () => {
     const configsStore = new FakeConfigStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
@@ -249,63 +287,108 @@ describe('refreshConfigs', function () {
         digest: sha256:abcdef
     `);
 
-    await refreshConfigs(configsStore, undefined, octokitSha123, "googleapis",
-      "nodejs-vision", "main", 42);
+    await refreshConfigs(
+      configsStore,
+      undefined,
+      octokitSha123,
+      'googleapis',
+      'nodejs-vision',
+      'main',
+      42
+    );
 
-    assert.deepStrictEqual(configsStore.configs, new Map([[
-      'googleapis/nodejs-vision', {
-        branchName: 'main',
-        commitHash: '123',
-        installationId: 42,
-        lock: {
-          docker: {
-            digest: 'sha256:abcdef',
-            image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
-          }
-        }
-      }
-    ]]));
+    assert.deepStrictEqual(
+      configsStore.configs,
+      new Map([
+        [
+          'googleapis/nodejs-vision',
+          {
+            branchName: 'main',
+            commitHash: '123',
+            installationId: 42,
+            lock: {
+              docker: {
+                digest: 'sha256:abcdef',
+                image:
+                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+              },
+            },
+          },
+        ],
+      ])
+    );
   });
 
-  it('stores empty config files', async function () {
+  it('stores empty config files', async () => {
     const configsStore = new FakeConfigStore();
     sandbox.stub(core, 'getFileContent').resolves(undefined);
 
-    await refreshConfigs(configsStore, undefined, octokitSha123, "googleapis",
-      "nodejs-vision", "main", 42);
+    await refreshConfigs(
+      configsStore,
+      undefined,
+      octokitSha123,
+      'googleapis',
+      'nodejs-vision',
+      'main',
+      42
+    );
 
-    assert.deepStrictEqual(configsStore.configs, new Map([[
-      'googleapis/nodejs-vision', {
-        branchName: 'main',
-        commitHash: '123',
-        installationId: 42,
-      }
-    ]]));
+    assert.deepStrictEqual(
+      configsStore.configs,
+      new Map([
+        [
+          'googleapis/nodejs-vision',
+          {
+            branchName: 'main',
+            commitHash: '123',
+            installationId: 42,
+          },
+        ],
+      ])
+    );
   });
 
-  it("stores nothing when there's a mid-air collision", async function () {
-    const configsStore = new FakeConfigStore(new Map([[
-      'googleapis/nodejs-vision', {
-        branchName: 'main',
-        commitHash: '456',
-        installationId: 42,
-      }
-    ]]));
+  it("stores nothing when there's a mid-air collision", async () => {
+    const configsStore = new FakeConfigStore(
+      new Map([
+        [
+          'googleapis/nodejs-vision',
+          {
+            branchName: 'main',
+            commitHash: '456',
+            installationId: 42,
+          },
+        ],
+      ])
+    );
     sandbox.stub(core, 'getFileContent').resolves(undefined);
 
-    await refreshConfigs(configsStore, undefined, octokitSha123, "googleapis",
-      "nodejs-vision", "main", 77);
+    await refreshConfigs(
+      configsStore,
+      undefined,
+      octokitSha123,
+      'googleapis',
+      'nodejs-vision',
+      'main',
+      77
+    );
 
-    assert.deepStrictEqual(configsStore.configs, new Map([[
-      'googleapis/nodejs-vision', {
-        branchName: 'main',
-        commitHash: '456',
-        installationId: 42,
-      }
-    ]]));
+    assert.deepStrictEqual(
+      configsStore.configs,
+      new Map([
+        [
+          'googleapis/nodejs-vision',
+          {
+            branchName: 'main',
+            commitHash: '456',
+            installationId: 42,
+          },
+        ],
+      ])
+    );
   });
 
-  it("stores nothing when the configs are up to date", async function () {
+  it('stores nothing when the configs are up to date', async () => {
     const configs: Configs = {
       branchName: 'main',
       commitHash: '123',
@@ -314,14 +397,21 @@ describe('refreshConfigs', function () {
     const configsStore = new FakeConfigStore();
     sandbox.stub(core, 'getFileContent').resolves(undefined);
 
-    await refreshConfigs(configsStore, configs, octokitSha123, "googleapis",
-      "nodejs-vision", "main", 77);
+    await refreshConfigs(
+      configsStore,
+      configs,
+      octokitSha123,
+      'googleapis',
+      'nodejs-vision',
+      'main',
+      77
+    );
 
     assert.deepStrictEqual(configsStore.configs, new Map());
   });
 });
 
-describe('scanGithubForConfigs', function () {
+describe('scanGithubForConfigs', () => {
   afterEach(() => {
     sandbox.restore();
   });
@@ -332,72 +422,153 @@ describe('scanGithubForConfigs', function () {
         return {
           data: {
             commit: {
-              sha: '123'
-            }
-          }
+              sha: '123',
+            },
+          },
         };
       },
       listForOrg() {
         return {
-          data:
-            [
-              {
-                name: 'nodejs-vision',
-                default_branch: 'main'
-              },
-              {
-                name: 'java-speech',
-              },
-              {
-                name: 'python-iap',
-                default_branch: 'master'
-              }
-            ]
-        }
-      }
-    }
+          data: [
+            {
+              name: 'nodejs-vision',
+              default_branch: 'main',
+            },
+            {
+              name: 'java-speech',
+            },
+            {
+              name: 'python-iap',
+              default_branch: 'master',
+            },
+          ],
+        };
+      },
+    },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any) as InstanceType<typeof Octokit>;
 
-
-  it('works with an installationId', async function () {
+  it('works with an installationId', async () => {
     const configsStore = new FakeConfigStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
     `);
-    await scanGithubForConfigs(configsStore, octokitWithRepos, "googleapis", 45);
+    await scanGithubForConfigs(
+      configsStore,
+      octokitWithRepos,
+      'googleapis',
+      45
+    );
 
-    assert.deepStrictEqual(configsStore.configs, new Map([[
-      'googleapis/java-speech', {
-        branchName: 'master',
-        commitHash: '123',
-        installationId: 45,
-        yaml: {
-          docker: {
-            image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
-          }
-        }
-      }],
-    ['googleapis/nodejs-vision', {
-      branchName: 'main',
-      commitHash: '123',
-      installationId: 45,
-      yaml: {
-        docker: {
-          image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
-        }
-      }
-    }],
-    ['googleapis/python-iap', {
-      branchName: 'master',
-      commitHash: '123',
-      installationId: 45,
-      yaml: {
-        docker: {
-          image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
-        }
-      }
-    }]]));
+    assert.deepStrictEqual(
+      configsStore.configs,
+      new Map([
+        [
+          'googleapis/java-speech',
+          {
+            branchName: 'master',
+            commitHash: '123',
+            installationId: 45,
+            yaml: {
+              docker: {
+                image:
+                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+              },
+            },
+          },
+        ],
+        [
+          'googleapis/nodejs-vision',
+          {
+            branchName: 'main',
+            commitHash: '123',
+            installationId: 45,
+            yaml: {
+              docker: {
+                image:
+                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+              },
+            },
+          },
+        ],
+        [
+          'googleapis/python-iap',
+          {
+            branchName: 'master',
+            commitHash: '123',
+            installationId: 45,
+            yaml: {
+              docker: {
+                image:
+                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+              },
+            },
+          },
+        ],
+      ])
+    );
+  });
+
+  it('pulls installationId from config store', async () => {
+    const configsStore = new FakeConfigStore(
+      new Map([
+        [
+          'googleapis/nodejs-vision',
+          {
+            branchName: 'main',
+            commitHash: '123',
+            installationId: 45,
+          },
+        ],
+      ])
+    );
+    sandbox.stub(core, 'getFileContent').resolves(`
+      docker:
+        image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
+    `);
+    await scanGithubForConfigs(configsStore, octokitWithRepos, 'googleapis');
+
+    assert.deepStrictEqual(
+      configsStore.configs,
+      new Map([
+        [
+          'googleapis/java-speech',
+          {
+            branchName: 'master',
+            commitHash: '123',
+            installationId: 45,
+            yaml: {
+              docker: {
+                image:
+                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+              },
+            },
+          },
+        ],
+        [
+          'googleapis/nodejs-vision',
+          {
+            branchName: 'main',
+            commitHash: '123',
+            installationId: 45,
+          },
+        ],
+        [
+          'googleapis/python-iap',
+          {
+            branchName: 'master',
+            commitHash: '123',
+            installationId: 45,
+            yaml: {
+              docker: {
+                image:
+                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+              },
+            },
+          },
+        ],
+      ])
+    );
   });
 });

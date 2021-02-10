@@ -22,7 +22,7 @@ import {
   owlBotYamlPath,
 } from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
-import {OctokitType, core } from './core';
+import {OctokitType, core} from './core';
 import {Octokit} from '@octokit/rest';
 import yaml from 'js-yaml';
 
@@ -213,7 +213,6 @@ export async function scanGithubForConfigs(
   }
 }
 
-
 /**
  * If the configs in the repo are newer than the configs in the configStore,
  * update the configStore.
@@ -234,14 +233,13 @@ export async function refreshConfigs(
   repoName: string,
   defaultBranch: string,
   installationId: number,
-  logger=console
+  logger = console
 ): Promise<void> {
-
   // Query github for the commit hash of the default branch.
   const {data: branchData} = await octokit.repos.getBranch({
     owner: githubOrg,
     repo: repoName,
-    branch: defaultBranch
+    branch: defaultBranch,
   });
   const repoFull = `${githubOrg}/${repoName}`;
   const commitHash = branchData.commit.sha;
