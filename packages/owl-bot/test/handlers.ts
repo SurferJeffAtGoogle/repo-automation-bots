@@ -282,4 +282,28 @@ describe('refreshConfigs', function () {
       }
     ]]));
   });  
+
+  it("stores nothing when there's a mid-air collision", async function () {
+    const configsStore = new FakeConfigStore(new Map([[
+      'googleapis/nodejs-vision', {
+        branchName: 'main',
+        commitHash: '456',
+        installationId: 42,
+      }
+    ]]));
+    sandbox.stub(core, 'getFileContent').resolves(undefined);
+
+    await refreshConfigs(configsStore, undefined, octokitSha123, "googleapis",
+      "nodejs-vision", "main", 77);
+
+    assert.deepStrictEqual(configsStore.configs, new Map([[
+      'googleapis/nodejs-vision', {
+        branchName: 'main',
+        commitHash: '456',
+        installationId: 42,
+      }
+    ]]));
+  });  
+
+
 });
