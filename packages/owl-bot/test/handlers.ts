@@ -523,9 +523,9 @@ describe('scanGithubForConfigs', () => {
     const configsStore = new FakeConfigStore(
       new Map([
         [
-          'googleapis/nodejs-vision',
+          'googleapis/java-speech',
           {
-            branchName: 'main',
+            branchName: 'master',
             commitHash: '123',
             installationId: 45,
           },
@@ -547,12 +547,6 @@ describe('scanGithubForConfigs', () => {
             branchName: 'master',
             commitHash: '123',
             installationId: 45,
-            yaml: {
-              docker: {
-                image:
-                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
-              },
-            },
           },
         ],
         [
@@ -561,6 +555,12 @@ describe('scanGithubForConfigs', () => {
             branchName: 'main',
             commitHash: '123',
             installationId: 45,
+            yaml: {
+              docker: {
+                image:
+                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+              },
+            },
           },
         ],
         [
