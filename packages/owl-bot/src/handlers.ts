@@ -235,11 +235,17 @@ export async function refreshConfigs(
 ): Promise<void> {
 
   // Query github for the commit hash of the default branch.
-  const {data: branchData} = await octokit.repo.branch.get({
-    branchName: defaultBranch,
+  const {data: branchData} = await octokit.repos.getBranch({
+    owner: githubOrg,
+    repo: repoName,
+    branch: defaultBranch
   });
-  const commitHash = branchData.commit.sha;
   const repoFull = `${githubOrg}/${repoName}`;
+  const commitHash = branchData.commit.sha;
+  if (!commitHash) {
+    logger.error(`${repoFull}:${defaultBranch} is missing a commit sha!`);
+    return;
+  }
   if (
     configs?.commitHash === commitHash &&
     configs?.branchName === defaultBranch

@@ -173,7 +173,7 @@ class FakeConfigStore implements ConfigsStore {
   }
 
   getConfigs(repo: string): Promise<Configs | undefined> {
-    throw new Error('Method not implemented.');
+    return Promise.resolve(this.configs.get(repo));
   }
 
   storeConfigs(repo: string, configs: Configs, replaceCommithash: string | null): Promise<boolean> {
@@ -203,17 +203,15 @@ describe('refreshConfigs', function () {
   });
 
   const octokitSha123 = ({
-    repo: {
-      branch: {
-        get() {
-          return {
-            data: {
-              commit: {
-                sha: '123'
-              }
+    repos: {
+      getBranch() {
+        return {
+          data: {
+            commit: {
+              sha: '123'
             }
-          };
-        }
+          }
+        };
       }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,7 +281,7 @@ describe('refreshConfigs', function () {
         installationId: 42,
       }
     ]]));
-  });  
+  });
 
   it("stores nothing when there's a mid-air collision", async function () {
     const configsStore = new FakeConfigStore(new Map([[
@@ -305,7 +303,7 @@ describe('refreshConfigs', function () {
         installationId: 42,
       }
     ]]));
-  });  
+  });
 
   it("stores nothing when the configs are up to date", async function () {
     const configs: Configs = {
@@ -328,14 +326,46 @@ describe('scanGithubForConfigs', function () {
     sandbox.restore();
   });
 
-  it('works', async function() {
+  const octokitWithRepos = ({
+    repos: {
+      getBranch() {
+        return {
+          data: {
+            commit: {
+              sha: '123'
+            }
+          }
+        };
+      },
+      listForOrg() {
+        return {
+          data:
+            [
+              {
+                name: 'nodejs-vision',
+                default_branch: 'main'
+              },
+              {
+                name: 'java-speech',
+              },
+              {
+                name: 'python-iap',
+                default_branch: 'master'
+              }
+            ]
+        }
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any) as InstanceType<typeof Octokit>;
+
+
+  it('works', async function () {
     const configsStore = new FakeConfigStore();
-    const readFileAsync = promisify(readFile);
-    const privateKey = await readFileAsync('private-key.pem', 'utf8');
-    const installationId = 14395202;
-    const token = await getGitHubShortLivedAccessToken(privateKey, 97063,
-      installationId);
-    const octokit = await getAuthenticatedOctokit(token.token);
-    await scanGithubForConfigs(configsStore, octokit, "googleapis", installationId);
+    sandbox.stub(core, 'getFileContent').resolves(`
+      docker:
+        image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
+    `);
+    await scanGithubForConfigs(configsStore, octokitWithRepos, "googleapis", 45);
   });
 });
