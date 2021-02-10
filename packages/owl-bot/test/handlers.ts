@@ -17,30 +17,30 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import * as assert from 'assert';
-import {describe, it, afterEach} from 'mocha';
+import { describe, it, afterEach } from 'mocha';
 
 import {
   createOnePullRequestForUpdatingLock,
   refreshConfigs,
   scanGithubForConfigs,
 } from '../src/handlers';
-import {Configs, ConfigsStore} from '../src/configs-store';
-import {dump} from 'js-yaml';
+import { Configs, ConfigsStore } from '../src/configs-store';
+import { dump } from 'js-yaml';
 import * as suggester from 'code-suggester';
-import {Octokit} from '@octokit/rest';
+import { Octokit } from '@octokit/rest';
 
 import * as sinon from 'sinon';
-import {OwlBotLock} from '../src/config-files';
+import { OwlBotLock } from '../src/config-files';
 import {
   core,
   getAuthenticatedOctokit,
   getGitHubShortLivedAccessToken,
 } from '../src/core';
-import {promisify} from 'util';
-import {readFile} from 'fs';
+import { promisify } from 'util';
+import { readFile } from 'fs';
 const sandbox = sinon.createSandbox();
 
-type Changes = Array<[string, {content: string; mode: string}]>;
+type Changes = Array<[string, { content: string; mode: string }]>;
 
 describe('handlers', () => {
   afterEach(() => {
@@ -427,24 +427,29 @@ describe('scanGithubForConfigs', () => {
           },
         };
       },
-      listForOrg() {
-        return {
-          data: [
-            {
-              name: 'nodejs-vision',
-              default_branch: 'main',
-            },
-            {
-              name: 'java-speech',
-            },
-            {
-              name: 'python-iap',
-              default_branch: 'master',
-            },
-          ],
-        };
+      listForOrg: {
+        endpoint: {
+          merge() {return "merge"; }
+        }
       },
     },
+    paginate: {
+      iterator() {
+        return [
+          {
+            name: 'nodejs-vision',
+            default_branch: 'main',
+          },
+          {
+            name: 'java-speech',
+          },
+          {
+            name: 'python-iap',
+            default_branch: 'master',
+          },
+        ];
+      }
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any) as InstanceType<typeof Octokit>;
 
