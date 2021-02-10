@@ -22,7 +22,7 @@ import {
   owlBotYamlPath,
 } from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
-import {OctokitType, getFileContent} from './core';
+import {OctokitType, core } from './core';
 import {Octokit} from '@octokit/rest';
 import yaml from 'js-yaml';
 
@@ -254,7 +254,7 @@ export async function refreshConfigs(
   const repoFull = `${githubOrg}/${repoName}`;
 
   // Query github for the contents of the lock file.
-  const lockContent = await getFileContent(
+  const lockContent = await core.getFileContent(
     githubOrg,
     repoName,
     owlBotLockPath,
@@ -273,7 +273,7 @@ export async function refreshConfigs(
   }
 
   // Query github for the contents of the yaml file.
-  const yamlContent = await getFileContent(
+  const yamlContent = await core.getFileContent(
     githubOrg,
     repoName,
     owlBotYamlPath,

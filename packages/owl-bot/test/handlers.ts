@@ -15,7 +15,7 @@
 import * as assert from 'assert';
 import {describe, it, afterEach} from 'mocha';
 
-import {createOnePullRequestForUpdatingLock} from '../src/handlers';
+import {createOnePullRequestForUpdatingLock, refreshConfigs} from '../src/handlers';
 import {Configs, ConfigsStore} from '../src/configs-store';
 import {dump} from 'js-yaml';
 import * as suggester from 'code-suggester';
@@ -23,6 +23,7 @@ import {Octokit} from '@octokit/rest';
 
 import * as sinon from 'sinon';
 import {OwlBotLock} from '../src/config-files';
+import { core } from '../src/core';
 const sandbox = sinon.createSandbox();
 
 type Changes = Array<[string, {content: string; mode: string}]>;
@@ -158,5 +159,55 @@ describe('handlers', () => {
       );
       assert.strictEqual(expectedURI, 'https://github.com/owl/test/pull/99');
     });
+  });
+});
+
+describe('refreshConfigs', function() {
+  afterEach(() => {
+    sandbox.restore();
+  });
+  class FakeConfigStore implements ConfigsStore {
+    getConfigs(repo: string): Promise<Configs | undefined> {
+      throw new Error('Method not implemented.');
+    }
+    storeConfigs(repo: string, configs: Configs, replaceCommithash: string | null): Promise<boolean> {
+      throw new Error('Method not implemented.');
+    }
+    findReposWithPostProcessor(dockerImageName: string): Promise<[string, Configs][]> {
+      throw new Error('Method not implemented.');
+    }
+    findPullRequestForUpdatingLock(repo: string, lock: OwlBotLock): Promise<string | undefined> {
+      throw new Error('Method not implemented.');
+    }
+    recordPullRequestForUpdatingLock(repo: string, lock: OwlBotLock, pullRequestId: string): Promise<string> {
+      throw new Error('Method not implemented.');
+    }
+  }
+
+  it('works', async function() { 
+    const configsStore = new FakeConfigStore();
+    sandbox.stub(core, 'getFileContent').resolves(`
+      docker:
+        image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
+    `);
+    const octokit = ({
+      repo: {
+        branch: {
+          get() {
+            return {
+              data: {
+                commit: {
+                  sha : '123'
+                }
+              }
+            };
+          }
+        }
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any) as InstanceType<typeof Octokit>;
+
+    await refreshConfigs(configsStore, undefined, octokit, "googleapis",
+      "nodejs-vision", "main", 42);
   });
 });

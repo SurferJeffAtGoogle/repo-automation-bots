@@ -362,6 +362,7 @@ export const core = {
   getAccessTokenURL,
   getAuthenticatedOctokit,
   getCloudBuildInstance,
+  getFileContent,
   getGitHubShortLivedAccessToken,
   getOwlBotLock,
   owlBotLockPath,
