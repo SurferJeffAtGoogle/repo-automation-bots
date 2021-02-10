@@ -192,6 +192,7 @@ export async function scanGithubForConfigs(
         logger.warn(`Saw two different installation ids for ${repoFull}: \
         ${orgInstallationId} !== ${configs.installationId}`);
       }
+      // Refresh now.
       await refresh(configs.installationId);
     } else {
       // Can't refresh yet because we don't have an installationId.
