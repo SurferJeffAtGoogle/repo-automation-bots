@@ -13,20 +13,20 @@
 // limitations under the License.
 // import * as assert from 'assert';
 import * as assert from 'assert';
-import {describe, it, afterEach} from 'mocha';
+import { describe, it, afterEach } from 'mocha';
 
-import {createOnePullRequestForUpdatingLock, refreshConfigs} from '../src/handlers';
-import {Configs, ConfigsStore} from '../src/configs-store';
-import {dump} from 'js-yaml';
+import { createOnePullRequestForUpdatingLock, refreshConfigs } from '../src/handlers';
+import { Configs, ConfigsStore } from '../src/configs-store';
+import { dump } from 'js-yaml';
 import * as suggester from 'code-suggester';
-import {Octokit} from '@octokit/rest';
+import { Octokit } from '@octokit/rest';
 
 import * as sinon from 'sinon';
-import {OwlBotLock} from '../src/config-files';
+import { OwlBotLock } from '../src/config-files';
 import { core } from '../src/core';
 const sandbox = sinon.createSandbox();
 
-type Changes = Array<[string, {content: string; mode: string}]>;
+type Changes = Array<[string, { content: string; mode: string }]>;
 
 describe('handlers', () => {
   afterEach(() => {
@@ -162,29 +162,45 @@ describe('handlers', () => {
   });
 });
 
-describe('refreshConfigs', function() {
-  afterEach(() => {
-    sandbox.restore();
-  });
-  class FakeConfigStore implements ConfigsStore {
-    getConfigs(repo: string): Promise<Configs | undefined> {
-      throw new Error('Method not implemented.');
-    }
-    storeConfigs(repo: string, configs: Configs, replaceCommithash: string | null): Promise<boolean> {
-      throw new Error('Method not implemented.');
-    }
-    findReposWithPostProcessor(dockerImageName: string): Promise<[string, Configs][]> {
-      throw new Error('Method not implemented.');
-    }
-    findPullRequestForUpdatingLock(repo: string, lock: OwlBotLock): Promise<string | undefined> {
-      throw new Error('Method not implemented.');
-    }
-    recordPullRequestForUpdatingLock(repo: string, lock: OwlBotLock, pullRequestId: string): Promise<string> {
-      throw new Error('Method not implemented.');
+
+class FakeConfigStore implements ConfigsStore {
+  readonly configs: Map<string, Configs>;
+
+  constructor(configs?: Map<string, Configs>) {
+    this.configs = configs ?? new Map<string, Configs>();
+  }
+
+  getConfigs(repo: string): Promise<Configs | undefined> {
+    throw new Error('Method not implemented.');
+  }
+
+  storeConfigs(repo: string, configs: Configs, replaceCommithash: string | null): Promise<boolean> {
+    const existingCommitHash = this.configs.get(repo)?.commitHash ?? null;
+    if (existingCommitHash == replaceCommithash) {
+      this.configs.set(repo, configs);
+      return Promise.resolve(true);
+    } else {
+      return Promise.resolve(false);
     }
   }
 
-  it('works', async function() { 
+  findReposWithPostProcessor(dockerImageName: string): Promise<[string, Configs][]> {
+    throw new Error('Method not implemented.');
+  }
+  findPullRequestForUpdatingLock(repo: string, lock: OwlBotLock): Promise<string | undefined> {
+    throw new Error('Method not implemented.');
+  }
+  recordPullRequestForUpdatingLock(repo: string, lock: OwlBotLock, pullRequestId: string): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
+}
+
+describe('refreshConfigs', function () {
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('works', async function () {
     const configsStore = new FakeConfigStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
@@ -197,7 +213,7 @@ describe('refreshConfigs', function() {
             return {
               data: {
                 commit: {
-                  sha : '123'
+                  sha: '123'
                 }
               }
             };
@@ -209,5 +225,18 @@ describe('refreshConfigs', function() {
 
     await refreshConfigs(configsStore, undefined, octokit, "googleapis",
       "nodejs-vision", "main", 42);
+
+    assert.deepStrictEqual(configsStore.configs, new Map([[
+      'googleapis/nodejs-vision', {
+        branchName: 'main',
+        commitHash: '123',
+        installationId: 42,
+        yaml: {
+          docker: {
+            image: 'gcr.io/repo-automation-bots/nodejs-post-processor:latest'
+          }
+        }
+      }
+    ]]));
   });
 });
