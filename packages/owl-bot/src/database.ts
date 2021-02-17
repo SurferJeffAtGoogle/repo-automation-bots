@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
+import { match } from 'sinon';
 import {OwlBotLock} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
 
@@ -135,4 +136,31 @@ export class FirestoreConfigsStore implements ConfigsStore {
       .doc(makeUpdateLockKey(repo, lock));
     await docRef.delete();
   }
+
+  async findReposAffectedByFileChanges(changedFilePaths: string[]): Promise<string[]>
+  {
+    // This loop runs in time O(n*m), where
+    // n = changedFilePaths.length
+    // m = # repos stored in config store.
+    // It scans all the values in the collection.  There are many opportunities
+    // to optimize if performance becomes a problem.
+    const snapshot = await this.db.collection(this.yamls).get();
+    const result: string[] = [];
+    snapshot.forEach(doc => {
+      const configs = doc.data() as Configs | undefined;
+      match_loop: for (const copy of configs?.yaml?.['copy-dirs'] ?? []) {
+        for (const path of changedFilePaths) {
+          if (matchCopySourceAndChangedPath(copy.source, path)) {
+            result.push(doc.id);
+            break match_loop;
+          }
+        }
+      }
+    });
+    return result;    
+  }
+}
+
+export function matchCopySourceAndChangedPath(copySource: string, path: string): boolean {
+  return false;
 }

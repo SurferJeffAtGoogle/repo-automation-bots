@@ -64,12 +64,22 @@ export interface ConfigsStore {
    * Finds a previously recorded pull request or returns undefined.
    * @param repo full repo name like "googleapis/nodejs-vision"
    * @param lock The new contents of the lock file.
-   * @returns: the string passed to recordPullRequestForUpdatingLock().
+   * @returns the string passed to recordPullRequestForUpdatingLock().
    */
   findPullRequestForUpdatingLock(
     repo: string,
     lock: OwlBotLock
   ): Promise<string | undefined>;
+
+  /**
+   * Finds repositories who list one of the changed files as a source in
+   * copy-files.
+   * @param changedFilePaths file paths in googleapis that changed.
+   *   ex: ["/google/cloud/vision/v1/vision-v1-nodejs/src/v1/image_annotator_client.ts"]
+   * @returns the list of repo names.
+   *   ex: ["googleapis/nodejs-vision", "googleapis/python-vision"]
+   */
+  findReposAffectedByFileChanges(changedFilePaths: string[]): Promise<string[]>;
 
   /**
    * Finds a previously recorded pull request or returns undefined.

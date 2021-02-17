@@ -58,6 +58,9 @@ describe('handlers', () => {
       let recordedURI = '';
       // Mock the database helpers used to check for/update existing PRs:
       class FakeConfigStore implements ConfigsStore {
+        findReposAffectedByFileChanges(changedFilePaths: string[]): Promise<string[]> {
+          throw new Error('Method not implemented.');
+        }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         getConfigs(repo: string): Promise<Configs | undefined> {
           throw new Error('Method not implemented.');
@@ -131,6 +134,9 @@ describe('handlers', () => {
       };
       // Mock the database helpers used to check for/update existing PRs:
       class FakeConfigStore implements ConfigsStore {
+        findReposAffectedByFileChanges(changedFilePaths: string[]): Promise<string[]> {
+          throw new Error('Method not implemented.');
+        }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         getConfigs(repo: string): Promise<Configs | undefined> {
           throw new Error('Method not implemented.');
@@ -187,6 +193,9 @@ class FakeConfigStore implements ConfigsStore {
 
   constructor(configs?: Map<string, Configs>) {
     this.configs = configs ?? new Map<string, Configs>();
+  }
+  findReposAffectedByFileChanges(changedFilePaths: string[]): Promise<string[]> {
+    throw new Error('Method not implemented.');
   }
 
   getConfigs(repo: string): Promise<Configs | undefined> {

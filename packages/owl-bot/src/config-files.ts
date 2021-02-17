@@ -47,6 +47,7 @@ export function owlBotLockFrom(o: Record<string, any>): OwlBotLock {
 export interface CopyDir {
   source: string;
   dest: string;
+  'strip-prefix'?: string;
 }
 
 // The .github/.OwlBot.yaml is stored on each repository that OwlBot
