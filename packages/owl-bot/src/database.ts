@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
-import { match } from 'sinon';
 import {OwlBotLock} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
+import {IMinimatch, Minimatch} from 'minimatch';
 
 export type Db = admin.firestore.Firestore;
 interface UpdateLockPr {
@@ -149,8 +149,9 @@ export class FirestoreConfigsStore implements ConfigsStore {
     snapshot.forEach(doc => {
       const configs = doc.data() as Configs | undefined;
       match_loop: for (const copy of configs?.yaml?.['copy-dirs'] ?? []) {
+        const mm = newMinimatchFromSource(copy.source);
         for (const path of changedFilePaths) {
-          if (matchCopySourceAndChangedPath(copy.source, path)) {
+          if (mm.match(path)) {
             result.push(doc.id);
             break match_loop;
           }
@@ -161,6 +162,21 @@ export class FirestoreConfigsStore implements ConfigsStore {
   }
 }
 
-export function matchCopySourceAndChangedPath(copySource: string, path: string): boolean {
-  return false;
+// Exported for testing purposes.
+export function newMinimatchFromSource(pattern: string): IMinimatch {
+  return new Minimatch(makePatternMatchAllSubdirs(pattern), { matchBase: true });
+}
+
+function makePatternMatchAllSubdirs(pattern: string): string {
+  // Make sure pattern always ends with /**
+  if (pattern.endsWith('/**')) {
+    // Good, nothing to do.
+  } else if (pattern.endsWith('/*')) {
+    pattern += '*';
+  } else if (pattern.endsWith('/')) {
+    pattern += '**';
+  } else {
+    pattern += '/**';
+  }
+  return pattern;
 }
