@@ -152,7 +152,7 @@ export class FirestoreConfigsStore implements ConfigsStore {
         const mm = newMinimatchFromSource(copy.source);
         for (const path of changedFilePaths) {
           if (mm.match(path)) {
-            result.push(doc.id);
+            result.push(decodeId(doc.id));
             break match_loop;
           }
         }
