@@ -54,7 +54,7 @@ export interface CopyDir {
 // is configured for, and indicates the docker container that should be run
 // for post processing and which files from googleapis-gen should be copied.
 export interface OwlBotYaml {
-  docker: {
+  docker?: {
     image: string;
   };
   'copy-dirs'?: CopyDir[];

@@ -57,7 +57,7 @@ describe('database', () => {
     assert.deepStrictEqual(noRepos, []);
 
     // Insert some configs.
-    const configs: Configs = {
+    const configsA: Configs = {
       yaml: {
         docker: {
           image: dockerImageA,
@@ -79,27 +79,41 @@ describe('database', () => {
       branchName: 'main',
       installationId: 42,
     };
-    assert.ok(await store.storeConfigs(repoA, configs, null));
+    assert.ok(await store.storeConfigs(repoA, configsA, null));
+    const configsB: Configs = {
+      yaml: {
+        'copy-dirs': [
+          {
+            source: '/gamma',
+            dest: '/omega',
+          },
+        ],
+      },
+      commitHash: 'def',
+      branchName: 'master',
+      installationId: 53,
+    };
+    assert.ok(await store.storeConfigs(repoB, configsB, null));
     try {
       // We should find the repo when we search for its docker image.
       let repos = await store.findReposWithPostProcessor(dockerImageA);
-      assert.deepStrictEqual(repos, [[repoA, configs]]);
+      assert.deepStrictEqual(repos, [[repoA, configsA]]);
 
       // And not find it if we search for a different docker image.
       repos = await store.findReposWithPostProcessor(dockerImageB);
       assert.deepStrictEqual(repos, []);
 
       // Confirm that storing with a mismatched hash doesn't store.
-      assert.ok(!(await store.storeConfigs(repoA, configs, 'xyz')));
+      assert.ok(!(await store.storeConfigs(repoA, configsA, 'xyz')));
 
       // Specify a new docker image and store again.
-      configs.yaml!.docker.image = dockerImageB;
-      configs.commitHash = 'def';
-      assert.ok(await store.storeConfigs(repoA, configs, 'abc'));
+      configsA.yaml!.docker!.image = dockerImageB;
+      configsA.commitHash = 'def';
+      assert.ok(await store.storeConfigs(repoA, configsA, 'abc'));
 
       // Make sure we find it now for dockerImageB.
       repos = await store.findReposWithPostProcessor(dockerImageB);
-      assert.deepStrictEqual(repos, [[repoA, configs]]);
+      assert.deepStrictEqual(repos, [[repoA, configsA]]);
 
       // And not find it if we search for a different docker image.
       repos = await store.findReposWithPostProcessor(dockerImageA);
@@ -111,20 +125,20 @@ describe('database', () => {
 
       // Test pull requests.
       assert.strictEqual(
-        await store.findPullRequestForUpdatingLock(repoA, configs.lock!),
+        await store.findPullRequestForUpdatingLock(repoA, configsA.lock!),
         undefined
       );
 
       // First one gets recorded.
       const pullRequestId = store.recordPullRequestForUpdatingLock(
         repoA,
-        configs.lock!,
+        configsA.lock!,
         '10'
       );
       try {
         assert.strictEqual(await pullRequestId, '10');
         assert.strictEqual(
-          await store.findPullRequestForUpdatingLock(repoA, configs.lock!),
+          await store.findPullRequestForUpdatingLock(repoA, configsA.lock!),
           '10'
         );
 
@@ -132,13 +146,13 @@ describe('database', () => {
         assert.strictEqual(
           await store.recordPullRequestForUpdatingLock(
             repoA,
-            configs.lock!,
+            configsA.lock!,
             '11'
           ),
           '10'
         );
       } finally {
-        await store.clearPullRequestForUpdatingLock(repoA, configs.lock!);
+        await store.clearPullRequestForUpdatingLock(repoA, configsA.lock!);
       }
     } finally {
       await store.clearConfigs(repoA);
