@@ -45,11 +45,6 @@ export async function octokitFrom(argv: OctokitParams): Promise<OctokitType> {
     return await core.getAuthenticatedOctokit(token.token);    
 }
 
-export function cmd(command: string, logger=console, options?: proc.ExecSyncOptionsWithStringEncoding | undefined): string {
-    logger.info(command);
-    return proc.execSync(command, options);
-}
-
 export async function copyCode(args: Args, logger=console): Promise<void> {
     if (await copyExists(await octokitFrom(args), args["dest-repo"], args["source-repo-commit-hash"])) {
         return;  // Copy already exists.  Don't copy again.
@@ -59,15 +54,20 @@ export async function copyCode(args: Args, logger=console): Promise<void> {
     const destDir = path.join(workDir, "dest");
     const destBranch = "owl-bot-" + uuidv4();
 
+    const cmd = (command: string, options?: proc.ExecSyncOptions | undefined): Buffer => {
+        logger.info(command);
+        return proc.execSync(command, options);
+    };
+
     // Clone the two repos.
-    cmd(`git clone --single-branch "https://${args["source-repo"]}.git" ${sourceDir}`, logger);
-    cmd(`git clone --single-branch "https://${args["dest-repo"]}.git" ${destDir}`, logger);
+    cmd(`git clone --single-branch "https://${args["source-repo"]}.git" ${sourceDir}`);
+    cmd(`git clone --single-branch "https://${args["dest-repo"]}.git" ${destDir}`);
 
     // Check out the specific hash we want to copy from.
-    cmd(`git checkout ${args["source-repo-commit-hash"]}`, logger, {cwd: sourceDir, encoding: 'utf8'});
+    cmd(`git checkout ${args["source-repo-commit-hash"]}`, {cwd: sourceDir});
 
     // Check out a dest branch.
-    cmd(`git checkout -b ${destBranch}`, logger, {cwd: destDir, encoding: 'utf8'});
+    cmd(`git checkout -b ${destBranch}`, {cwd: destDir});
 
 
     // Load the OwlBot.yaml file in dest.
@@ -83,11 +83,22 @@ export async function copyCode(args: Args, logger=console): Promise<void> {
         return;  // Success because we don't want to retry.
     }
 
+    // Wipe out the existing contents of the dest directory.
     for (const copyDir of yaml["copy-dirs"] ?? []) {
-        // Wipe out the existing contents of the dest directory.
-        cmd(`rm -rf "${copyDir.dest}"`, logger, {cwd: destDir, encoding: 'utf8'});
-        cmd(`mkdir -p "${copyDir.dest}"`, logger, {cwd: destDir, encoding: 'utf8'});                
+        cmd(`rm -rf "${copyDir.dest}"`, {cwd: destDir});
     }
+
+    // Copy the files from source to dest.
+    for (const copyDir of yaml["copy-dirs"] ?? []) {
+        // TODO: copy the files.
+    }
+
+    // TODO: commit changes to branch.
+    // TODO: push branch.
+    if (await copyExists(await octokitFrom(args), args["dest-repo"], args["source-repo-commit-hash"])) {
+        return;  // Mid-air collision!
+    }
+    // TODO: create pull request.
 }
 
 /**
