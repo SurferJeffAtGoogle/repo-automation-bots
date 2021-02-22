@@ -12,19 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// To Run: node ./build/src/bin/owl-bot.js validate ~/.OwlBot.yaml
+// To Run: node ./build/src/bin/owl-bot.js copy-exists <args>
 
 import {promisify} from 'util';
 import {readFile} from 'fs';
-import {Args} from '../../copy-code';
 import yargs = require('yargs');
-import { getGitHubShortLivedAccessToken } from '../../core';
+import { core, getGitHubShortLivedAccessToken } from '../../core';
+import * as copyCode from '../../copy-code';
 
 const readFileAsync = promisify(readFile);
 
-export const copyCode: yargs.CommandModule<{}, Args> = {
-  command: 'open-pr',
-  describe: 'Open a pull request with an updated .OwlBot.lock.yaml',
+export interface Args {
+  'pem-path': string;
+  'app-id': number;
+  installation: number;
+  'source-repo-commit-hash': string;
+  'dest-repo': string;
+}
+
+export const copyExists: yargs.CommandModule<{}, Args> = {
+  command: 'copy-exists',
+  describe: 'Checks if the files have already been copied into dest repo.',
   builder(yargs) {
     return yargs
       .option('pem-path', {
@@ -40,12 +48,6 @@ export const copyCode: yargs.CommandModule<{}, Args> = {
       .option('installation', {
         describe: 'installation ID for GitHub app',
         type: 'number',
-        demand: true,
-      })
-      .option('source-repo', {
-        describe:
-          'The github repository from which files are copied.  Always googleapis/googleapis-gen.',
-        type: 'string',
         demand: true,
       })
       .option('source-repo-commit-hash', {
@@ -66,6 +68,7 @@ export const copyCode: yargs.CommandModule<{}, Args> = {
       argv['app-id'],
       argv.installation
     );
-    // TODO: implement.
+    const octokit = await core.getAuthenticatedOctokit(token.token);
+    await copyCode.copyExists(octokit, argv['dest-repo'], argv['source-repo-commit-hash']);
   },
 };

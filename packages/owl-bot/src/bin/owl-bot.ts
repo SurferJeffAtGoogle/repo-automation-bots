@@ -18,11 +18,14 @@ import {triggerBuildCommand} from './commands/trigger-build';
 import {openPR} from './commands/open-pr';
 import {scanConfigs} from './commands/scan-configs';
 import {validate} from './commands/validate';
+import {copyExists} from './commands/copy-exists';
+
 yargs(process.argv.slice(2))
   .command(triggerBuildCommand)
   .command(openPR)
   .command(scanConfigs)
   .command(validate)
+  .command(copyExists)
   .demandCommand(1)
   .strictCommands()
   .parse();
