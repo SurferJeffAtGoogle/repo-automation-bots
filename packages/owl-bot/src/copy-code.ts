@@ -23,6 +23,13 @@ export interface Args {
   'dest-repo': string;
 }
 
+/**
+ * Searches for instances of the sourceCommitHash in recent pull requests and commits.
+ * 
+ * @param octokit an octokit instance
+ * @param destRepo the repo to search
+ * @param sourceCommitHash the string to search for
+ */
 export async function copyExists(
   octokit: OctokitType,
   destRepo: string,
