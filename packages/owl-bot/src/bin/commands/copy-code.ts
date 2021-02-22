@@ -18,7 +18,7 @@ import {promisify} from 'util';
 import {readFile} from 'fs';
 import {Args} from '../../copy-code';
 import yargs = require('yargs');
-import { getGitHubShortLivedAccessToken } from '../../core';
+import {getGitHubShortLivedAccessToken} from '../../core';
 
 const readFileAsync = promisify(readFile);
 
@@ -49,12 +49,14 @@ export const copyCode: yargs.CommandModule<{}, Args> = {
         demand: true,
       })
       .option('source-repo-commit-hash', {
-        describe: 'The commit hash of the source repo from which to copy files.',
+        describe:
+          'The commit hash of the source repo from which to copy files.',
         type: 'string',
         demand: true,
       })
       .option('dest-repo', {
-        describe: 'The github repository to copy files to.  Example: googleapis/nodejs-vision.',
+        describe:
+          'The github repository to copy files to.  Example: googleapis/nodejs-vision.',
         type: 'string',
         demand: true,
       });

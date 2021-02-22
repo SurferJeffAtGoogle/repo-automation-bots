@@ -12,40 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { OctokitType } from "./core";
+import {OctokitType} from './core';
 
 export interface Args {
-    'pem-path': string;
-    'app-id': number;
-    installation: number;
-    'source-repo': string;
-    'source-repo-commit-hash': string;
-    'dest-repo': string;
+  'pem-path': string;
+  'app-id': number;
+  installation: number;
+  'source-repo': string;
+  'source-repo-commit-hash': string;
+  'dest-repo': string;
 }
 
-export async function copyExists(octokit: OctokitType, destRepo: string, sourceCommitHash: string, logger = console): Promise<boolean> {
-    const q = `repo:${destRepo}+${sourceCommitHash}`;
-    const foundCommits = await octokit.search.commits({q});
-    if (foundCommits.data.total_count > 0) {
-        logger.info(`Commit with ${sourceCommitHash} exists in ${destRepo}.`);
-        return true;
+export async function copyExists(
+  octokit: OctokitType,
+  destRepo: string,
+  sourceCommitHash: string,
+  logger = console
+): Promise<boolean> {
+  const q = `repo:${destRepo}+${sourceCommitHash}`;
+  const foundCommits = await octokit.search.commits({q});
+  if (foundCommits.data.total_count > 0) {
+    logger.info(`Commit with ${sourceCommitHash} exists in ${destRepo}.`);
+    return true;
+  }
+  const found = await octokit.search.issuesAndPullRequests({q});
+  for (const item of found.data.items) {
+    logger.info(
+      `Issue or pull request ${item.number} with ${sourceCommitHash} exists in ${destRepo}.`
+    );
+    return true;
+  }
+  // I observed octokit.search.issuesAndPullRequests() not finding recent, open
+  // pull requests.  So enumerate them.
+  const [owner, repo] = destRepo.split('/');
+  const pulls = await octokit.pulls.list({owner, repo, per_page: 100});
+  for (const pull of pulls.data) {
+    const pos: number = pull.body?.indexOf(sourceCommitHash) ?? -1;
+    if (pos >= 0) {
+      logger.info(
+        `Pull request ${pull.number} with ${sourceCommitHash} exists in ${destRepo}.`
+      );
+      return true;
     }
-    const found = await octokit.search.issuesAndPullRequests({q});
-    for (const item of found.data.items) {
-        logger.info(`Issue or pull request ${item.number} with ${sourceCommitHash} exists in ${destRepo}.`);
-        return true;
-    }
-    // I observed octokit.search.issuesAndPullRequests() not finding recent, open
-    // pull requests.  So enumerate them.
-    const [owner, repo] = destRepo.split('/');
-    const pulls = await octokit.pulls.list({owner, repo, per_page: 100});
-    for (const pull of pulls.data) {
-        const pos:number = pull.body?.indexOf(sourceCommitHash) ?? -1;
-        if (pos >= 0) {
-            logger.info(`Pull request ${pull.number} with ${sourceCommitHash} exists in ${destRepo}.`);
-            return true;    
-        }
-    }
-    logger.info(`${sourceCommitHash} not found in ${destRepo}.`);
-    return false;
+  }
+  logger.info(`${sourceCommitHash} not found in ${destRepo}.`);
+  return false;
 }
