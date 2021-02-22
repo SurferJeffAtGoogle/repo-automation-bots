@@ -12,15 +12,82 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {OctokitType} from './core';
+import {OctokitType, getGitHubShortLivedAccessToken, core} from './core';
+import { promisify } from 'util';
+import { readFile } from 'fs';
+import * as proc from 'child_process';
+import { owlBotYamlPath, owlBotYamlFrom, OwlBotYaml } from './config-files';
+import path from 'path';
+import {load} from 'js-yaml';
+import {v4 as uuidv4} from 'uuid';
 
-export interface Args {
-  'pem-path': string;
-  'app-id': number;
-  installation: number;
+const readFileAsync = promisify(readFile);
+
+export interface Args extends OctokitParams{
   'source-repo': string;
   'source-repo-commit-hash': string;
   'dest-repo': string;
+}
+
+export interface OctokitParams {
+    'pem-path': string;
+    'app-id': number;
+    installation: number;  
+}
+
+export async function octokitFrom(argv: OctokitParams): Promise<OctokitType> {
+    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
+    const token = await getGitHubShortLivedAccessToken(
+      privateKey,
+      argv['app-id'],
+      argv.installation
+    );
+    return await core.getAuthenticatedOctokit(token.token);    
+}
+
+export function cmd(command: string, logger=console, options?: proc.ExecSyncOptionsWithStringEncoding | undefined): string {
+    logger.info(command);
+    return proc.execSync(command, options);
+}
+
+export async function copyCode(args: Args, logger=console): Promise<void> {
+    if (await copyExists(await octokitFrom(args), args["dest-repo"], args["source-repo-commit-hash"])) {
+        return;  // Copy already exists.  Don't copy again.
+    }
+    const workDir = ".";
+    const sourceDir = path.join(workDir, "source");
+    const destDir = path.join(workDir, "dest");
+    const destBranch = "owl-bot-" + uuidv4();
+
+    // Clone the two repos.
+    cmd(`git clone --single-branch "https://${args["source-repo"]}.git" ${sourceDir}`, logger);
+    cmd(`git clone --single-branch "https://${args["dest-repo"]}.git" ${destDir}`, logger);
+
+    // Check out the specific hash we want to copy from.
+    cmd(`git checkout ${args["source-repo-commit-hash"]}`, logger, {cwd: sourceDir, encoding: 'utf8'});
+
+    // Check out a dest branch.
+    cmd(`git checkout -b ${destBranch}`, logger, {cwd: destDir, encoding: 'utf8'});
+
+
+    // Load the OwlBot.yaml file in dest.
+    const yamlPath = path.join(destDir, owlBotYamlPath);
+    let yaml: OwlBotYaml;
+    try {
+        const text = await readFileAsync(yamlPath, 'utf8');
+        const obj = load(text);
+        yaml = owlBotYamlFrom(obj as Record<string, any>);
+    } catch (e) {
+        logger.error(e);
+        // TODO: open an issue on the dest repository.
+        return;  // Success because we don't want to retry.
+    }
+
+    for (const copyDir of yaml["copy-dirs"] ?? []) {
+        // Wipe out the existing contents of the dest directory.
+        cmd(`rm -rf "${copyDir.dest}"`, logger, {cwd: destDir, encoding: 'utf8'});
+        cmd(`mkdir -p "${copyDir.dest}"`, logger, {cwd: destDir, encoding: 'utf8'});                
+    }
 }
 
 /**
