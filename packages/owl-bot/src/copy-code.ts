@@ -142,10 +142,7 @@ export function copyDirs(
   // Copy the files from source to dest.
   for (const copyDir of yaml['copy-dirs'] ?? []) {
     let pattern = makePatternMatchAllSubdirs(copyDir.source);
-    pattern = path.normalize(pattern);
-    if (pattern.startsWith(path.sep)) {
-      pattern = pattern.slice(1, pattern.length - 1);
-    }
+    pattern = trimSlashes(pattern);
     const sourcePaths = glob.sync(pattern, {cwd: sourceDir});
     for (const sourcePath of sourcePaths) {
       const fullSourcePath = path.join(sourceDir, sourcePath);
