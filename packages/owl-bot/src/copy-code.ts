@@ -121,11 +121,11 @@ export function copyDirs(
   yaml: OwlBotYaml,
   logger = console
 ): void {
-  const cmd = newCmd(logger);
-
   // Wipe out the existing contents of the dest directory.
   for (const copyDir of yaml['copy-dirs'] ?? []) {
-    cmd(`rm -rf "${copyDir.dest}"`, {cwd: destDir});
+    const fullPath = path.join(destDir, copyDir.dest);
+    logger.info(`rm -rf ${fullPath}`);
+    fs.rmdirSync(fullPath, { recursive: true });
   }
 
   // Copy the files from source to dest.

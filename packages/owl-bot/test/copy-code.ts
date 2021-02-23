@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {describe, it} from 'mocha';
+import { describe, it } from 'mocha';
 import * as assert from 'assert';
-import {stripPrefix} from '../src/copy-code';
+import { stripPrefix, copyDirs } from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
 import glob from 'glob';
 import tmp from 'tmp';
+import { OwlBotYaml } from '../src/config-files';
 
 describe('stripPrefix', () => {
   const norm = path.normalize;
@@ -76,14 +77,14 @@ describe('copyDirs', () => {
    * Collects the entire source tree content into a list that can
    * be easily compared equal in a test.
    */
-  function collectDirTree(dir:string): string[] {
+  function collectDirTree(dir: string): string[] {
     const tree: string[] = [];
     for (const apath of glob.sync('**', { cwd: dir })) {
       const fullPath = path.join(dir, apath);
       if (fs.lstatSync(fullPath).isDirectory()) {
         tree.push(apath);
       } else {
-        const content = fs.readFileSync(fullPath, { encoding: 'utf8'});
+        const content = fs.readFileSync(fullPath, { encoding: 'utf8' });
         tree.push(`${apath}:${content}`);
       }
     }
@@ -92,8 +93,18 @@ describe('copyDirs', () => {
   }
 
   it('works', () => {
-      const tempo = tmp.dirSync();
-      const sourceDir = makeSourceTree(tempo.name);
-      assert.deepStrictEqual(collectDirTree(sourceDir), []);
+    const tempo = tmp.dirSync();
+    const sourceDir = makeSourceTree(tempo.name);
+    const destDir = path.join(tempo.name, 'dest');
+    const yaml: OwlBotYaml = {
+      "copy-dirs":
+        [{
+          source: "/b/y",
+          dest: "/y",
+          "strip-prefix": "/b"
+        }]
+    };
+    copyDirs(sourceDir, destDir, yaml);
+    assert.deepStrictEqual(collectDirTree(destDir), []);
   });
 });
