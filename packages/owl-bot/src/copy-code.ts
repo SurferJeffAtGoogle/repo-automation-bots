@@ -103,6 +103,12 @@ export async function copyCode(args: Args, logger=console): Promise<void> {
     // TODO: create pull request.
 }
 
+/**
+ * Copies directories and files specified by yaml.
+ * @param sourceDir the path to the source repository directory
+ * @param destDir the path to the dest repository directory.
+ * @param yaml the OwlBot.yaml file from the dest repository.
+ */
 export function copyDirs(sourceDir: string, destDir: string, yaml: OwlBotYaml, logger=console): void {
     const cmd = newCmd(logger);
 
@@ -120,14 +126,21 @@ export function copyDirs(sourceDir: string, destDir: string, yaml: OwlBotYaml, l
             const relPath = stripPrefix(copyDir["strip-prefix"], sourcePath);
             const fullDestPath = path.join(destDir, relPath);
             if (fs.lstatSync(fullSourcePath).isDirectory()) {
+                logger.info("mkdir " + fullDestPath);
                 fs.mkdirSync(fullDestPath);
             } else {
+                logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
                 fs.copyFileSync(fullSourcePath, fullSourcePath);
             }
         }
     }
 }
 
+/**
+ * Strips a prefix from a filepath.
+ * @param prefix the prefix to strip; can contain wildcard characters like * and ?
+ * @param filePath the path from which to strip the prefix.
+ */
 export function stripPrefix(prefix: string | undefined, filePath: string): string {
     const mm = new Minimatch(prefix ?? "", { matchBase: true });
     if (mm.match(filePath)) {
