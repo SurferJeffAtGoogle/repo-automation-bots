@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {OctokitType, getGitHubShortLivedAccessToken, core} from './core';
 import { promisify } from 'util';
 import { readFile } from 'fs';
 import * as proc from 'child_process';
@@ -24,6 +23,7 @@ import glob from 'glob';
 import * as fs from 'fs';
 import { makePatternMatchAllSubdirs } from './pattern-match';
 import { Minimatch } from 'minimatch';
+import { OctokitParams, octokitFrom, OctokitType } from './octokit-util';
 
 const readFileAsync = promisify(readFile);
 
@@ -31,22 +31,6 @@ export interface Args extends OctokitParams{
   'source-repo': string;
   'source-repo-commit-hash': string;
   'dest-repo': string;
-}
-
-export interface OctokitParams {
-    'pem-path': string;
-    'app-id': number;
-    installation: number;  
-}
-
-export async function octokitFrom(argv: OctokitParams): Promise<OctokitType> {
-    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-    const token = await getGitHubShortLivedAccessToken(
-      privateKey,
-      argv['app-id'],
-      argv.installation
-    );
-    return await core.getAuthenticatedOctokit(token.token);    
 }
 
 type Cmd = (command: string, options?: proc.ExecSyncOptions | undefined) => Buffer;

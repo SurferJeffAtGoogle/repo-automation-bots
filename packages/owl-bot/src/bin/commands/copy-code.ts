@@ -16,13 +16,13 @@
 
 import {promisify} from 'util';
 import {readFile} from 'fs';
-import {Args} from '../../copy-code';
+import {Args, copyCode} from '../../copy-code';
 import yargs = require('yargs');
 import {getGitHubShortLivedAccessToken} from '../../core';
 
 const readFileAsync = promisify(readFile);
 
-export const copyCode: yargs.CommandModule<{}, Args> = {
+export const copyCodeCommand: yargs.CommandModule<{}, Args> = {
   command: 'open-pr',
   describe: 'Open a pull request with an updated .OwlBot.lock.yaml',
   builder(yargs) {
@@ -62,12 +62,6 @@ export const copyCode: yargs.CommandModule<{}, Args> = {
       });
   },
   async handler(argv) {
-    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-    const token = await getGitHubShortLivedAccessToken(
-      privateKey,
-      argv['app-id'],
-      argv.installation
-    );
-    // TODO: implement.
+    await copyCode(argv);
   },
 };
