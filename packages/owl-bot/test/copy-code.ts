@@ -101,13 +101,13 @@ describe('copyDirs', () => {
       'copy-dirs': [
         {
           source: '/b/y',
-          dest: '/y',
+          dest: '/src',
           'strip-prefix': '/b',
         },
       ],
     };
     copyDirs(sourceDir, destDir, yaml);
-    assert.deepStrictEqual(collectDirTree(destDir), ['y', 'y/s.txt:s']);
+    assert.deepStrictEqual(collectDirTree(destDir), ['src', 'src/y', 'src/y/s.txt:s']);
   });
 
   it('copies rootdirectory', () => {
@@ -116,12 +116,13 @@ describe('copyDirs', () => {
       'copy-dirs': [
         {
           source: '/a',
-          dest: '/m/n/o'
+          dest: '/m/n'
         },
       ],
     };
     copyDirs(sourceDir, destDir, yaml);
-    assert.deepStrictEqual(collectDirTree(destDir), ['y', 'y/s.txt:s']);
+    assert.deepStrictEqual(collectDirTree(destDir), ['m', 'm/n', 'm/n/a', "m/n/a/r.txt:r"
+    , "m/n/a/x"]);
   });
 
 });
