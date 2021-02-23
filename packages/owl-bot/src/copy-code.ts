@@ -15,12 +15,7 @@
 import {promisify} from 'util';
 import {readFile} from 'fs';
 import * as proc from 'child_process';
-import {
-  owlBotYamlPath,
-  owlBotYamlFrom,
-  OwlBotYaml,
-  CopyDir,
-} from './config-files';
+import {owlBotYamlPath, owlBotYamlFrom, OwlBotYaml} from './config-files';
 import path from 'path';
 import {load} from 'js-yaml';
 import {v4 as uuidv4} from 'uuid';
@@ -90,6 +85,7 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
   try {
     const text = await readFileAsync(yamlPath, 'utf8');
     const obj = load(text);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     yaml = owlBotYamlFrom(obj as Record<string, any>);
   } catch (e) {
     logger.error(e);
@@ -174,7 +170,12 @@ export function stripPrefix(
     const dirName = path.dirname(filePath);
     const fileName = path.basename(filePath);
     pathSegments.push(fileName);
-    if (mm.match(dirName) || dirName === '' || dirName === path.sep) {
+    if (
+      mm.match(dirName) ||
+      dirName === '' ||
+      dirName === path.sep ||
+      dirName === filePath
+    ) {
       break;
     }
     filePath = dirName;

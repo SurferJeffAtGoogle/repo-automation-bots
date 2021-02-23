@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {describe, it, before} from 'mocha';
+import {describe, it} from 'mocha';
 import {newMinimatchFromSource} from '../src/pattern-match';
 import * as assert from 'assert';
 
