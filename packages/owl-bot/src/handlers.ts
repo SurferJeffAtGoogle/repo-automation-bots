@@ -29,7 +29,7 @@ import yaml from 'js-yaml';
 // Conflicting linters think the next line is extraneous or necessary.
 // eslint-disable-next-line node/no-extraneous-import
 import {Endpoints} from '@octokit/types';
-import { OctokitType } from './octokit-util';
+import {OctokitType} from './octokit-util';
 
 type ListReposResponse = Endpoints['GET /orgs/{org}/repos']['response'];
 

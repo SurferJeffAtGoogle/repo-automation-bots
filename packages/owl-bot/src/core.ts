@@ -19,7 +19,7 @@ import {CloudBuildClient} from '@google-cloud/cloudbuild';
 import {Octokit} from '@octokit/rest';
 // eslint-disable-next-line node/no-extraneous-import
 import {OwlBotLock, owlBotLockPath, owlBotLockFrom} from './config-files';
-import { OctokitType } from './octokit-util';
+import {OctokitType} from './octokit-util';
 
 interface BuildArgs {
   image: string;

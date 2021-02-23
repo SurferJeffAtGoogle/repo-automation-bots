@@ -12,31 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Octokit } from '@octokit/rest';
-import { ProbotOctokit } from 'probot';
-import { promisify } from 'util';
-import { readFile } from 'fs';
-import { getGitHubShortLivedAccessToken, core } from './core';
+import {Octokit} from '@octokit/rest';
+import {ProbotOctokit} from 'probot';
+import {promisify} from 'util';
+import {readFile} from 'fs';
+import {getGitHubShortLivedAccessToken, core} from './core';
 
 const readFileAsync = promisify(readFile);
 
 export type OctokitType =
-    | InstanceType<typeof Octokit>
-    | InstanceType<typeof ProbotOctokit>;
-
+  | InstanceType<typeof Octokit>
+  | InstanceType<typeof ProbotOctokit>;
 
 export interface OctokitParams {
-    'pem-path': string;
-    'app-id': number;
-    installation: number;
+  'pem-path': string;
+  'app-id': number;
+  installation: number;
 }
 
 export async function octokitFrom(argv: OctokitParams): Promise<OctokitType> {
-    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-    const token = await getGitHubShortLivedAccessToken(
-        privateKey,
-        argv['app-id'],
-        argv.installation
-    );
-    return await core.getAuthenticatedOctokit(token.token);
+  const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
+  const token = await getGitHubShortLivedAccessToken(
+    privateKey,
+    argv['app-id'],
+    argv.installation
+  );
+  return await core.getAuthenticatedOctokit(token.token);
 }

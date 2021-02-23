@@ -14,11 +14,7 @@
 
 import {describe, it, before} from 'mocha';
 import admin from 'firebase-admin';
-import {
-  FirestoreConfigsStore,
-  encodeId,
-  decodeId,
-} from '../src/database';
+import {FirestoreConfigsStore, encodeId, decodeId} from '../src/database';
 import {Configs} from '../src/configs-store';
 import {v4 as uuidv4} from 'uuid';
 import * as assert from 'assert';

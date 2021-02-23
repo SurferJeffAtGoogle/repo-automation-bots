@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { IMinimatch, Minimatch } from "minimatch";
+import {IMinimatch, Minimatch} from 'minimatch';
 
 // Exported for testing purposes.
 export function newMinimatchFromSource(pattern: string): IMinimatch {
-    return new Minimatch(makePatternMatchAllSubdirs(pattern), { matchBase: true });
+  return new Minimatch(makePatternMatchAllSubdirs(pattern), {matchBase: true});
 }
 
 export function makePatternMatchAllSubdirs(pattern: string): string {
-    // Make sure pattern always ends with /**
-    if (pattern.endsWith('/**')) {
-        // Good, nothing to do.
-    } else if (pattern.endsWith('/*')) {
-        pattern += '*';
-    } else if (pattern.endsWith('/')) {
-        pattern += '**';
-    } else {
-        pattern += '/**';
-    }
-    return pattern;
+  // Make sure pattern always ends with /**
+  if (pattern.endsWith('/**')) {
+    // Good, nothing to do.
+  } else if (pattern.endsWith('/*')) {
+    pattern += '*';
+  } else if (pattern.endsWith('/')) {
+    pattern += '**';
+  } else {
+    pattern += '/**';
+  }
+  return pattern;
 }

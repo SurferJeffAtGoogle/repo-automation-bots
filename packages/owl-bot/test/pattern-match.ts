@@ -13,19 +13,18 @@
 // limitations under the License.
 
 import {describe, it, before} from 'mocha';
-import { newMinimatchFromSource } from '../src/pattern-match';
+import {newMinimatchFromSource} from '../src/pattern-match';
 import * as assert from 'assert';
 
 describe('confirm my understanding of minmatch', () => {
-    it('matches patterns', () => {
-      // All these patterns should be equivelent.
-      const patterns = ['/a/*/b', '/a/*/b/', '/a/*/b/*', '/a/*/b/**'];
-      for (const pattern of patterns) {
-        const mm = newMinimatchFromSource(pattern);
-        assert.ok(mm.match('/a/x/b/y'));
-        assert.ok(mm.match('/a/x/b/y/z/q'));
-        assert.ok(!mm.match('/a/b/c'));
-      }
-    });
+  it('matches patterns', () => {
+    // All these patterns should be equivelent.
+    const patterns = ['/a/*/b', '/a/*/b/', '/a/*/b/*', '/a/*/b/**'];
+    for (const pattern of patterns) {
+      const mm = newMinimatchFromSource(pattern);
+      assert.ok(mm.match('/a/x/b/y'));
+      assert.ok(mm.match('/a/x/b/y/z/q'));
+      assert.ok(!mm.match('/a/b/c'));
+    }
   });
-  
+});

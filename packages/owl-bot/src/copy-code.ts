@@ -12,79 +12,105 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { promisify } from 'util';
-import { readFile } from 'fs';
+import {promisify} from 'util';
+import {readFile} from 'fs';
 import * as proc from 'child_process';
-import { owlBotYamlPath, owlBotYamlFrom, OwlBotYaml, CopyDir } from './config-files';
+import {
+  owlBotYamlPath,
+  owlBotYamlFrom,
+  OwlBotYaml,
+  CopyDir,
+} from './config-files';
 import path from 'path';
 import {load} from 'js-yaml';
 import {v4 as uuidv4} from 'uuid';
 import glob from 'glob';
 import * as fs from 'fs';
-import { makePatternMatchAllSubdirs } from './pattern-match';
-import { Minimatch } from 'minimatch';
-import { OctokitParams, octokitFrom, OctokitType } from './octokit-util';
+import {makePatternMatchAllSubdirs} from './pattern-match';
+import {Minimatch} from 'minimatch';
+import {OctokitParams, octokitFrom, OctokitType} from './octokit-util';
 
 const readFileAsync = promisify(readFile);
 
-export interface Args extends OctokitParams{
+export interface Args extends OctokitParams {
   'source-repo': string;
   'source-repo-commit-hash': string;
   'dest-repo': string;
 }
 
-type Cmd = (command: string, options?: proc.ExecSyncOptions | undefined) => Buffer;
-function newCmd(logger=console): Cmd {
-    const cmd = (command: string, options?: proc.ExecSyncOptions | undefined): Buffer => {
-        logger.info(command);
-        return proc.execSync(command, options);
-    }; 
-    return cmd;
+type Cmd = (
+  command: string,
+  options?: proc.ExecSyncOptions | undefined
+) => Buffer;
+function newCmd(logger = console): Cmd {
+  const cmd = (
+    command: string,
+    options?: proc.ExecSyncOptions | undefined
+  ): Buffer => {
+    logger.info(command);
+    return proc.execSync(command, options);
+  };
+  return cmd;
 }
 
-export async function copyCode(args: Args, logger=console): Promise<void> {
-    if (await copyExists(await octokitFrom(args), args["dest-repo"], args["source-repo-commit-hash"])) {
-        return;  // Copy already exists.  Don't copy again.
-    }
-    const workDir = ".";
-    const sourceDir = path.join(workDir, "source");
-    const destDir = path.join(workDir, "dest");
-    const destBranch = "owl-bot-" + uuidv4();
+export async function copyCode(args: Args, logger = console): Promise<void> {
+  if (
+    await copyExists(
+      await octokitFrom(args),
+      args['dest-repo'],
+      args['source-repo-commit-hash']
+    )
+  ) {
+    return; // Copy already exists.  Don't copy again.
+  }
+  const workDir = '.';
+  const sourceDir = path.join(workDir, 'source');
+  const destDir = path.join(workDir, 'dest');
+  const destBranch = 'owl-bot-' + uuidv4();
 
-    const cmd = newCmd(logger);
+  const cmd = newCmd(logger);
 
-    // Clone the two repos.
-    cmd(`git clone --single-branch "https://${args["source-repo"]}.git" ${sourceDir}`);
-    cmd(`git clone --single-branch "https://${args["dest-repo"]}.git" ${destDir}`);
+  // Clone the two repos.
+  cmd(
+    `git clone --single-branch "https://${args['source-repo']}.git" ${sourceDir}`
+  );
+  cmd(
+    `git clone --single-branch "https://${args['dest-repo']}.git" ${destDir}`
+  );
 
-    // Check out the specific hash we want to copy from.
-    cmd(`git checkout ${args["source-repo-commit-hash"]}`, {cwd: sourceDir});
+  // Check out the specific hash we want to copy from.
+  cmd(`git checkout ${args['source-repo-commit-hash']}`, {cwd: sourceDir});
 
-    // Check out a dest branch.
-    cmd(`git checkout -b ${destBranch}`, {cwd: destDir});
+  // Check out a dest branch.
+  cmd(`git checkout -b ${destBranch}`, {cwd: destDir});
 
+  // Load the OwlBot.yaml file in dest.
+  const yamlPath = path.join(destDir, owlBotYamlPath);
+  let yaml: OwlBotYaml;
+  try {
+    const text = await readFileAsync(yamlPath, 'utf8');
+    const obj = load(text);
+    yaml = owlBotYamlFrom(obj as Record<string, any>);
+  } catch (e) {
+    logger.error(e);
+    // TODO: open an issue on the dest repository.
+    return; // Success because we don't want to retry.
+  }
 
-    // Load the OwlBot.yaml file in dest.
-    const yamlPath = path.join(destDir, owlBotYamlPath);
-    let yaml: OwlBotYaml;
-    try {
-        const text = await readFileAsync(yamlPath, 'utf8');
-        const obj = load(text);
-        yaml = owlBotYamlFrom(obj as Record<string, any>);
-    } catch (e) {
-        logger.error(e);
-        // TODO: open an issue on the dest repository.
-        return;  // Success because we don't want to retry.
-    }
+  copyDirs(sourceDir, destDir, yaml, logger);
 
-    copyDirs(sourceDir, destDir, yaml, logger);
-
-    // TODO: commit changes to branch.
-    // TODO: push branch.
-    if (await copyExists(await octokitFrom(args), args["dest-repo"], args["source-repo-commit-hash"])) {
-        return;  // Mid-air collision!
-    }
-    // TODO: create pull request.
+  // TODO: commit changes to branch.
+  // TODO: push branch.
+  if (
+    await copyExists(
+      await octokitFrom(args),
+      args['dest-repo'],
+      args['source-repo-commit-hash']
+    )
+  ) {
+    return; // Mid-air collision!
+  }
+  // TODO: create pull request.
 }
 
 /**
@@ -93,31 +119,36 @@ export async function copyCode(args: Args, logger=console): Promise<void> {
  * @param destDir the path to the dest repository directory.
  * @param yaml the OwlBot.yaml file from the dest repository.
  */
-export function copyDirs(sourceDir: string, destDir: string, yaml: OwlBotYaml, logger=console): void {
-    const cmd = newCmd(logger);
+export function copyDirs(
+  sourceDir: string,
+  destDir: string,
+  yaml: OwlBotYaml,
+  logger = console
+): void {
+  const cmd = newCmd(logger);
 
-    // Wipe out the existing contents of the dest directory.
-    for (const copyDir of yaml["copy-dirs"] ?? []) {
-        cmd(`rm -rf "${copyDir.dest}"`, {cwd: destDir});
-    }
+  // Wipe out the existing contents of the dest directory.
+  for (const copyDir of yaml['copy-dirs'] ?? []) {
+    cmd(`rm -rf "${copyDir.dest}"`, {cwd: destDir});
+  }
 
-    // Copy the files from source to dest.
-    for (const copyDir of yaml["copy-dirs"] ?? []) {
-        const pattern = makePatternMatchAllSubdirs(copyDir.source);
-        const sourcePaths = glob.sync(pattern, {cwd: destDir});
-        for (let sourcePath of sourcePaths) {
-            const fullSourcePath = path.join(sourceDir, sourcePath);
-            const relPath = stripPrefix(copyDir["strip-prefix"], sourcePath);
-            const fullDestPath = path.join(destDir, relPath);
-            if (fs.lstatSync(fullSourcePath).isDirectory()) {
-                logger.info("mkdir " + fullDestPath);
-                fs.mkdirSync(fullDestPath);
-            } else {
-                logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
-                fs.copyFileSync(fullSourcePath, fullSourcePath);
-            }
-        }
+  // Copy the files from source to dest.
+  for (const copyDir of yaml['copy-dirs'] ?? []) {
+    const pattern = makePatternMatchAllSubdirs(copyDir.source);
+    const sourcePaths = glob.sync(pattern, {cwd: destDir});
+    for (const sourcePath of sourcePaths) {
+      const fullSourcePath = path.join(sourceDir, sourcePath);
+      const relPath = stripPrefix(copyDir['strip-prefix'], sourcePath);
+      const fullDestPath = path.join(destDir, relPath);
+      if (fs.lstatSync(fullSourcePath).isDirectory()) {
+        logger.info('mkdir ' + fullDestPath);
+        fs.mkdirSync(fullDestPath);
+      } else {
+        logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
+        fs.copyFileSync(fullSourcePath, fullSourcePath);
+      }
     }
+  }
 }
 
 /**
@@ -125,28 +156,31 @@ export function copyDirs(sourceDir: string, destDir: string, yaml: OwlBotYaml, l
  * @param prefix the prefix to strip; can contain wildcard characters like * and ?
  * @param filePath the path from which to strip the prefix.
  */
-export function stripPrefix(prefix: string | undefined, filePath: string): string {
-    const mm = new Minimatch(prefix ?? "", { matchBase: true });
-    if (mm.match(filePath)) {
-        return path.basename(filePath);
+export function stripPrefix(
+  prefix: string | undefined,
+  filePath: string
+): string {
+  const mm = new Minimatch(prefix ?? '', {matchBase: true});
+  if (mm.match(filePath)) {
+    return path.basename(filePath);
+  }
+  const pathSegments: string[] = [];
+  while (true) {
+    const dirName = path.dirname(filePath);
+    const fileName = path.basename(filePath);
+    pathSegments.push(fileName);
+    if (mm.match(dirName) || dirName === '' || dirName === path.sep) {
+      break;
     }
-    const pathSegments: string[] = [];
-    while (true) {
-        const dirName = path.dirname(filePath);
-        const fileName = path.basename(filePath);
-        pathSegments.push(fileName);
-        if (mm.match(dirName) || dirName == "" || dirName == path.sep) {
-            break;
-        }
-        filePath = dirName;
-    }
-    pathSegments.reverse();
-    return path.join(...pathSegments);
+    filePath = dirName;
+  }
+  pathSegments.reverse();
+  return path.join(...pathSegments);
 }
 
 /**
  * Searches for instances of the sourceCommitHash in recent pull requests and commits.
- * 
+ *
  * @param octokit an octokit instance
  * @param destRepo the repo to search
  * @param sourceCommitHash the string to search for
