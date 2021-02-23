@@ -14,13 +14,9 @@
 
 // To Run: node ./build/src/bin/owl-bot.js copy-exists <args>
 
-import {promisify} from 'util';
-import {readFile} from 'fs';
 import yargs = require('yargs');
-import {core, getGitHubShortLivedAccessToken} from '../../core';
 import * as copyCode from '../../copy-code';
-
-const readFileAsync = promisify(readFile);
+import {octokitFrom} from '../../octokit-util';
 
 export interface Args {
   'pem-path': string;
@@ -64,13 +60,7 @@ export const copyExists: yargs.CommandModule<{}, Args> = {
       });
   },
   async handler(argv) {
-    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-    const token = await getGitHubShortLivedAccessToken(
-      privateKey,
-      argv['app-id'],
-      argv.installation
-    );
-    const octokit = await core.getAuthenticatedOctokit(token.token);
+    const octokit = await octokitFrom(argv);
     await copyCode.copyExists(
       octokit,
       argv['dest-repo'],
