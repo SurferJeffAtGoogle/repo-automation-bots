@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {describe, it, before} from 'mocha';
+import {describe, it} from 'mocha';
 import * as assert from 'assert';
 import {stripPrefix} from '../src/copy-code';
 import path from 'path';
