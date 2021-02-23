@@ -170,7 +170,7 @@ function trimSlashes(apath: string) {
   apath = path.normalize(apath);
   const start = apath.startsWith(path.sep) ? 1 : 0;
   const end = apath.endsWith(path.sep) ? apath.length - 1 : apath.length;
-  return apath.slice(start, end);
+  return apath.slice(start, end > start ? end : start);
 }
 
 /**
