@@ -186,6 +186,18 @@ export async function copyExists(
       return true;
     }
   }
+  // And enumerate recent issues too.
+  const issues = await octokit.issues.list({owner, repo, per_page: 100});
+  for (const issue of issues.data) {
+    const pos: number = issue.body?.indexOf(sourceCommitHash) ?? -1;
+    if (pos >= 0) {
+      logger.info(
+        `Issue ${issue.number} with ${sourceCommitHash} exists in ${destRepo}.`
+      );
+      return true;
+    }
+  }
+
   logger.info(`${sourceCommitHash} not found in ${destRepo}.`);
   return false;
 }
