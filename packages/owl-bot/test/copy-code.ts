@@ -17,8 +17,8 @@ import * as assert from 'assert';
 import {stripPrefix} from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
-import { makePatternMatchAllSubdirs } from '../src/pattern-match';
 import glob from 'glob';
+import tmp from 'tmp';
 
 describe('stripPrefix', () => {
   const norm = path.normalize;
@@ -89,8 +89,8 @@ describe('copyDirs', () => {
   }
 
   it('works', () => {
-      const dir = fs.mkdtempSync('copy-dirs-test');
-      const sourceDir = makeSourceTree(dir);
+      const tempo = tmp.dirSync();
+      const sourceDir = makeSourceTree(tempo.name);
       assert.deepStrictEqual(collectDirTree(sourceDir), []);
   });
 });
