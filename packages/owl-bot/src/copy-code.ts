@@ -109,6 +109,15 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
   // TODO: create pull request.
 }
 
+// returns undefined instead of throwing an exception.
+function stat(path: string): fs.Stats | undefined {
+  try {
+    return fs.statSync(path);
+  } catch (e) {
+    return undefined;
+  }
+}
+
 /**
  * Copies directories and files specified by yaml.
  * @param sourceDir the path to the source repository directory
@@ -124,25 +133,31 @@ export function copyDirs(
   // Wipe out the existing contents of the dest directory.
   for (const copyDir of yaml['copy-dirs'] ?? []) {
     const fullPath = path.join(destDir, copyDir.dest);
-    logger.info(`rm -rf ${fullPath}`);
-    fs.rmdirSync(fullPath, { recursive: true });
+    if (stat(fullPath)) {
+      logger.info(`rm -rf ${fullPath}`);
+      fs.rmdirSync(fullPath, { recursive: true });
+    }
   }
 
   // Copy the files from source to dest.
   for (const copyDir of yaml['copy-dirs'] ?? []) {
-    const pattern = makePatternMatchAllSubdirs(copyDir.source);
-    const sourcePaths = glob.sync(pattern, {cwd: destDir});
+    let pattern = makePatternMatchAllSubdirs(copyDir.source);
+    pattern = path.normalize(pattern);
+    if (pattern.startsWith(path.sep)) {
+      pattern = pattern.slice(1, pattern.length - 1);
+    }
+    const sourcePaths = glob.sync(pattern, {cwd: sourceDir});
     for (const sourcePath of sourcePaths) {
       const fullSourcePath = path.join(sourceDir, sourcePath);
       const relPath = stripPrefix(copyDir['strip-prefix'], sourcePath);
       const fullDestPath = path.join(destDir, relPath);
-      if (fs.lstatSync(fullSourcePath).isDirectory()) {
-        logger.info('mkdir ' + fullDestPath);
-        fs.mkdirSync(fullDestPath);
-      } else {
-        logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
-        fs.copyFileSync(fullSourcePath, fullSourcePath);
+      const dirName = path.dirname(fullDestPath);
+      if (!stat(dirName)?.isDirectory()) {
+        logger.info('mkdir ' + dirName);
+        fs.mkdirSync(dirName, { recursive: true });
       }
+      logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
+      fs.copyFileSync(fullSourcePath, fullDestPath);
     }
   }
 }
