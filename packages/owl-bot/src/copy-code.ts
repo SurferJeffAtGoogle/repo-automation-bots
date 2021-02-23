@@ -165,6 +165,7 @@ export function stripPrefix(
     return path.basename(filePath);
   }
   const pathSegments: string[] = [];
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const dirName = path.dirname(filePath);
     const fileName = path.basename(filePath);

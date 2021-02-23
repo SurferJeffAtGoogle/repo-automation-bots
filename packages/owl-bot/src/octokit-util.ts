@@ -13,6 +13,8 @@
 // limitations under the License.
 
 import {Octokit} from '@octokit/rest';
+// Conflicting linters think the next line is extraneous or necessary.
+// eslint-disable-next-line node/no-extraneous-import
 import {ProbotOctokit} from 'probot';
 import {promisify} from 'util';
 import {readFile} from 'fs';
