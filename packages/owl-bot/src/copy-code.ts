@@ -22,6 +22,8 @@ import {load} from 'js-yaml';
 import {v4 as uuidv4} from 'uuid';
 import glob from 'glob';
 import * as fs from 'fs';
+import { makePatternMatchAllSubdirs } from './pattern-match';
+import { Minimatch } from 'minimatch';
 
 const readFileAsync = promisify(readFile);
 
@@ -111,7 +113,8 @@ export function copyDirs(sourceDir: string, destDir: string, yaml: OwlBotYaml, l
 
     // Copy the files from source to dest.
     for (const copyDir of yaml["copy-dirs"] ?? []) {
-        const sourcePaths = glob.sync(copyDir.source, {cwd: destDir});
+        const pattern = makePatternMatchAllSubdirs(copyDir.source);
+        const sourcePaths = glob.sync(pattern, {cwd: destDir});
         for (let sourcePath of sourcePaths) {
             const fullSourcePath = path.join(sourceDir, sourcePath);
             const relPath = stripPrefix(copyDir["strip-prefix"], sourcePath);
@@ -125,11 +128,23 @@ export function copyDirs(sourceDir: string, destDir: string, yaml: OwlBotYaml, l
     }
 }
 
-export function stripPrefix(prefix: string | undefined, path: string): string {
+export function stripPrefix(prefix: string | undefined, filePath: string): string {
     if (!prefix) {
-        return path;
+        return filePath;
     }
-    return "";    
+    const mm = new Minimatch(prefix, { matchBase: true });
+    const pathSegments: string[] = [];
+    while (true) {
+        const dirName = path.dirname(filePath);
+        const fileName = path.basename(filePath);
+        pathSegments.push(fileName);
+        if (mm.match(dirName) || dirName == "" || dirName == path.sep) {
+            break;
+        }
+        filePath = dirName;
+    }
+    pathSegments.reverse();
+    return path.join(...pathSegments);
 }
 
 /**
