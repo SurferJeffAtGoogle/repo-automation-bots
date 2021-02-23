@@ -18,7 +18,6 @@ import {
   FirestoreConfigsStore,
   encodeId,
   decodeId,
-  newMinimatchFromSource,
 } from '../src/database';
 import {Configs} from '../src/configs-store';
 import {v4 as uuidv4} from 'uuid';
@@ -264,18 +263,5 @@ describe('encodeId', () => {
     const encoded = encodeId(chars);
     assert.strictEqual(encoded, '%2F%25%2B%2F%25%2B%2F%25%2B');
     assert.strictEqual(decodeId(encoded), chars);
-  });
-});
-
-describe('confirm my understanding of minmatch', () => {
-  it('matches patterns', () => {
-    // All these patterns should be equivelent.
-    const patterns = ['/a/*/b', '/a/*/b/', '/a/*/b/*', '/a/*/b/**'];
-    for (const pattern of patterns) {
-      const mm = newMinimatchFromSource(pattern);
-      assert.ok(mm.match('/a/x/b/y'));
-      assert.ok(mm.match('/a/x/b/y/z/q'));
-      assert.ok(!mm.match('/a/b/c'));
-    }
   });
 });

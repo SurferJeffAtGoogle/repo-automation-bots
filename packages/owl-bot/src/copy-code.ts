@@ -16,10 +16,12 @@ import {OctokitType, getGitHubShortLivedAccessToken, core} from './core';
 import { promisify } from 'util';
 import { readFile } from 'fs';
 import * as proc from 'child_process';
-import { owlBotYamlPath, owlBotYamlFrom, OwlBotYaml } from './config-files';
+import { owlBotYamlPath, owlBotYamlFrom, OwlBotYaml, CopyDir } from './config-files';
 import path from 'path';
 import {load} from 'js-yaml';
 import {v4 as uuidv4} from 'uuid';
+import glob from 'glob';
+import * as fs from 'fs';
 
 const readFileAsync = promisify(readFile);
 
@@ -45,6 +47,15 @@ export async function octokitFrom(argv: OctokitParams): Promise<OctokitType> {
     return await core.getAuthenticatedOctokit(token.token);    
 }
 
+type Cmd = (command: string, options?: proc.ExecSyncOptions | undefined) => Buffer;
+function newCmd(logger=console): Cmd {
+    const cmd = (command: string, options?: proc.ExecSyncOptions | undefined): Buffer => {
+        logger.info(command);
+        return proc.execSync(command, options);
+    }; 
+    return cmd;
+}
+
 export async function copyCode(args: Args, logger=console): Promise<void> {
     if (await copyExists(await octokitFrom(args), args["dest-repo"], args["source-repo-commit-hash"])) {
         return;  // Copy already exists.  Don't copy again.
@@ -54,10 +65,7 @@ export async function copyCode(args: Args, logger=console): Promise<void> {
     const destDir = path.join(workDir, "dest");
     const destBranch = "owl-bot-" + uuidv4();
 
-    const cmd = (command: string, options?: proc.ExecSyncOptions | undefined): Buffer => {
-        logger.info(command);
-        return proc.execSync(command, options);
-    };
+    const cmd = newCmd(logger);
 
     // Clone the two repos.
     cmd(`git clone --single-branch "https://${args["source-repo"]}.git" ${sourceDir}`);
@@ -83,15 +91,7 @@ export async function copyCode(args: Args, logger=console): Promise<void> {
         return;  // Success because we don't want to retry.
     }
 
-    // Wipe out the existing contents of the dest directory.
-    for (const copyDir of yaml["copy-dirs"] ?? []) {
-        cmd(`rm -rf "${copyDir.dest}"`, {cwd: destDir});
-    }
-
-    // Copy the files from source to dest.
-    for (const copyDir of yaml["copy-dirs"] ?? []) {
-        // TODO: copy the files.
-    }
+    copyDirs(sourceDir, destDir, yaml, logger);
 
     // TODO: commit changes to branch.
     // TODO: push branch.
@@ -99,6 +99,37 @@ export async function copyCode(args: Args, logger=console): Promise<void> {
         return;  // Mid-air collision!
     }
     // TODO: create pull request.
+}
+
+export function copyDirs(sourceDir: string, destDir: string, yaml: OwlBotYaml, logger=console): void {
+    const cmd = newCmd(logger);
+
+    // Wipe out the existing contents of the dest directory.
+    for (const copyDir of yaml["copy-dirs"] ?? []) {
+        cmd(`rm -rf "${copyDir.dest}"`, {cwd: destDir});
+    }
+
+    // Copy the files from source to dest.
+    for (const copyDir of yaml["copy-dirs"] ?? []) {
+        const sourcePaths = glob.sync(copyDir.source, {cwd: destDir});
+        for (let sourcePath of sourcePaths) {
+            const fullSourcePath = path.join(sourceDir, sourcePath);
+            const relPath = stripPrefix(copyDir["strip-prefix"], sourcePath);
+            const fullDestPath = path.join(destDir, relPath);
+            if (fs.lstatSync(fullSourcePath).isDirectory()) {
+                fs.mkdirSync(fullDestPath);
+            } else {
+                fs.copyFileSync(fullSourcePath, fullSourcePath);
+            }
+        }
+    }
+}
+
+export function stripPrefix(prefix: string | undefined, path: string): string {
+    if (!prefix) {
+        return path;
+    }
+    return "";    
 }
 
 /**

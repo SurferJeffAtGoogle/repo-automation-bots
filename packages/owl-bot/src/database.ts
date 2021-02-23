@@ -15,8 +15,8 @@
 import admin from 'firebase-admin';
 import {OwlBotLock} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
-import {IMinimatch, Minimatch} from 'minimatch';
 import {CopyTasksStore} from './copy-tasks-store';
+import { newMinimatchFromSource } from './pattern-match';
 
 export type Db = admin.firestore.Firestore;
 interface UpdatePr {
@@ -216,23 +216,4 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
       .doc(makeUpdateFilesKey(repo, googleapisGenCommitHash));
     await docRef.delete();
   }
-}
-
-// Exported for testing purposes.
-export function newMinimatchFromSource(pattern: string): IMinimatch {
-  return new Minimatch(makePatternMatchAllSubdirs(pattern), {matchBase: true});
-}
-
-function makePatternMatchAllSubdirs(pattern: string): string {
-  // Make sure pattern always ends with /**
-  if (pattern.endsWith('/**')) {
-    // Good, nothing to do.
-  } else if (pattern.endsWith('/*')) {
-    pattern += '*';
-  } else if (pattern.endsWith('/')) {
-    pattern += '**';
-  } else {
-    pattern += '/**';
-  }
-  return pattern;
 }
