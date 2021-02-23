@@ -52,9 +52,10 @@ function newCmd(logger = console): Cmd {
 }
 
 export async function copyCode(args: Args, logger = console): Promise<void> {
+  let octokit = await octokitFrom(args);
   if (
     await copyExists(
-      await octokitFrom(args),
+      octokit,
       args['dest-repo'],
       args['source-repo-commit-hash']
     )
@@ -86,7 +87,9 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
 
   // Load the OwlBot.yaml file in dest.
   const yamlPath = path.join(destDir, owlBotYamlPath);
+  const sourceLink = `https://github.com/googleapis/googleapis/commit/${args['source-repo-commit-hash']}`;
   let yaml: OwlBotYaml;
+  const [owner, repo] = args['dest-repo'].split('/');
   try {
     const text = await readFileAsync(yamlPath, 'utf8');
     const obj = load(text);
@@ -94,7 +97,8 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
     yaml = owlBotYamlFrom(obj as Record<string, any>);
   } catch (e) {
     logger.error(e);
-    // TODO: open an issue on the dest repository.
+    octokit.issues.create({owner, repo, title: `${owlBotYamlPath} is missing or defective`,
+      body: `While attempting to copy files from\n${sourceLink}\n\n${e}`});
     return; // Success because we don't want to retry.
   }
 
@@ -105,7 +109,7 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
   let commitMsg = cmd('git log -1 --format=%s%n%n%b', {
     cwd: sourceDir,
   }).toString('utf8');
-  commitMsg += `Source-Link: https://github.com/googleapis/googleapis/commit/${args['source-repo-commit-hash']}\n`;
+  commitMsg += `Source-Link: ${sourceLink}\n`;
   fs.writeFileSync(commitMsgPath, commitMsg);
   cmd('git add -A', {cwd: destDir});
   cmd(`git commit -F "${commitMsgPath}" --allow-empty`, {cwd: destDir});
@@ -117,7 +121,8 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
     args['app-id'],
     args.installation
   );
-  const octokit = await core.getAuthenticatedOctokit(token.token);
+  // Octokit token may have expired; refresh it.
+  octokit = await core.getAuthenticatedOctokit(token.token);
   if (
     await copyExists(
       octokit,
@@ -128,7 +133,6 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
     return; // Mid-air collision!
   }
 
-  const [owner, repo] = args['dest-repo'].split('/');
   const githubRepo = await octokit.repos.get({owner, repo});
 
   // Push to origin.
