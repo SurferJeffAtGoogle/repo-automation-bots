@@ -148,7 +148,7 @@ describe('copyDirs', () => {
     const destDir = path.join(tempDir, 'java-asset');
     const files = [
       "README.md:I should be preserved.",
-      "grpc-google-cloud-asset-v1p1beta1/src/main/delete-me.txt:I should be deleted.",
+      "grpc-google-cloud-asset-v1p1beta1-java/src/main/delete-me.txt:I should be deleted.",
     ];
     for (const file of files) {
       const [relPath, content] = file.split(":");
@@ -169,8 +169,8 @@ describe('copyDirs', () => {
     // CopyDirs and confirm.
     copyDirs(sourceDir, destDir, yaml);
     assert.deepStrictEqual(collectDirTree(destDir), [
+      "README.md:I should be preserved.",
       "grpc-google-cloud-asset-v1p1beta1-java",
-      "grpc-google-cloud-asset-v1p1beta1-java/README.md:I should be preserved.",
       "grpc-google-cloud-asset-v1p1beta1-java/src",
       "grpc-google-cloud-asset-v1p1beta1-java/src/main",
       "grpc-google-cloud-asset-v1p1beta1-java/src/main/java",

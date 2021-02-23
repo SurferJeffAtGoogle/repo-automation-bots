@@ -132,10 +132,15 @@ export function copyDirs(
 ): void {
   // Wipe out the existing contents of the dest directory.
   for (const copyDir of yaml['copy-dirs'] ?? []) {
-    const fullPath = path.join(destDir, copyDir.dest);
-    if (stat(fullPath)) {
-      logger.info(`rm -rf ${fullPath}`);
-      fs.rmdirSync(fullPath, {recursive: true});
+    if (trimSlashes(copyDir.dest) === "") {
+      // Java copies everything into the root of the repo, and we don't want
+      // to wipe out the root.
+    } else {
+      const fullPath = path.join(destDir, copyDir.dest);
+      if (stat(fullPath)) {
+        logger.info(`rm -rf ${fullPath}`);
+        fs.rmdirSync(fullPath, {recursive: true});
+      }
     }
   }
 
