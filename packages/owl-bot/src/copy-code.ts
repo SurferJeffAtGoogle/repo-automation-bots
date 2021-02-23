@@ -129,10 +129,10 @@ export function copyDirs(sourceDir: string, destDir: string, yaml: OwlBotYaml, l
 }
 
 export function stripPrefix(prefix: string | undefined, filePath: string): string {
-    if (!prefix) {
-        return filePath;
+    const mm = new Minimatch(prefix ?? "", { matchBase: true });
+    if (mm.match(filePath)) {
+        return path.basename(filePath);
     }
-    const mm = new Minimatch(prefix, { matchBase: true });
     const pathSegments: string[] = [];
     while (true) {
         const dirName = path.dirname(filePath);
