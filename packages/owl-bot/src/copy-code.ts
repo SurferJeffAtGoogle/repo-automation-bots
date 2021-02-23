@@ -162,6 +162,13 @@ export function copyDirs(
   }
 }
 
+function trimSlashes(apath: string) {
+  apath = path.normalize(apath);
+  const start = apath.startsWith(path.sep) ? 1 : 0;
+  const end = apath.endsWith(path.sep) ? apath.length - 1 : apath.length;
+  return apath.slice(start, end);
+}
+
 /**
  * Strips a prefix from a filepath.
  * @param prefix the prefix to strip; can contain wildcard characters like * and ?
@@ -171,10 +178,8 @@ export function stripPrefix(
   prefix: string | undefined,
   filePath: string
 ): string {
-  let pattern = prefix ?? "";
-  if (pattern.endsWith(path.sep)) {
-      pattern = pattern.slice(0, pattern.length - 1);
-  }
+  let pattern = trimSlashes(prefix ?? "");
+  filePath = trimSlashes(filePath);
   const mm = new Minimatch(pattern, {matchBase: true});
   if (mm.match(filePath)) {
     return path.basename(filePath);

@@ -105,6 +105,6 @@ describe('copyDirs', () => {
         }]
     };
     copyDirs(sourceDir, destDir, yaml);
-    assert.deepStrictEqual(collectDirTree(destDir), []);
+    assert.deepStrictEqual(collectDirTree(destDir), ["y", "y/s.txt:s"]);
   });
 });
