@@ -135,7 +135,7 @@ export function copyDirs(
     const fullPath = path.join(destDir, copyDir.dest);
     if (stat(fullPath)) {
       logger.info(`rm -rf ${fullPath}`);
-      fs.rmdirSync(fullPath, { recursive: true });
+      fs.rmdirSync(fullPath, {recursive: true});
     }
   }
 
@@ -154,7 +154,7 @@ export function copyDirs(
       const dirName = path.dirname(fullDestPath);
       if (!stat(dirName)?.isDirectory()) {
         logger.info('mkdir ' + dirName);
-        fs.mkdirSync(dirName, { recursive: true });
+        fs.mkdirSync(dirName, {recursive: true});
       }
       logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
       fs.copyFileSync(fullSourcePath, fullDestPath);
@@ -162,6 +162,10 @@ export function copyDirs(
   }
 }
 
+/**
+ * Converts slashes to the local platform slashes, then removes a leading
+ * and trailing slash if they're present.
+ */
 function trimSlashes(apath: string) {
   apath = path.normalize(apath);
   const start = apath.startsWith(path.sep) ? 1 : 0;
@@ -178,7 +182,7 @@ export function stripPrefix(
   prefix: string | undefined,
   filePath: string
 ): string {
-  let pattern = trimSlashes(prefix ?? "");
+  const pattern = trimSlashes(prefix ?? '');
   filePath = trimSlashes(filePath);
   const mm = new Minimatch(pattern, {matchBase: true});
   if (mm.match(filePath)) {

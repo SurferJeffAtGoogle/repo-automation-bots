@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it } from 'mocha';
+import {describe, it} from 'mocha';
 import * as assert from 'assert';
-import { stripPrefix, copyDirs } from '../src/copy-code';
+import {stripPrefix, copyDirs} from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
 import glob from 'glob';
 import tmp from 'tmp';
-import { OwlBotYaml } from '../src/config-files';
+import {OwlBotYaml} from '../src/config-files';
 
 describe('stripPrefix', () => {
   const norm = path.normalize;
@@ -30,7 +30,10 @@ describe('stripPrefix', () => {
     assert.strictEqual(stripPrefix('/*/*/*', '/a/b/c/d/e'), norm('d/e'));
   });
   it('works with trailing slash', () => {
-    assert.strictEqual(stripPrefix(norm('/a/*/c/'), norm('/a/b/c/d/e')), norm('d/e'));
+    assert.strictEqual(
+      stripPrefix(norm('/a/*/c/'), norm('/a/b/c/d/e')),
+      norm('d/e')
+    );
   });
   it('works with empty prefix', () => {
     assert.strictEqual(stripPrefix(undefined, '/a/b/c/d/e'), norm('a/b/c/d/e'));
@@ -61,11 +64,7 @@ describe('copyDirs', () => {
     for (const dir of dirs) {
       fs.mkdirSync(path.join(rootDir, dir));
     }
-    const files = [
-      'source/q.txt:q',
-      'source/a/r.txt:r',
-      'source/b/y/s.txt:s',
-    ];
+    const files = ['source/q.txt:q', 'source/a/r.txt:r', 'source/b/y/s.txt:s'];
     for (const file of files) {
       const [name, content] = file.split(':');
       fs.writeFileSync(path.join(rootDir, name), content);
@@ -79,12 +78,12 @@ describe('copyDirs', () => {
    */
   function collectDirTree(dir: string): string[] {
     const tree: string[] = [];
-    for (const apath of glob.sync('**', { cwd: dir })) {
+    for (const apath of glob.sync('**', {cwd: dir})) {
       const fullPath = path.join(dir, apath);
       if (fs.lstatSync(fullPath).isDirectory()) {
         tree.push(apath);
       } else {
-        const content = fs.readFileSync(fullPath, { encoding: 'utf8' });
+        const content = fs.readFileSync(fullPath, {encoding: 'utf8'});
         tree.push(`${apath}:${content}`);
       }
     }
@@ -97,14 +96,15 @@ describe('copyDirs', () => {
     const sourceDir = makeSourceTree(tempo.name);
     const destDir = path.join(tempo.name, 'dest');
     const yaml: OwlBotYaml = {
-      "copy-dirs":
-        [{
-          source: "/b/y",
-          dest: "/y",
-          "strip-prefix": "/b"
-        }]
+      'copy-dirs': [
+        {
+          source: '/b/y',
+          dest: '/y',
+          'strip-prefix': '/b',
+        },
+      ],
     };
     copyDirs(sourceDir, destDir, yaml);
-    assert.deepStrictEqual(collectDirTree(destDir), ["y", "y/s.txt:s"]);
+    assert.deepStrictEqual(collectDirTree(destDir), ['y', 'y/s.txt:s']);
   });
 });
