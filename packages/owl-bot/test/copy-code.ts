@@ -15,23 +15,25 @@
 import {describe, it, before} from 'mocha';
 import * as assert from 'assert';
 import {stripPrefix} from '../src/copy-code';
+import path from 'path';
 
 describe('stripPrefix', () => {
+  const norm = path.normalize;
   it('works normally', () => {
-    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c/d/e'), 'd/e');
-    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c/d'), 'd');
-    assert.strictEqual(stripPrefix('/a/*/*', '/a/b/c/d/e'), 'd/e');
-    assert.strictEqual(stripPrefix('/*/*/*', '/a/b/c/d/e'), 'd/e');
+    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c/d/e'), norm('d/e'));
+    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c/d'), norm('d'));
+    assert.strictEqual(stripPrefix('/a/*/*', '/a/b/c/d/e'), norm('d/e'));
+    assert.strictEqual(stripPrefix('/*/*/*', '/a/b/c/d/e'), norm('d/e'));
   });
   it('works with empty prefix', () => {
-    assert.strictEqual(stripPrefix(undefined, '/a/b/c/d/e'), 'a/b/c/d/e');
-    assert.strictEqual(stripPrefix('', '/a/b/c/d/e'), 'a/b/c/d/e');
-    assert.strictEqual(stripPrefix('/', '/a/b/c/d/e'), 'a/b/c/d/e');
+    assert.strictEqual(stripPrefix(undefined, '/a/b/c/d/e'), norm('a/b/c/d/e'));
+    assert.strictEqual(stripPrefix('', '/a/b/c/d/e'), norm('a/b/c/d/e'));
+    assert.strictEqual(stripPrefix('/', '/a/b/c/d/e'), norm('a/b/c/d/e'));
   });
   it('returns whole argument for mismatched prefix', () => {
-    assert.strictEqual(stripPrefix('/b/c', '/a/b/c/d/e'), 'a/b/c/d/e');
+    assert.strictEqual(stripPrefix('/b/c', '/a/b/c/d/e'), norm('a/b/c/d/e'));
   });
   it('returns final path segment for complete match', () => {
-    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c'), 'c');
+    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c'), norm('c'));
   });
 });

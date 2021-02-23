@@ -170,7 +170,7 @@ export function stripPrefix(
     const dirName = path.dirname(filePath);
     const fileName = path.basename(filePath);
     pathSegments.push(fileName);
-    if (mm.match(dirName) || dirName === '' || dirName === path.sep) {
+    if (mm.match(dirName) || dirName === '' || dirName === path.sep || dirName === filePath) {
       break;
     }
     filePath = dirName;
