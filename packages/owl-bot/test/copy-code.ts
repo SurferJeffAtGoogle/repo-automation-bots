@@ -88,10 +88,15 @@ describe('copyDirs', () => {
     return tree;
   }
 
-  it('works', () => {
+  function makeSourceAndDestDirs(): [string, string] {
     const tempo = tmp.dirSync();
     const sourceDir = makeSourceTree(tempo.name);
     const destDir = path.join(tempo.name, 'dest');
+    return [sourceDir, destDir];
+  }
+
+  it('copies subdirectory', () => {
+    const [sourceDir, destDir] = makeSourceAndDestDirs();
     const yaml: OwlBotYaml = {
       'copy-dirs': [
         {
@@ -104,4 +109,19 @@ describe('copyDirs', () => {
     copyDirs(sourceDir, destDir, yaml);
     assert.deepStrictEqual(collectDirTree(destDir), ['y', 'y/s.txt:s']);
   });
+
+  it('copies rootdirectory', () => {
+    const [sourceDir, destDir] = makeSourceAndDestDirs();
+    const yaml: OwlBotYaml = {
+      'copy-dirs': [
+        {
+          source: '/a',
+          dest: '/m/n/o'
+        },
+      ],
+    };
+    copyDirs(sourceDir, destDir, yaml);
+    assert.deepStrictEqual(collectDirTree(destDir), ['y', 'y/s.txt:s']);
+  });
+
 });

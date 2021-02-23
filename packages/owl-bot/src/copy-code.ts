@@ -150,7 +150,12 @@ export function copyDirs(
     for (const sourcePath of sourcePaths) {
       const fullSourcePath = path.join(sourceDir, sourcePath);
       const relPath = stripPrefix(copyDir['strip-prefix'], sourcePath);
-      const fullDestPath = path.join(destDir, relPath);
+      const fullDestPath = path.join(destDir, copyDir.dest, relPath);
+      if (stat(fullSourcePath)?.isDirectory()) {
+        logger.info('mkdir ' + fullDestPath);
+        fs.mkdirSync(fullDestPath, {recursive: true});
+        continue;
+      }
       const dirName = path.dirname(fullDestPath);
       if (!stat(dirName)?.isDirectory()) {
         logger.info('mkdir ' + dirName);
