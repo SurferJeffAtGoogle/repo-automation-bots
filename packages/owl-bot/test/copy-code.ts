@@ -23,6 +23,9 @@ describe('stripPrefix', () => {
     assert.strictEqual(stripPrefix('/a/*/*', '/a/b/c/d/e'), 'd/e');
     assert.strictEqual(stripPrefix('/*/*/*', '/a/b/c/d/e'), 'd/e');
   });
+  it('works with trailing slash', () => {
+    assert.strictEqual(stripPrefix('/a/*/c/', '/a/b/c/d/e'), 'd/e');
+  });
   it('works with empty prefix', () => {
     assert.strictEqual(stripPrefix(undefined, '/a/b/c/d/e'), 'a/b/c/d/e');
     assert.strictEqual(stripPrefix('', '/a/b/c/d/e'), 'a/b/c/d/e');

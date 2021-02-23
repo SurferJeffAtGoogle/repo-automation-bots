@@ -160,7 +160,11 @@ export function stripPrefix(
   prefix: string | undefined,
   filePath: string
 ): string {
-  const mm = new Minimatch(prefix ?? '', {matchBase: true});
+  let pattern = prefix ?? "";
+  if (pattern.endsWith(path.sep)) {
+      pattern = pattern.slice(0, pattern.length - 1);
+  }
+  const mm = new Minimatch(pattern, {matchBase: true});
   if (mm.match(filePath)) {
     return path.basename(filePath);
   }
