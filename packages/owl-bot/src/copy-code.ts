@@ -24,7 +24,7 @@ import * as fs from 'fs';
 import {makePatternMatchAllSubdirs} from './pattern-match';
 import {Minimatch} from 'minimatch';
 import {OctokitParams, octokitFrom, OctokitType} from './octokit-util';
-import { core } from './core';
+import {core} from './core';
 import tmp from 'tmp';
 
 const readFileAsync = promisify(readFile);
@@ -101,13 +101,15 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
   copyDirs(sourceDir, destDir, yaml, logger);
 
   // Commit changes to branch.
-  const commitMsgPath = path.resolve(path.join(workDir, "commit-msg.txt"));
-  let commitMsg = cmd('git log -1 --format=%s%n%n%b', {cwd: sourceDir}).toString('utf8');
-  commitMsg += `Source-Link: https://github.com/googleapis/googleapis/commit/${args['source-repo-commit-hash']}\n`
+  const commitMsgPath = path.resolve(path.join(workDir, 'commit-msg.txt'));
+  let commitMsg = cmd('git log -1 --format=%s%n%n%b', {
+    cwd: sourceDir,
+  }).toString('utf8');
+  commitMsg += `Source-Link: https://github.com/googleapis/googleapis/commit/${args['source-repo-commit-hash']}\n`;
   fs.writeFileSync(commitMsgPath, commitMsg);
   cmd('git add -A', {cwd: destDir});
   cmd(`git commit -F "${commitMsgPath}" --allow-empty`, {cwd: destDir});
- 
+
   // Check for existing pull request one more time before we push.
   const privateKey = await readFileAsync(args['pem-path'], 'utf8');
   const token = await core.getGitHubShortLivedAccessToken(
@@ -130,11 +132,18 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
   const githubRepo = await octokit.repos.get({owner, repo});
 
   // Push to origin.
-  cmd(`git remote set-url origin https://x-access-token:${token.token}@github.com/googleapis/googleapis-gen.git`);
+  cmd(
+    `git remote set-url origin https://x-access-token:${token.token}@github.com/googleapis/googleapis-gen.git`
+  );
   cmd(`git push origin ${destBranch}`);
 
   // Create a pull request.
-  await octokit.pulls.create({owner, repo, head: destBranch, base: githubRepo.data.default_branch});
+  await octokit.pulls.create({
+    owner,
+    repo,
+    head: destBranch,
+    base: githubRepo.data.default_branch,
+  });
 }
 
 // returns undefined instead of throwing an exception.
@@ -161,7 +170,7 @@ export function copyDirs(
   // Wipe out the existing contents of the dest directory.
   let deadPaths: string[] = [];
   for (const copyDir of yaml['copy-dirs'] ?? []) {
-    if (trimSlashes(copyDir.dest) === "") {
+    if (trimSlashes(copyDir.dest) === '') {
       // Java copies everything into the root of the repo, and we don't want
       // to wipe out the root.
       const killPattern = path.join(destDir, path.basename(copyDir.source));

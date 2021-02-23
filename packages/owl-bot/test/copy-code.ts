@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it } from 'mocha';
+import {describe, it} from 'mocha';
 import * as assert from 'assert';
-import { stripPrefix, copyDirs } from '../src/copy-code';
+import {stripPrefix, copyDirs} from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
 import glob from 'glob';
 import tmp from 'tmp';
-import { OwlBotYaml } from '../src/config-files';
+import {OwlBotYaml} from '../src/config-files';
 
 describe('stripPrefix', () => {
   const norm = path.normalize;
@@ -75,12 +75,12 @@ describe('copyDirs', () => {
    */
   function collectDirTree(dir: string): string[] {
     const tree: string[] = [];
-    for (const apath of glob.sync('**', { cwd: dir })) {
+    for (const apath of glob.sync('**', {cwd: dir})) {
       const fullPath = path.join(dir, apath);
       if (fs.lstatSync(fullPath).isDirectory()) {
         tree.push(apath);
       } else {
-        const content = fs.readFileSync(fullPath, { encoding: 'utf8' });
+        const content = fs.readFileSync(fullPath, {encoding: 'utf8'});
         tree.push(`${apath}:${content}`);
       }
     }
@@ -138,22 +138,23 @@ describe('copyDirs', () => {
     const tempDir = tmp.dirSync().name;
     const sourceDir = path.join(tempDir, 'googleapis');
     // prepare the source
-    const sourcePath = path.join(sourceDir,
+    const sourcePath = path.join(
+      sourceDir,
       'google/cloud/asset/v1p1beta1/google-cloud-asset-v1p1beta1-java/grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java'
     );
-    fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
-    fs.writeFileSync(sourcePath, "from java import *;");
+    fs.mkdirSync(path.dirname(sourcePath), {recursive: true});
+    fs.writeFileSync(sourcePath, 'from java import *;');
 
     // prepare the dest.
     const destDir = path.join(tempDir, 'java-asset');
     const files = [
-      "README.md:I should be preserved.",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main/delete-me.txt:I should be deleted.",
+      'README.md:I should be preserved.',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main/delete-me.txt:I should be deleted.',
     ];
     for (const file of files) {
-      const [relPath, content] = file.split(":");
+      const [relPath, content] = file.split(':');
       const fullPath = path.join(destDir, relPath);
-      fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+      fs.mkdirSync(path.dirname(fullPath), {recursive: true});
       fs.writeFileSync(fullPath, content);
     }
     const yaml: OwlBotYaml = {
@@ -169,17 +170,17 @@ describe('copyDirs', () => {
     // CopyDirs and confirm.
     copyDirs(sourceDir, destDir, yaml);
     assert.deepStrictEqual(collectDirTree(destDir), [
-      "README.md:I should be preserved.",
-      "grpc-google-cloud-asset-v1p1beta1-java",
-      "grpc-google-cloud-asset-v1p1beta1-java/src",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main/java",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1",
-      "grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java:from java import *;"
+      'README.md:I should be preserved.',
+      'grpc-google-cloud-asset-v1p1beta1-java',
+      'grpc-google-cloud-asset-v1p1beta1-java/src',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1',
+      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java:from java import *;',
     ]);
   });
 });
