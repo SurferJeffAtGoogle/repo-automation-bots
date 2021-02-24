@@ -147,12 +147,13 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
   cmd(`git push origin ${destBranch}`);
 
   // Create a pull request.
-  await octokit.pulls.create({
+  const pull = await octokit.pulls.create({
     owner,
     repo,
     head: destBranch,
     base: githubRepo.data.default_branch,
   });
+  logger.info(`Created pull request ${pull.data.html_url}`);
 }
 
 // returns undefined instead of throwing an exception.
