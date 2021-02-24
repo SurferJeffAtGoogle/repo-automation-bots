@@ -19,6 +19,7 @@ import {openPR} from './commands/open-pr';
 import {scanConfigs} from './commands/scan-configs';
 import {validate} from './commands/validate';
 import {copyExists} from './commands/copy-exists';
+import { copyCodeCommand } from './commands/copy-code';
 
 yargs(process.argv.slice(2))
   .command(triggerBuildCommand)
@@ -26,6 +27,7 @@ yargs(process.argv.slice(2))
   .command(scanConfigs)
   .command(validate)
   .command(copyExists)
+  .command(copyCodeCommand)
   .demandCommand(1)
   .strictCommands()
   .parse();
