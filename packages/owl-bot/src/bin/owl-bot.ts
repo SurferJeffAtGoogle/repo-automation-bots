@@ -20,6 +20,7 @@ import {scanConfigs} from './commands/scan-configs';
 import {validate} from './commands/validate';
 import {copyExists} from './commands/copy-exists';
 import { copyCodeCommand } from './commands/copy-code';
+import { copyCodeAndCreatePullRequestCommand } from './commands/copy-code-and-create-pull-request';
 
 yargs(process.argv.slice(2))
   .command(triggerBuildCommand)
@@ -28,6 +29,7 @@ yargs(process.argv.slice(2))
   .command(validate)
   .command(copyExists)
   .command(copyCodeCommand)
+  .command(copyCodeAndCreatePullRequestCommand)
   .demandCommand(1)
   .strictCommands()
   .parse();

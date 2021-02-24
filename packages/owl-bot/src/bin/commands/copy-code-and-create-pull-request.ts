@@ -12,29 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// To Run: node ./build/src/bin/owl-bot.js copy-code <args>
+// To Run: node ./build/src/bin/owl-bot.js copy-code-and-create-pull-request <args>
 
-import tmp from 'tmp';
 import yargs = require('yargs');
-import {copyCode} from '../../copy-code';
+import {Args, copyCodeAndCreatePullRequest} from '../../copy-code';
 
-interface Args {
-  'source-repo': string,
-  'source-repo-commit-hash': string,
-  dest: string | undefined
-}
-
-export const copyCodeCommand: yargs.CommandModule<{}, Args> = {
-  command: 'copy-code',
-  describe: 'copies code from source to repo into a local repo',
+export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<{}, Args> = {
+  command: 'copy-code-and-create-pull-request',
+  describe: 'copies code from source to dest repo, creating a pull request on the dest repo',
   builder(yargs) {
     return yargs
+      .option('pem-path', {
+        describe: 'provide path to private key for requesting JWT',
+        type: 'string',
+        demand: true,
+      })
+      .option('app-id', {
+        describe: 'GitHub AppID',
+        type: 'number',
+        demand: true,
+      })
+      .option('installation', {
+        describe: 'installation ID for GitHub app',
+        type: 'number',
+        demand: true,
+      })
       .option('source-repo', {
         describe:
           'The source repository.  Example: googleapis/googleapis-gen',
         type: 'string',
-        demand: false,
-        default: 'googleapis/googleapis-gen'
+        demand: true,
       })
       .option('source-repo-commit-hash', {
         describe:
@@ -42,15 +49,14 @@ export const copyCodeCommand: yargs.CommandModule<{}, Args> = {
         type: 'string',
         demand: true,
       })
-      .option('dest', {
+      .option('dest-repo', {
         describe:
-          'The directory containing a local repo.  Example: nodejs/vision.',
+          'The github repository to copy files to.  Example: googleapis/nodejs-vision.',
         type: 'string',
-        demand: false,
+        demand: true,
       });
   },
   async handler(argv) {
-    await copyCode(argv['source-repo'], argv['source-repo-commit-hash'], argv.dest, 
-      tmp.dirSync().name);
+    await copyCodeAndCreatePullRequest(argv);
   },
 };

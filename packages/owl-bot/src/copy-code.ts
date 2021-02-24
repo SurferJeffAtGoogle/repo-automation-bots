@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {promisify} from 'util';
-import {readFile} from 'fs';
+import { promisify } from 'util';
+import { readFile } from 'fs';
 import * as proc from 'child_process';
-import {owlBotYamlPath, owlBotYamlFrom, OwlBotYaml} from './config-files';
+import { owlBotYamlPath, owlBotYamlFrom, OwlBotYaml } from './config-files';
 import path from 'path';
-import {load} from 'js-yaml';
-import {v4 as uuidv4} from 'uuid';
+import { load } from 'js-yaml';
+import { v4 as uuidv4 } from 'uuid';
 import glob from 'glob';
 import * as fs from 'fs';
-import {makePatternMatchAllSubdirs} from './pattern-match';
-import {Minimatch} from 'minimatch';
-import {OctokitParams, octokitFrom, OctokitType} from './octokit-util';
-import {core} from './core';
+import { makePatternMatchAllSubdirs } from './pattern-match';
+import { Minimatch } from 'minimatch';
+import { OctokitParams, octokitFrom, OctokitType } from './octokit-util';
+import { core } from './core';
 import tmp from 'tmp';
 
 const readFileAsync = promisify(readFile);
@@ -51,7 +51,11 @@ function newCmd(logger = console): Cmd {
   return cmd;
 }
 
-export async function copyCode(args: Args, logger = console): Promise<void> {
+function sourceLinkFrom(sourceRepo: string, sourceCommitHash: string) : string {
+  return `https://github.com/${sourceRepo}/commit/${sourceCommitHash}`;
+}
+
+export async function copyCodeAndCreatePullRequest(args: Args, logger = console): Promise<void> {
   let octokit = await octokitFrom(args);
   if (
     await copyExists(
@@ -65,59 +69,40 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
   const workDir = tmp.dirSync().name;
   logger.info(`Working in ${workDir}`);
 
-  const sourceDir = path.join(workDir, 'source');
   const destDir = path.join(workDir, 'dest');
   const destBranch = 'owl-bot-' + uuidv4();
 
   const cmd = newCmd(logger);
 
-  // Clone the two repos.
-  cmd(
-    `git clone --single-branch "https://github.com/${args['source-repo']}.git" ${sourceDir}`
-  );
+  // Clone the dest repo.
   cmd(
     `git clone --single-branch "https://github.com/${args['dest-repo']}.git" ${destDir}`
   );
 
-  // Check out the specific hash we want to copy from.
-  cmd(`git checkout ${args['source-repo-commit-hash']}`, {cwd: sourceDir});
-
   // Check out a dest branch.
-  cmd(`git checkout -b ${destBranch}`, {cwd: destDir});
+  cmd(`git checkout -b ${destBranch}`, { cwd: destDir });
 
-  // Load the OwlBot.yaml file in dest.
-  const yamlPath = path.join(destDir, owlBotYamlPath);
-  const sourceLink = `https://github.com/${args['source-repo']}/commit/${args['source-repo-commit-hash']}`;
-  let yaml: OwlBotYaml;
   const [owner, repo] = args['dest-repo'].split('/');
+
   try {
-    const text = await readFileAsync(yamlPath, 'utf8');
-    const obj = load(text);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    yaml = owlBotYamlFrom(obj as Record<string, any>);
-  } catch (e) {
-    logger.error(e);
-    const issue = await octokit.issues.create({
-      owner,
-      repo,
-      title: `${owlBotYamlPath} is missing or defective`,
-      body: `While attempting to copy files from\n${sourceLink}\n\n${e}`,
-    });
-    logger.error(`Created issue ${issue.data.html_url}`);
-    return; // Success because we don't want to retry.
+    copyCode(args['source-repo'], args['source-repo-commit-hash'], destBranch, workDir, logger);
+  } catch (err) {
+    if (err.kind === 'BadOwlbotYamlError') {
+      logger.error(err);
+      const e = err as BadOwlbotYamlError;
+      const sourceLink = sourceLinkFrom(args['source-repo'], args['source-repo-commit-hash']);
+      const issue = await octokit.issues.create({
+        owner,
+        repo,
+        title: `${owlBotYamlPath} is missing or defective`,
+        body: `While attempting to copy files from\n${sourceLink}\n\n${e.inner}`,
+      });
+      logger.error(`Created issue ${issue.data.html_url}`);
+      return; // Success because we don't want to retry.
+    } else {
+      throw err;
+    }
   }
-
-  copyDirs(sourceDir, destDir, yaml, logger);
-
-  // Commit changes to branch.
-  const commitMsgPath = path.resolve(path.join(workDir, 'commit-msg.txt'));
-  let commitMsg = cmd('git log -1 --format=%s%n%n%b', {
-    cwd: sourceDir,
-  }).toString('utf8');
-  commitMsg += `Source-Link: ${sourceLink}\n`;
-  fs.writeFileSync(commitMsgPath, commitMsg);
-  cmd('git add -A', {cwd: destDir});
-  cmd(`git commit -F "${commitMsgPath}" --allow-empty`, {cwd: destDir});
 
   // Check for existing pull request one more time before we push.
   const privateKey = await readFileAsync(args['pem-path'], 'utf8');
@@ -138,7 +123,7 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
     return; // Mid-air collision!
   }
 
-  const githubRepo = await octokit.repos.get({owner, repo});
+  const githubRepo = await octokit.repos.get({ owner, repo });
 
   // Push to origin.
   cmd(
@@ -154,6 +139,54 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
     base: githubRepo.data.default_branch,
   });
   logger.info(`Created pull request ${pull.data.html_url}`);
+}
+
+interface BadOwlbotYamlError {
+  kind: 'BadOwlbotYamlError';
+  inner: any;  // The inner error that was thrown.
+}
+
+export async function copyCode(sourceRepo: string, sourceCommitHash: string,
+  destDir: string | undefined, workDir: string, logger = console) 
+{
+  destDir = destDir ?? process.cwd();
+
+  // Load the OwlBot.yaml file in dest.
+  const yamlPath = path.join(destDir, owlBotYamlPath);
+  let yaml: OwlBotYaml;
+  try {
+    const text = await readFileAsync(yamlPath, 'utf8');
+    const obj = load(text);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    yaml = owlBotYamlFrom(obj as Record<string, any>);
+  } catch (e) {
+    const err: BadOwlbotYamlError = {
+      kind: 'BadOwlbotYamlError',
+      inner: e,
+    };
+    throw err;
+  }
+
+  const cmd = newCmd(logger);
+  const sourceDir = path.join(workDir, 'source');
+  cmd(
+    `git clone --single-branch "https://github.com/${sourceRepo}.git" ${sourceDir}`
+  );
+  // Check out the specific hash we want to copy from.
+  cmd(`git checkout ${sourceCommitHash}`, { cwd: sourceDir });
+
+  copyDirs(sourceDir, destDir, yaml, logger);
+
+  // Commit changes to branch.
+  const commitMsgPath = path.resolve(path.join(workDir, 'commit-msg.txt'));
+  let commitMsg = cmd('git log -1 --format=%s%n%n%b', {
+    cwd: sourceDir,
+  }).toString('utf8');
+  const sourceLink = sourceLinkFrom(sourceRepo, sourceCommitHash);
+  commitMsg += `Source-Link: ${sourceLink}\n`;
+  fs.writeFileSync(commitMsgPath, commitMsg);
+  cmd('git add -A', { cwd: destDir });
+  cmd(`git commit -F "${commitMsgPath}" --allow-empty`, { cwd: destDir });
 }
 
 // returns undefined instead of throwing an exception.
@@ -180,13 +213,13 @@ export function copyDirs(
   // Wipe out the existing contents of the dest directory.
   const deadPaths: string[] = [];
   for (const copyDir of yaml['copy-dirs'] ?? []) {
-      const killPattern = path.join(destDir, path.basename(copyDir.source));
-      deadPaths.push(...glob.sync(killPattern));
+    const killPattern = path.join(destDir, path.basename(copyDir.source));
+    deadPaths.push(...glob.sync(killPattern));
   }
   for (const deadPath of deadPaths) {
     if (stat(deadPath)) {
       logger.info(`rm -r ${deadPath}`);
-      fs.rmSync(deadPath, {recursive: true});
+      fs.rmSync(deadPath, { recursive: true });
     }
   }
 
@@ -194,20 +227,20 @@ export function copyDirs(
   for (const copyDir of yaml['copy-dirs'] ?? []) {
     let pattern = makePatternMatchAllSubdirs(copyDir.source);
     pattern = trimSlashes(pattern);
-    const sourcePaths = glob.sync(pattern, {cwd: sourceDir});
+    const sourcePaths = glob.sync(pattern, { cwd: sourceDir });
     for (const sourcePath of sourcePaths) {
       const fullSourcePath = path.join(sourceDir, sourcePath);
       const relPath = stripPrefix(copyDir['strip-prefix'], sourcePath);
       const fullDestPath = path.join(destDir, copyDir.dest, relPath);
       if (stat(fullSourcePath)?.isDirectory()) {
         logger.info('mkdir ' + fullDestPath);
-        fs.mkdirSync(fullDestPath, {recursive: true});
+        fs.mkdirSync(fullDestPath, { recursive: true });
         continue;
       }
       const dirName = path.dirname(fullDestPath);
       if (!stat(dirName)?.isDirectory()) {
         logger.info('mkdir ' + dirName);
-        fs.mkdirSync(dirName, {recursive: true});
+        fs.mkdirSync(dirName, { recursive: true });
       }
       logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
       fs.copyFileSync(fullSourcePath, fullDestPath);
@@ -237,7 +270,7 @@ export function stripPrefix(
 ): string {
   const pattern = trimSlashes(prefix ?? '');
   filePath = trimSlashes(filePath);
-  const mm = new Minimatch(pattern, {matchBase: true});
+  const mm = new Minimatch(pattern, { matchBase: true });
   if (mm.match(filePath)) {
     return path.basename(filePath);
   }
@@ -275,12 +308,12 @@ export async function copyExists(
   logger = console
 ): Promise<boolean> {
   const q = `repo:${destRepo}+${sourceCommitHash}`;
-  const foundCommits = await octokit.search.commits({q});
+  const foundCommits = await octokit.search.commits({ q });
   if (foundCommits.data.total_count > 0) {
     logger.info(`Commit with ${sourceCommitHash} exists in ${destRepo}.`);
     return true;
   }
-  const found = await octokit.search.issuesAndPullRequests({q});
+  const found = await octokit.search.issuesAndPullRequests({ q });
   for (const item of found.data.items) {
     logger.info(
       `Issue or pull request ${item.number} with ${sourceCommitHash} exists in ${destRepo}.`
@@ -290,7 +323,7 @@ export async function copyExists(
   // I observed octokit.search.issuesAndPullRequests() not finding recent, open
   // pull requests.  So enumerate them.
   const [owner, repo] = destRepo.split('/');
-  const pulls = await octokit.pulls.list({owner, repo, per_page: 100});
+  const pulls = await octokit.pulls.list({ owner, repo, per_page: 100 });
   for (const pull of pulls.data) {
     const pos: number = pull.body?.indexOf(sourceCommitHash) ?? -1;
     if (pos >= 0) {
@@ -301,7 +334,7 @@ export async function copyExists(
     }
   }
   // And enumerate recent issues too.
-  const issues = await octokit.issues.listForRepo({owner, repo, per_page: 100});
+  const issues = await octokit.issues.listForRepo({ owner, repo, per_page: 100 });
   for (const issue of issues.data) {
     const pos: number = issue.body?.indexOf(sourceCommitHash) ?? -1;
     if (pos >= 0) {
