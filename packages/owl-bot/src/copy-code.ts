@@ -17,7 +17,6 @@ import {readFile} from 'fs';
 import * as proc from 'child_process';
 import {owlBotYamlPath, owlBotYamlFromText, OwlBotYaml} from './config-files';
 import path from 'path';
-import {load} from 'js-yaml';
 import {v4 as uuidv4} from 'uuid';
 import glob from 'glob';
 import * as fs from 'fs';
@@ -168,7 +167,7 @@ interface BadOwlbotYamlError {
 
 /**
  * Copies the code from a source repo to a locally checked out repo.
- * 
+ *
  * @param sourceRepo usually 'googleapis/googleapis-gen'
  * @param sourceCommitHash the commit hash to copy from googleapis-gen.
  * @param destDir the locally checkout out repo with an .OwlBot.yaml file.

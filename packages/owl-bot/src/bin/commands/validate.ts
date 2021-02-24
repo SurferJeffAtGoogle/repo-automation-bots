@@ -18,7 +18,6 @@ import {owlBotYamlFromText} from '../../config-files';
 import {promisify} from 'util';
 import {readFile} from 'fs';
 import yargs = require('yargs');
-import * as yaml from 'js-yaml';
 
 const readFileAsync = promisify(readFile);
 

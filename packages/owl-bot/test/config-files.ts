@@ -14,7 +14,6 @@
 
 import {owlBotYamlFromText} from '../src/config-files';
 import {describe, it} from 'mocha';
-import yaml from 'js-yaml';
 import * as assert from 'assert';
 
 describe('config-files', () => {
