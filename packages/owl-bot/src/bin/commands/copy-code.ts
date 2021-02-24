@@ -19,9 +19,9 @@ import yargs = require('yargs');
 import {copyCode} from '../../copy-code';
 
 interface Args {
-  'source-repo': string,
-  'source-repo-commit-hash': string,
-  dest: string | undefined
+  'source-repo': string;
+  'source-repo-commit-hash': string;
+  dest: string | undefined;
 }
 
 export const copyCodeCommand: yargs.CommandModule<{}, Args> = {
@@ -30,11 +30,10 @@ export const copyCodeCommand: yargs.CommandModule<{}, Args> = {
   builder(yargs) {
     return yargs
       .option('source-repo', {
-        describe:
-          'The source repository.  Example: googleapis/googleapis-gen',
+        describe: 'The source repository.  Example: googleapis/googleapis-gen',
         type: 'string',
         demand: false,
-        default: 'googleapis/googleapis-gen'
+        default: 'googleapis/googleapis-gen',
       })
       .option('source-repo-commit-hash', {
         describe:
@@ -50,7 +49,11 @@ export const copyCodeCommand: yargs.CommandModule<{}, Args> = {
       });
   },
   async handler(argv) {
-    await copyCode(argv['source-repo'], argv['source-repo-commit-hash'], argv.dest, 
-      tmp.dirSync().name);
+    await copyCode(
+      argv['source-repo'],
+      argv['source-repo-commit-hash'],
+      argv.dest,
+      tmp.dirSync().name
+    );
   },
 };

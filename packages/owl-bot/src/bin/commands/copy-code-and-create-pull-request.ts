@@ -17,9 +17,13 @@
 import yargs = require('yargs');
 import {Args, copyCodeAndCreatePullRequest} from '../../copy-code';
 
-export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<{}, Args> = {
+export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<
+  {},
+  Args
+> = {
   command: 'copy-code-and-create-pull-request',
-  describe: 'copies code from source to dest repo, creating a pull request on the dest repo',
+  describe:
+    'copies code from source to dest repo, creating a pull request on the dest repo',
   builder(yargs) {
     return yargs
       .option('pem-path', {
@@ -38,8 +42,7 @@ export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<{}, Args> 
         demand: true,
       })
       .option('source-repo', {
-        describe:
-          'The source repository.  Example: googleapis/googleapis-gen',
+        describe: 'The source repository.  Example: googleapis/googleapis-gen',
         type: 'string',
         demand: true,
       })
