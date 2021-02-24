@@ -73,10 +73,10 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
 
   // Clone the two repos.
   cmd(
-    `git clone --single-branch "https://${args['source-repo']}.git" ${sourceDir}`
+    `git clone --single-branch "https://github.com/${args['source-repo']}.git" ${sourceDir}`
   );
   cmd(
-    `git clone --single-branch "https://${args['dest-repo']}.git" ${destDir}`
+    `git clone --single-branch "https://github.com/${args['dest-repo']}.git" ${destDir}`
   );
 
   // Check out the specific hash we want to copy from.
@@ -87,7 +87,7 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
 
   // Load the OwlBot.yaml file in dest.
   const yamlPath = path.join(destDir, owlBotYamlPath);
-  const sourceLink = `https://github.com/googleapis/googleapis/commit/${args['source-repo-commit-hash']}`;
+  const sourceLink = `https://github.com/${args['source-repo']}/commit/${args['source-repo-commit-hash']}`;
   let yaml: OwlBotYaml;
   const [owner, repo] = args['dest-repo'].split('/');
   try {
@@ -305,7 +305,7 @@ export async function copyExists(
     }
   }
   // And enumerate recent issues too.
-  const issues = await octokit.issues.list({owner, repo, per_page: 100});
+  const issues = await octokit.issues.listForRepo({owner, repo, per_page: 100});
   for (const issue of issues.data) {
     const pos: number = issue.body?.indexOf(sourceCommitHash) ?? -1;
     if (pos >= 0) {
