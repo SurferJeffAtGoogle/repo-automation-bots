@@ -15,16 +15,14 @@
 import {promisify} from 'util';
 import {readFile} from 'fs';
 import * as proc from 'child_process';
-import {owlBotYamlPath, owlBotYamlFromText, OwlBotYaml} from './config-files';
+import {owlBotYamlPath, owlBotYamlFromText, OwlBotYaml, regExpFromYamlString} from './config-files';
 import path from 'path';
 import {v4 as uuidv4} from 'uuid';
-import glob from 'glob';
 import * as fs from 'fs';
-import {makePatternMatchAllSubdirs} from './pattern-match';
-import {Minimatch} from 'minimatch';
 import {OctokitParams, octokitFrom, OctokitType} from './octokit-util';
 import {core} from './core';
 import tmp from 'tmp';
+import glob from 'glob';
 
 const readFileAsync = promisify(readFile);
 
@@ -241,9 +239,13 @@ export function copyDirs(
 ): void {
   // Wipe out the existing contents of the dest directory.
   const deadPaths: string[] = [];
-  for (const copyDir of yaml['copy-dirs'] ?? []) {
-    const killPattern = path.join(destDir, path.basename(copyDir.source));
-    deadPaths.push(...glob.sync(killPattern));
+  for (const deepCopy of yaml['deep-copy-regex'] ?? []) {
+    let rmDest = deepCopy['rm-dest'];
+    if (rmDest && stat(destDir)) {      
+      const rmRegExp = regExpFromYamlString(rmDest);
+      const allDestPaths = glob.sync('**', {cwd: destDir});
+      deadPaths.push(...allDestPaths.filter(path => rmRegExp.test('/' + path)));
+    }
   }
   for (const deadPath of deadPaths) {
     if (stat(deadPath)) {
@@ -253,19 +255,14 @@ export function copyDirs(
   }
 
   // Copy the files from source to dest.
-  for (const copyDir of yaml['copy-dirs'] ?? []) {
-    let pattern = makePatternMatchAllSubdirs(copyDir.source);
-    pattern = trimSlashes(pattern);
-    const sourcePaths = glob.sync(pattern, {cwd: sourceDir});
-    for (const sourcePath of sourcePaths) {
+  for (const deepCopy of yaml['deep-copy-regex'] ?? []) {
+    let regExp = regExpFromYamlString(deepCopy.source);
+    const allSourcePaths = glob.sync('**', {cwd: sourceDir});
+    const sourcePathsToCopy = allSourcePaths.filter(path => regExp.test('/' + path));
+    for (const sourcePath of sourcePathsToCopy) {
       const fullSourcePath = path.join(sourceDir, sourcePath);
-      const relPath = stripPrefix(copyDir['strip-prefix'], sourcePath);
-      const fullDestPath = path.join(destDir, copyDir.dest, relPath);
-      if (stat(fullSourcePath)?.isDirectory()) {
-        logger.info('mkdir ' + fullDestPath);
-        fs.mkdirSync(fullDestPath, {recursive: true});
-        continue;
-      }
+      const relPath = sourcePath.replace(regExp, deepCopy.dest);
+      const fullDestPath = path.join(destDir,  relPath);
       const dirName = path.dirname(fullDestPath);
       if (!stat(dirName)?.isDirectory()) {
         logger.info('mkdir ' + dirName);
@@ -275,52 +272,6 @@ export function copyDirs(
       fs.copyFileSync(fullSourcePath, fullDestPath);
     }
   }
-}
-
-/**
- * Converts slashes to the local platform slashes, then removes a leading
- * and trailing slash if they're present.
- */
-function trimSlashes(apath: string) {
-  apath = path.normalize(apath);
-  const start = apath.startsWith(path.sep) ? 1 : 0;
-  const end = apath.endsWith(path.sep) ? apath.length - 1 : apath.length;
-  return apath.slice(start, end > start ? end : start);
-}
-
-/**
- * Strips a prefix from a filepath.
- * @param prefix the prefix to strip; can contain wildcard characters like * and ?
- * @param filePath the path from which to strip the prefix.
- */
-export function stripPrefix(
-  prefix: string | undefined,
-  filePath: string
-): string {
-  const pattern = trimSlashes(prefix ?? '');
-  filePath = trimSlashes(filePath);
-  const mm = new Minimatch(pattern, {matchBase: true});
-  if (mm.match(filePath)) {
-    return path.basename(filePath);
-  }
-  const pathSegments: string[] = [];
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const dirName = path.dirname(filePath);
-    const fileName = path.basename(filePath);
-    pathSegments.push(fileName);
-    if (
-      mm.match(dirName) ||
-      dirName === '' ||
-      dirName === path.sep ||
-      dirName === filePath
-    ) {
-      break;
-    }
-    filePath = dirName;
-  }
-  pathSegments.reverse();
-  return path.join(...pathSegments);
 }
 
 /**

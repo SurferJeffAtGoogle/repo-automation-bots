@@ -62,7 +62,7 @@ describe('database', () => {
         docker: {
           image: dockerImageA,
         },
-        'copy-dirs': [
+        'deep-copy-regex': [
           {
             source: '/alpha',
             dest: '/beta',
@@ -82,7 +82,7 @@ describe('database', () => {
     assert.ok(await store.storeConfigs(repoA, configsA, null));
     const configsB: Configs = {
       yaml: {
-        'copy-dirs': [
+        'deep-copy-regex': [
           {
             source: '/gamma',
             dest: '/omega',
@@ -139,7 +139,7 @@ describe('database', () => {
         docker: {
           image: dockerImageA,
         },
-        'copy-dirs': [
+        'deep-copy-regex': [
           {
             source: '/alpha',
             dest: '/beta',

@@ -19,7 +19,7 @@ import * as assert from 'assert';
 describe('config-files', () => {
   it('parses a good yaml', async () => {
     const text = `
-copy-dirs:
+deep-copy-regex:
   - source: /google/cloud/vision
     dest: /src
 
@@ -28,14 +28,14 @@ docker:
 `;
     const config = owlBotYamlFromText(text);
     assert.deepStrictEqual(config, {
-      'copy-dirs': [{source: '/google/cloud/vision', dest: '/src'}],
+      'deep-copy-regex': [{source: '/google/cloud/vision', dest: '/src'}],
       docker: {image: 'gcr.io/cloud-devrel-resources/synthtool-nodejs:prod'},
     });
   });
 
   it('throws an exception when a required field is missing', async () => {
     const text = `
-copy-dirs:
+deep-copy-regex:
   - source: /google/cloud/vision
 
 docker:

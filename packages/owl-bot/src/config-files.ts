@@ -45,10 +45,10 @@ export function owlBotLockFrom(o: Record<string, any>): OwlBotLock {
   return o as OwlBotLock;
 }
 
-export interface CopyDir {
+export interface DeepCopyRegex {
   source: string;
   dest: string;
-  'strip-prefix'?: string;
+  'rm-dest'?: string;
 }
 
 // The .github/.OwlBot.yaml is stored on each repository that OwlBot
@@ -58,7 +58,7 @@ export interface OwlBotYaml {
   docker?: {
     image: string;
   };
-  'copy-dirs'?: CopyDir[];
+  'deep-copy-regex'?: DeepCopyRegex[];
 }
 
 // The default path where .OwlBot.yaml is expected to be found.
@@ -75,3 +75,15 @@ export function owlBotYamlFromText(yamlText: string): OwlBotYaml {
     throw validate.errors;
   }
 }
+
+/**
+ * Given a source string from a yaml, convert it into a regular expression.
+ * 
+ * Adds a ^ and a $ so the expression only matches complete strings.
+ */
+export function regExpFromYamlString(regexp: string): RegExp {
+  const leading = regexp[0] === '^' ? '' : '^';
+  const trailing = regexp[regexp.length-1] === '$' ? '' : "$";
+  return new RegExp(`${leading}${regexp}${trailing}`);
+}
+

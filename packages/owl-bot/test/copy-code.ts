@@ -14,36 +14,13 @@
 
 import {describe, it} from 'mocha';
 import * as assert from 'assert';
-import {stripPrefix, copyDirs} from '../src/copy-code';
+import {copyDirs} from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
 import glob from 'glob';
 import tmp from 'tmp';
 import {OwlBotYaml} from '../src/config-files';
 
-describe('stripPrefix', () => {
-  const norm = path.normalize;
-  it('works normally', () => {
-    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c/d/e'), norm('d/e'));
-    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c/d'), norm('d'));
-    assert.strictEqual(stripPrefix('/a/*/*', '/a/b/c/d/e'), norm('d/e'));
-    assert.strictEqual(stripPrefix('/*/*/*', '/a/b/c/d/e'), norm('d/e'));
-  });
-  it('works with trailing slash', () => {
-    assert.strictEqual(stripPrefix('/a/*/c/', '/a/b/c/d/e'), norm('d/e'));
-  });
-  it('works with empty prefix', () => {
-    assert.strictEqual(stripPrefix(undefined, '/a/b/c/d/e'), norm('a/b/c/d/e'));
-    assert.strictEqual(stripPrefix('', '/a/b/c/d/e'), norm('a/b/c/d/e'));
-    assert.strictEqual(stripPrefix('/', '/a/b/c/d/e'), norm('a/b/c/d/e'));
-  });
-  it('returns whole argument for mismatched prefix', () => {
-    assert.strictEqual(stripPrefix('/b/c', '/a/b/c/d/e'), norm('a/b/c/d/e'));
-  });
-  it('returns final path segment for complete match', () => {
-    assert.strictEqual(stripPrefix('/a/*/c', '/a/b/c'), norm('c'));
-  });
-});
 
 describe('copyDirs', () => {
   /**
@@ -98,11 +75,10 @@ describe('copyDirs', () => {
   it('copies subdirectory', () => {
     const [sourceDir, destDir] = makeSourceAndDestDirs();
     const yaml: OwlBotYaml = {
-      'copy-dirs': [
+      'deep-copy-regex': [
         {
-          source: '/b/y',
-          dest: '/src',
-          'strip-prefix': '/b',
+          source: '/b/(y)',
+          dest: '/src/$1',
         },
       ],
     };
@@ -117,7 +93,7 @@ describe('copyDirs', () => {
   it('copies rootdirectory', () => {
     const [sourceDir, destDir] = makeSourceAndDestDirs();
     const yaml: OwlBotYaml = {
-      'copy-dirs': [
+      'deep-copy-regex': [
         {
           source: '/a',
           dest: '/m/n',
@@ -158,11 +134,11 @@ describe('copyDirs', () => {
       fs.writeFileSync(fullPath, content);
     }
     const yaml: OwlBotYaml = {
-      'copy-dirs': [
+      'deep-copy-regex': [
         {
-          source: '/google/cloud/asset/*/*-java/grpc-google-cloud-asset-*-java',
-          'strip-prefix': '/google/cloud/asset/*/*-java',
-          dest: '/',
+          source: '/google/cloud/asset/.*/.*-java/(grpc-google-cloud-asset-.*)-java',
+          'rm-dest': '(grpc-google-cloud-asset-.*)',
+          dest: '/$1',
         },
       ],
     };
