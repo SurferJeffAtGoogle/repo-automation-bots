@@ -51,10 +51,15 @@ function newCmd(logger = console): Cmd {
   return cmd;
 }
 
+// Composes a link to the source commit that triggered the copy.
 function sourceLinkFrom(sourceRepo: string, sourceCommitHash: string): string {
   return `https://github.com/${sourceRepo}/commit/${sourceCommitHash}`;
 }
 
+/**
+ * Copies the code from googleapis-gen to the dest repo, and creates a
+ * pull request.
+ */
 export async function copyCodeAndCreatePullRequest(
   args: Args,
   logger = console
@@ -98,6 +103,7 @@ export async function copyCodeAndCreatePullRequest(
   } catch (err) {
     if (err.kind === 'BadOwlbotYamlError') {
       logger.error(err);
+      // Create a github issue.
       const e = err as BadOwlbotYamlError;
       const sourceLink = sourceLinkFrom(
         args['source-repo'],
@@ -153,12 +159,21 @@ export async function copyCodeAndCreatePullRequest(
   logger.info(`Created pull request ${pull.data.html_url}`);
 }
 
+// Thrown when the .OwlBot.yaml error is invalid.
 interface BadOwlbotYamlError {
   kind: 'BadOwlbotYamlError';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inner: any; // The inner error that was thrown.
 }
 
+/**
+ * Copies the code from a source repo to a locally checked out repo.
+ * 
+ * @param sourceRepo usually 'googleapis/googleapis-gen'
+ * @param sourceCommitHash the commit hash to copy from googleapis-gen.
+ * @param destDir the locally checkout out repo with an .OwlBot.yaml file.
+ * @param workDir a working directory where googleapis-gen will be cloned.
+ */
 export async function copyCode(
   sourceRepo: string,
   sourceCommitHash: string,
