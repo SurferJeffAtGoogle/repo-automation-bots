@@ -24,7 +24,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "copy-code command",
+            "name": "copy-code java-asset",
             "program": "${workspaceFolder}/build/src/bin/owl-bot.js",
             "args": [
                 "copy-code",
