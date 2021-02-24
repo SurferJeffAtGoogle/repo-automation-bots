@@ -78,12 +78,11 @@ export function owlBotYamlFromText(yamlText: string): OwlBotYaml {
 
 /**
  * Given a source string from a yaml, convert it into a regular expression.
- * 
+ *
  * Adds a ^ and a $ so the expression only matches complete strings.
  */
 export function regExpFromYamlString(regexp: string): RegExp {
   const leading = regexp[0] === '^' ? '' : '^';
-  const trailing = regexp[regexp.length-1] === '$' ? '' : "$";
+  const trailing = regexp[regexp.length - 1] === '$' ? '' : '$';
   return new RegExp(`${leading}${regexp}${trailing}`);
 }
-

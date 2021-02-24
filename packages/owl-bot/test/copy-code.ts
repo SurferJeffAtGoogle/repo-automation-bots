@@ -21,7 +21,6 @@ import glob from 'glob';
 import tmp from 'tmp';
 import {OwlBotYaml} from '../src/config-files';
 
-
 describe('copyDirs', () => {
   /**
    * Creates a sample source tree.
@@ -135,7 +134,8 @@ describe('copyDirs', () => {
     const yaml: OwlBotYaml = {
       'deep-copy-regex': [
         {
-          source: '/google/cloud/asset/.*/.*-java/(grpc-google-cloud-asset-.*)-java',
+          source:
+            '/google/cloud/asset/.*/.*-java/(grpc-google-cloud-asset-.*)-java',
           dest: '/$1',
           'rm-dest': '/grpc-google-cloud-asset-.*',
         },

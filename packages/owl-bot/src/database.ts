@@ -16,7 +16,6 @@ import admin from 'firebase-admin';
 import {OwlBotLock, regExpFromYamlString} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
 import {CopyTasksStore} from './copy-tasks-store';
-import {newMinimatchFromSource} from './pattern-match';
 
 export type Db = admin.firestore.Firestore;
 interface UpdatePr {

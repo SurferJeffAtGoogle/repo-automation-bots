@@ -15,7 +15,12 @@
 import {promisify} from 'util';
 import {readFile} from 'fs';
 import * as proc from 'child_process';
-import {owlBotYamlPath, owlBotYamlFromText, OwlBotYaml, regExpFromYamlString} from './config-files';
+import {
+  owlBotYamlPath,
+  owlBotYamlFromText,
+  OwlBotYaml,
+  regExpFromYamlString,
+} from './config-files';
 import path from 'path';
 import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
@@ -241,8 +246,8 @@ export function copyDirs(
   // Wipe out the existing contents of the dest directory.
   const deadPaths: string[] = [];
   for (const deepCopy of yaml['deep-copy-regex'] ?? []) {
-    let rmDest = deepCopy['rm-dest'];
-    if (rmDest && stat(destDir)) {      
+    const rmDest = deepCopy['rm-dest'];
+    if (rmDest && stat(destDir)) {
       const rmRegExp = regExpFromYamlString(rmDest);
       const allDestPaths = glob.sync('**', {cwd: destDir});
       deadPaths.push(...allDestPaths.filter(path => rmRegExp.test('/' + path)));
@@ -258,20 +263,25 @@ export function copyDirs(
 
   // Copy the files from source to dest.
   for (const deepCopy of yaml['deep-copy-regex'] ?? []) {
-    let regExp = regExpFromYamlString(deepCopy.source);
+    const regExp = regExpFromYamlString(deepCopy.source);
     const allSourcePaths = glob.sync('**', {cwd: sourceDir});
-    const sourcePathsToCopy = allSourcePaths.filter(path => regExp.test('/' + path));
+    const sourcePathsToCopy = allSourcePaths.filter(path =>
+      regExp.test('/' + path)
+    );
     for (const sourcePath of sourcePathsToCopy) {
       const fullSourcePath = path.join(sourceDir, sourcePath);
       const relPath = ('/' + sourcePath).replace(regExp, deepCopy.dest);
-      const fullDestPath = path.join(destDir,  relPath);
+      const fullDestPath = path.join(destDir, relPath);
       const dirName = path.dirname(fullDestPath);
       if (!stat(dirName)?.isDirectory()) {
         logger.info('mkdir ' + dirName);
         fs.mkdirSync(dirName, {recursive: true});
       }
       logger.info(`cp -r ${fullSourcePath} ${fullDestPath}`);
-      fse.copySync(fullSourcePath, fullDestPath, {recursive: true, overwrite: true});
+      fse.copySync(fullSourcePath, fullDestPath, {
+        recursive: true,
+        overwrite: true,
+      });
     }
   }
 }
