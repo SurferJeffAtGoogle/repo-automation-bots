@@ -28,7 +28,7 @@
             "program": "${workspaceFolder}/build/src/bin/owl-bot.js",
             "args": [
                 "copy-code",
-                "--dest", "/tmp",
+                "--dest", "/usr/local/google/home/rennie/gitrepos/java-asset",
                 "--source-repo-commit-hash", "e7694b40a0432b7cd243f163eee941028c263be6"
             ],
             "console": "integratedTerminal",

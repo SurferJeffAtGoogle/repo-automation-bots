@@ -104,9 +104,8 @@ describe('copyDirs', () => {
     assert.deepStrictEqual(collectDirTree(destDir), [
       'm',
       'm/n',
-      'm/n/a',
-      'm/n/a/r.txt:r',
-      'm/n/a/x',
+      'm/n/r.txt:r',
+      'm/n/x',
     ]);
   });
 
@@ -125,7 +124,7 @@ describe('copyDirs', () => {
     const destDir = path.join(tempDir, 'java-asset');
     const files = [
       'README.md:I should be preserved.',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main/delete-me.txt:I should be deleted.',
+      'grpc-google-cloud-asset-v1p1beta1/src/main/delete-me.txt:I should be deleted.',
     ];
     for (const file of files) {
       const [relPath, content] = file.split(':');
@@ -137,8 +136,8 @@ describe('copyDirs', () => {
       'deep-copy-regex': [
         {
           source: '/google/cloud/asset/.*/.*-java/(grpc-google-cloud-asset-.*)-java',
-          'rm-dest': '(grpc-google-cloud-asset-.*)',
           dest: '/$1',
+          'rm-dest': '/grpc-google-cloud-asset-.*',
         },
       ],
     };
@@ -147,16 +146,16 @@ describe('copyDirs', () => {
     copyDirs(sourceDir, destDir, yaml);
     assert.deepStrictEqual(collectDirTree(destDir), [
       'README.md:I should be preserved.',
-      'grpc-google-cloud-asset-v1p1beta1-java',
-      'grpc-google-cloud-asset-v1p1beta1-java/src',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1',
-      'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java:from java import *;',
+      'grpc-google-cloud-asset-v1p1beta1',
+      'grpc-google-cloud-asset-v1p1beta1/src',
+      'grpc-google-cloud-asset-v1p1beta1/src/main',
+      'grpc-google-cloud-asset-v1p1beta1/src/main/java',
+      'grpc-google-cloud-asset-v1p1beta1/src/main/java/com',
+      'grpc-google-cloud-asset-v1p1beta1/src/main/java/com/google',
+      'grpc-google-cloud-asset-v1p1beta1/src/main/java/com/google/cloud',
+      'grpc-google-cloud-asset-v1p1beta1/src/main/java/com/google/cloud/asset',
+      'grpc-google-cloud-asset-v1p1beta1/src/main/java/com/google/cloud/asset/v1p1beta1',
+      'grpc-google-cloud-asset-v1p1beta1/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java:from java import *;',
     ]);
   });
 });

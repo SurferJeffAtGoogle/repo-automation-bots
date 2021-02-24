@@ -19,6 +19,7 @@ import {owlBotYamlPath, owlBotYamlFromText, OwlBotYaml, regExpFromYamlString} fr
 import path from 'path';
 import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
+import * as fse from 'fs-extra';
 import {OctokitParams, octokitFrom, OctokitType} from './octokit-util';
 import {core} from './core';
 import tmp from 'tmp';
@@ -247,7 +248,8 @@ export function copyDirs(
       deadPaths.push(...allDestPaths.filter(path => rmRegExp.test('/' + path)));
     }
   }
-  for (const deadPath of deadPaths) {
+  for (let deadPath of deadPaths) {
+    deadPath = path.join(destDir, deadPath);
     if (stat(deadPath)) {
       logger.info(`rm -r ${deadPath}`);
       fs.rmSync(deadPath, {recursive: true});
@@ -261,15 +263,15 @@ export function copyDirs(
     const sourcePathsToCopy = allSourcePaths.filter(path => regExp.test('/' + path));
     for (const sourcePath of sourcePathsToCopy) {
       const fullSourcePath = path.join(sourceDir, sourcePath);
-      const relPath = sourcePath.replace(regExp, deepCopy.dest);
+      const relPath = ('/' + sourcePath).replace(regExp, deepCopy.dest);
       const fullDestPath = path.join(destDir,  relPath);
       const dirName = path.dirname(fullDestPath);
       if (!stat(dirName)?.isDirectory()) {
         logger.info('mkdir ' + dirName);
         fs.mkdirSync(dirName, {recursive: true});
       }
-      logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
-      fs.copyFileSync(fullSourcePath, fullDestPath);
+      logger.info(`cp -r ${fullSourcePath} ${fullDestPath}`);
+      fse.copySync(fullSourcePath, fullDestPath, {recursive: true, overwrite: true});
     }
   }
 }
