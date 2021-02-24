@@ -15,7 +15,7 @@
 import {promisify} from 'util';
 import {readFile} from 'fs';
 import * as proc from 'child_process';
-import {owlBotYamlPath, owlBotYamlFrom, OwlBotYaml} from './config-files';
+import {owlBotYamlPath, owlBotYamlFromText, OwlBotYaml} from './config-files';
 import path from 'path';
 import {load} from 'js-yaml';
 import {v4 as uuidv4} from 'uuid';
@@ -188,9 +188,7 @@ export async function copyCode(
   let yaml: OwlBotYaml;
   try {
     const text = await readFileAsync(yamlPath, 'utf8');
-    const obj = load(text);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    yaml = owlBotYamlFrom(obj as Record<string, any>);
+    yaml = owlBotYamlFromText(text);
   } catch (e) {
     const err: BadOwlbotYamlError = {
       kind: 'BadOwlbotYamlError',

@@ -19,7 +19,7 @@ import {
   OwlBotLock,
   owlBotLockFrom,
   owlBotLockPath,
-  owlBotYamlFrom,
+  owlBotYamlFromText,
   owlBotYamlPath,
 } from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
@@ -286,10 +286,7 @@ export async function refreshConfigs(
   );
   if (yamlContent) {
     try {
-      newConfigs.yaml = owlBotYamlFrom(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        yaml.load(yamlContent) as Record<string, any>
-      );
+      newConfigs.yaml = owlBotYamlFromText(yamlContent);
     } catch (e) {
       logger.error(`${repoFull} has an invalid ${owlBotYamlPath} file: ${e}`);
     }

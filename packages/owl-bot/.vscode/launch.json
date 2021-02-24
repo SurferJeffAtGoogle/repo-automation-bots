@@ -5,19 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "pwa-node",
-            "request": "launch",
-            "name": "Launch Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}\\build\\src\\app.js",
-            "preLaunchTask": "tsc: build - tsconfig.json",
-            "outFiles": [
-                "${workspaceFolder}/build/**/*.js"
-            ]
-        },
-        {
             "type": "node",
             "request": "launch",
             "name": "Mocha copy-code.ts",
@@ -33,6 +20,22 @@
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
             "protocol": "inspector"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "copy-code command",
+            "program": "${workspaceFolder}/build/src/bin/owl-bot.js",
+            "args": [
+                "copy-code",
+                "--dest", "/tmp",
+                "--source-repo-commit-hash", "e7694b40a0432b7cd243f163eee941028c263be6"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "protocol": "inspector",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "outFiles": ["${workspaceFolder}/build/**/*.js"]
         }
     ]
 }

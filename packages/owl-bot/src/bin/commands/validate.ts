@@ -14,7 +14,7 @@
 
 // To Run: node ./build/src/bin/owl-bot.js validate ~/.OwlBot.yaml
 
-import {owlBotYamlFrom} from '../../config-files';
+import {owlBotYamlFromText} from '../../config-files';
 import {promisify} from 'util';
 import {readFile} from 'fs';
 import yargs = require('yargs');
@@ -38,11 +38,8 @@ export const validate: yargs.CommandModule<{}, Args> = {
   },
   async handler(argv) {
     try {
-      const lockContent = await readFileAsync(argv.config, 'utf8');
-      owlBotYamlFrom(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        yaml.load(lockContent) as Record<string, any>
-      );
+      const yamlText = await readFileAsync(argv.config, 'utf8');
+      owlBotYamlFromText(yamlText);
       console.info(`${argv.config} is valid`);
     } catch (e) {
       console.info(e);
