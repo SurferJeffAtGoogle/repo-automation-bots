@@ -97,12 +97,13 @@ export async function copyCode(args: Args, logger = console): Promise<void> {
     yaml = owlBotYamlFrom(obj as Record<string, any>);
   } catch (e) {
     logger.error(e);
-    octokit.issues.create({
+    const issue = await octokit.issues.create({
       owner,
       repo,
       title: `${owlBotYamlPath} is missing or defective`,
       body: `While attempting to copy files from\n${sourceLink}\n\n${e}`,
     });
+    logger.error(`Created issue ${issue.data.html_url}`);
     return; // Success because we don't want to retry.
   }
 
