@@ -43,11 +43,11 @@ export interface Args extends OctokitParams {
 }
 
 // Creates a function that first prints, then executes a shell command.
-type Cmd = (
+export type Cmd = (
   command: string,
   options?: proc.ExecSyncOptions | undefined
 ) => Buffer;
-function newCmd(logger = console): Cmd {
+export function newCmd(logger = console): Cmd {
   const cmd = (
     command: string,
     options?: proc.ExecSyncOptions | undefined
