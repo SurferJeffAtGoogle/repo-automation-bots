@@ -51,7 +51,7 @@ export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
         demand: true,
       })
       .option('source-repo', {
-        describe: 'The source repository.  Example: googleapis/googleapis-gen',
+        describe: 'The source repository.  Example: googleapis/googleapis-gen.  Can also be a local path to a repo directory.',
         type: 'string',
         default: 'googleapis/googleapis-gen',
       })
