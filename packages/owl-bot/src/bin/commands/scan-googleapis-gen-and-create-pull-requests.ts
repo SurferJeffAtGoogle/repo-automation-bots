@@ -61,7 +61,8 @@ export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
         default: 'repo-automation-bots-metrics',
       })
       .option('clone-depth', {
-        describe: 'The depth to clone googleapis-gen, and therefore an upper bound on the number of commits to examine.',
+        describe:
+          'The depth to clone googleapis-gen, and therefore an upper bound on the number of commits to examine.',
         type: 'number',
         default: 100,
       });
@@ -77,7 +78,7 @@ export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
       argv['source-repo'],
       argv,
       configsStore,
-      argv["clone-depth"]
+      argv['clone-depth']
     );
   },
 };
