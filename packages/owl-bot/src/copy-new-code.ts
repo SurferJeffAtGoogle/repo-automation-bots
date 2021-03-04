@@ -56,7 +56,7 @@ export async function copyNewCode(
     // The regular expressions in an OwlBot.yaml file expect file paths to
     // begin with a slash.
     touchedFiles = touchedFiles.map(f => (f.startsWith('/') ? f : '/' + f));
-    logger.info(`Commit modified files: ${commitText}`);
+    logger.info(commitText);
     touchedFiles.forEach(f => logger.info(f));
     const repos = await configsStore.findReposAffectedByFileChanges(
       touchedFiles
