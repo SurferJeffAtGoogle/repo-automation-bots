@@ -363,8 +363,9 @@ export async function getFileContent(
  * given commit.
  * @param path path to git repository on disk.
  * @param sha commit to list modified files for.
+ * @returns a list of file paths.
  */
-export async function getFilesModifiedBySha(path: string, sha: string) {
+export async function getFilesModifiedBySha(path: string, sha: string): Promise<string[]> {
   const out = await execAsync(`git show --name-only ${sha}`, {
     cwd: path,
     // Handle 100,000+ files changing:
