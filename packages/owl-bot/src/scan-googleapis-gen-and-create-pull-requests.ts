@@ -21,7 +21,7 @@ import {
   toLocalRepo,
 } from './copy-code';
 import {getFilesModifiedBySha} from '.';
-import { OctokitFactory } from './octokit-util';
+import {OctokitFactory} from './octokit-util';
 
 interface Todo {
   repo: string;

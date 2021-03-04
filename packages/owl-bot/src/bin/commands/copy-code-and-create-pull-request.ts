@@ -18,7 +18,7 @@ import yargs = require('yargs');
 import * as cc from '../../copy-code';
 import {octokitFactoryFrom, OctokitParams} from '../../octokit-util';
 
-interface Args extends cc.Args, OctokitParams { }
+interface Args extends cc.Args, OctokitParams {}
 
 export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<
   {},

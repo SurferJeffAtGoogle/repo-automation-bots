@@ -12,18 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import admin from 'firebase-admin';
-import {
-  getFilesModifiedBySha,
-  commitsIterator,
-} from '../../core';
+import {getFilesModifiedBySha, commitsIterator} from '../../core';
 import {FirestoreConfigsStore} from '../../database';
-import {promisify} from 'util';
-import {readFile} from 'fs';
 import yargs = require('yargs');
 import {logger} from 'gcf-utils';
-import { octokitFrom } from '../../octokit-util';
-
-const readFileAsync = promisify(readFile);
+import {octokitFrom} from '../../octokit-util';
 
 interface Args {
   'pem-path': string;

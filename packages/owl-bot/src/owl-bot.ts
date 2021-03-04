@@ -21,7 +21,7 @@ import {logger} from 'gcf-utils';
 import {core} from './core';
 import {Octokit} from '@octokit/rest';
 import {onPostProcessorPublished, scanGithubForConfigs} from './handlers';
-import { octokitFactoryFrom, AuthArgs } from './octokit-util';
+import {octokitFactoryFrom} from './octokit-util';
 
 interface PubSubContext {
   github: Octokit;
@@ -97,7 +97,11 @@ export = (privateKey: string | undefined, app: Probot, db?: Db) => {
       }
       const image = `${lock.docker.image}@${lock.docker.digest}`;
       // Run time image from .Owlbot.lock.yaml on Cloud Build:
-      const octokitFactory = await octokitFactoryFrom({privateKey, appId, installation});
+      const octokitFactory = await octokitFactoryFrom({
+        privateKey,
+        appId,
+        installation,
+      });
       const buildStatus = await core.triggerPostProcessBuild(
         {
           image,

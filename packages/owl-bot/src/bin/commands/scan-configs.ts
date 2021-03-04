@@ -13,14 +13,10 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
-import {readFile} from 'fs';
 import {FirestoreConfigsStore} from '../../database';
 import {scanGithubForConfigs} from '../../handlers';
-import {promisify} from 'util';
 import yargs = require('yargs');
-import { octokitFrom } from '../../octokit-util';
-
-const readFileAsync = promisify(readFile);
+import {octokitFrom} from '../../octokit-util';
 
 interface Args {
   'pem-path': string;

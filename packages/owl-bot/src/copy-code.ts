@@ -25,8 +25,7 @@ import path from 'path';
 import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
-import {OctokitParams, octokitFrom, OctokitType, OctokitFactory} from './octokit-util';
-import {core} from './core';
+import {OctokitType, OctokitFactory} from './octokit-util';
 import tmp from 'tmp';
 import glob from 'glob';
 

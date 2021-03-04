@@ -15,14 +15,10 @@
 // Run like this:
 // node ./build/src/bin/owl-bot.js list-repos --docker-image foo
 
-import {readFile} from 'fs';
 import {ConfigsStore} from '../../configs-store';
 import {createOnePullRequestForUpdatingLock} from '../../handlers';
-import {promisify} from 'util';
 import yargs = require('yargs');
-import { octokitFrom } from '../../octokit-util';
-
-const readFileAsync = promisify(readFile);
+import {octokitFrom} from '../../octokit-util';
 
 interface Args {
   'pem-path': string;

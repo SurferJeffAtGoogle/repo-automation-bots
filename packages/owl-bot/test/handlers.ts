@@ -31,9 +31,7 @@ import {Octokit} from '@octokit/rest';
 
 import * as sinon from 'sinon';
 import {OwlBotLock} from '../src/config-files';
-import {
-  core,
-} from '../src/core';
+import {core} from '../src/core';
 const sandbox = sinon.createSandbox();
 
 type Changes = Array<[string, {content: string; mode: string}]>;

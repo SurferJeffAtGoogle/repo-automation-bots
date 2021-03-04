@@ -11,17 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-  createCheck,
-  getOwlBotLock,
-  triggerPostProcessBuild,
-} from '../../core';
-import {promisify} from 'util';
-import {readFile} from 'fs';
+import {createCheck, getOwlBotLock, triggerPostProcessBuild} from '../../core';
 import yargs = require('yargs');
-import { octokitFrom, octokitFactoryFrom } from '../../octokit-util';
-
-const readFileAsync = promisify(readFile);
+import {octokitFactoryFrom} from '../../octokit-util';
 
 interface Args {
   'pem-path': string;
@@ -75,8 +67,11 @@ export const triggerBuildCommand: yargs.CommandModule<{}, Args> = {
   },
   async handler(argv) {
     const octokitFactory = await octokitFactoryFrom(argv);
-    const lock = await getOwlBotLock(argv.repo, Number(argv.pr),
-      await octokitFactory.getShortLivedOctokit());
+    const lock = await getOwlBotLock(
+      argv.repo,
+      Number(argv.pr),
+      await octokitFactory.getShortLivedOctokit()
+    );
     if (!lock) {
       console.info('no .OwlBot.lock.yaml found');
       return;

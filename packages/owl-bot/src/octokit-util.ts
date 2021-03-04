@@ -51,24 +51,29 @@ export interface AuthArgs {
 export async function authArgsFrom(params: OctokitParams): Promise<AuthArgs> {
   return {
     privateKey: await readFileAsync(params['pem-path'], 'utf8'),
-    appId: params["app-id"],
-    installation: params.installation
+    appId: params['app-id'],
+    installation: params.installation,
   };
 }
 
 /**
  * Creates an authenticated instance of octokit.
  */
-export async function octokitFrom(params: OctokitParams | AuthArgs): Promise<OctokitType> {
+export async function octokitFrom(
+  params: OctokitParams | AuthArgs
+): Promise<OctokitType> {
   const token = await githubTokenFrom(params);
-  return new Octokit({auth: token.token });
+  return new Octokit({auth: token.token});
 }
 
 /**
  * Fetchs a short lived token from the github API.
  */
-export async function githubTokenFrom(params: OctokitParams | AuthArgs): Promise<Token> {
-  const args: AuthArgs = 'privateKey' in params ? params : await authArgsFrom(params);
+export async function githubTokenFrom(
+  params: OctokitParams | AuthArgs
+): Promise<Token> {
+  const args: AuthArgs =
+    'privateKey' in params ? params : await authArgsFrom(params);
   const token = await getGitHubShortLivedAccessToken(
     args.privateKey,
     args.appId,
@@ -82,19 +87,23 @@ export async function githubTokenFrom(params: OctokitParams | AuthArgs): Promise
  */
 export interface OctokitFactory {
   getGitHubShortLivedAccessToken(): Promise<Token>;
-  getShortLivedOctokit(token?: Token) : Promise<OctokitType>;
+  getShortLivedOctokit(token?: Token): Promise<OctokitType>;
 }
 
 /**
  * Creates an octokit factory from the common params.
  */
-export function octokitFactoryFrom(params: OctokitParams | AuthArgs): OctokitFactory {
+export function octokitFactoryFrom(
+  params: OctokitParams | AuthArgs
+): OctokitFactory {
   return {
-    getGitHubShortLivedAccessToken() { return githubTokenFrom(params); },
+    getGitHubShortLivedAccessToken() {
+      return githubTokenFrom(params);
+    },
     async getShortLivedOctokit(token?: Token) {
-      const atoken = token ?? await githubTokenFrom(params);
-      return new Octokit({auth: atoken.token });
-    }
+      const atoken = token ?? (await githubTokenFrom(params));
+      return new Octokit({auth: atoken.token});
+    },
   };
 }
 
