@@ -23,6 +23,7 @@ import {OctokitParams} from '../../octokit-util';
 interface Args extends OctokitParams {
   'source-repo': string;
   'firestore-project': string;
+  'clone-depth': number;
 }
 
 export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
@@ -58,6 +59,11 @@ export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
         describe: 'project used for firestore database',
         type: 'string',
         default: 'repo-automation-bots-metrics',
+      })
+      .option('clone-depth', {
+        describe: 'The depth to clone googleapis-gen, and therefore an upper bound on the number of commits to examine.',
+        type: 'number',
+        default: 100,
       });
   },
   async handler(argv) {
@@ -70,7 +76,8 @@ export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
     scanGoogleapisGenAndCreatePullRequests(
       argv['source-repo'],
       argv,
-      configsStore
+      configsStore,
+      argv["clone-depth"]
     );
   },
 };

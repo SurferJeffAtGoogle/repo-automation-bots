@@ -32,15 +32,18 @@ export async function scanGoogleapisGenAndCreatePullRequests(
   sourceRepo: string,
   octokitParams: OctokitParams,
   configsStore: ConfigsStore,
+  cloneDepth = 100,
   logger = console
 ): Promise<void> {
   // Clone the source repo.
   const workDir = tmp.dirSync().name;
-  const sourceDir = toLocalRepo(sourceRepo, workDir, logger, 100);
+  // cloneDepth + 1 because the final commit in a shallow clone is grafted: it contains
+  // the combined state of all earlier commits, so we don't want to examine it.
+  const sourceDir = toLocalRepo(sourceRepo, workDir, logger, cloneDepth + 1);
 
   // Collect the history of commit hashes.
   const cmd = newCmd(logger);
-  const stdout = cmd('git log -99 --format=%H', {cwd: sourceDir});
+  const stdout = cmd(`git log -${cloneDepth} --format=%H`, {cwd: sourceDir});
   const commitHashes = stdout.toString('utf8').split(/\r?\n/);
 
   const todoStack: Todo[] = [];
