@@ -12,57 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {describe, it} from 'mocha';
+import { describe, it } from 'mocha';
 import * as assert from 'assert';
-import {copyDirs} from '../src/copy-code';
+import { copyDirs } from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
-import glob from 'glob';
 import tmp from 'tmp';
-import {OwlBotYaml} from '../src/config-files';
+import { OwlBotYaml } from '../src/config-files';
+import { collectDirTree, makeDirTree } from './dir-tree';
 
 describe('copyDirs', () => {
   /**
    * Creates a sample source tree.
    */
   function makeSourceTree(rootDir: string): string {
-    const dirs = [
+    makeDirTree(rootDir, [
       'source',
       'source/a',
       'source/b',
       'source/a/x',
       'source/b/y',
       'source/b/z',
-    ];
-    for (const dir of dirs) {
-      fs.mkdirSync(path.join(rootDir, dir));
-    }
-    const files = ['source/q.txt:q', 'source/a/r.txt:r', 'source/b/y/s.txt:s'];
-    for (const file of files) {
-      const [name, content] = file.split(':');
-      fs.writeFileSync(path.join(rootDir, name), content);
-    }
-    return path.join(rootDir, dirs[0]);
+      'source/q.txt:q', 'source/a/r.txt:r', 'source/b/y/s.txt:s']);
+    return path.join(rootDir, 'source');
   }
 
-  /**
-   * Collects the entire source tree content into a list that can
-   * be easily compared equal in a test.
-   */
-  function collectDirTree(dir: string): string[] {
-    const tree: string[] = [];
-    for (const apath of glob.sync('**', {cwd: dir})) {
-      const fullPath = path.join(dir, apath);
-      if (fs.lstatSync(fullPath).isDirectory()) {
-        tree.push(apath);
-      } else {
-        const content = fs.readFileSync(fullPath, {encoding: 'utf8'});
-        tree.push(`${apath}:${content}`);
-      }
-    }
-    tree.sort();
-    return tree;
-  }
 
   function makeSourceAndDestDirs(): [string, string] {
     const tempo = tmp.dirSync();
@@ -118,7 +92,7 @@ describe('copyDirs', () => {
       sourceDir,
       'google/cloud/asset/v1p1beta1/google-cloud-asset-v1p1beta1-java/grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java'
     );
-    fs.mkdirSync(path.dirname(sourcePath), {recursive: true});
+    fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
     fs.writeFileSync(sourcePath, 'from java import *;');
 
     // prepare the dest.
@@ -130,7 +104,7 @@ describe('copyDirs', () => {
     for (const file of files) {
       const [relPath, content] = file.split(':');
       const fullPath = path.join(destDir, relPath);
-      fs.mkdirSync(path.dirname(fullPath), {recursive: true});
+      fs.mkdirSync(path.dirname(fullPath), { recursive: true });
       fs.writeFileSync(fullPath, content);
     }
     const yaml: OwlBotYaml = {

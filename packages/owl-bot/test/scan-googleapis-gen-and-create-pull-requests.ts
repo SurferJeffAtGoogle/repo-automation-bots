@@ -14,9 +14,11 @@
 
 import * as assert from 'assert';
 import {describe, it, afterEach} from 'mocha';
+import { scanGoogleapisGenAndCreatePullRequests } from '../src/scan-googleapis-gen-and-create-pull-requests';
 
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
-    it('works', () => {
+    it('works', async () => {
         assert.ok(true);
+        // await scanGoogleapisGenAndCreatePullRequests()
     })
 });
