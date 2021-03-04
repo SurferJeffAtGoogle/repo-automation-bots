@@ -25,7 +25,7 @@ interface Args extends OctokitParams {
   'firestore-project': string;
 }
 
-export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<
+export const copyNewCodeCommand: yargs.CommandModule<
   {},
   Args
 > = {
