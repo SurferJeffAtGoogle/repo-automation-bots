@@ -19,7 +19,7 @@ import {
 import {promisify} from 'util';
 import {readFile} from 'fs';
 import yargs = require('yargs');
-import { octokitFrom } from '../../octokit-util';
+import { octokitFrom, octokitFactoryFrom } from '../../octokit-util';
 
 const readFileAsync = promisify(readFile);
 
@@ -74,8 +74,9 @@ export const triggerBuildCommand: yargs.CommandModule<{}, Args> = {
       });
   },
   async handler(argv) {
-    const octokit = await octokitFrom(argv);
-    const lock = await getOwlBotLock(argv.repo, Number(argv.pr), octokit);
+    const octokitFactory = await octokitFactoryFrom(argv);
+    const lock = await getOwlBotLock(argv.repo, Number(argv.pr),
+      await octokitFactory.getShortLivedOctokit());
     if (!lock) {
       console.info('no .OwlBot.lock.yaml found');
       return;
@@ -85,20 +86,14 @@ export const triggerBuildCommand: yargs.CommandModule<{}, Args> = {
       {
         image,
         project: argv.project,
-        privateKey,
-        appId: argv['app-id'],
-        installation: argv.installation,
         repo: argv.repo,
         pr: Number(argv.pr),
         trigger: argv.trigger,
       },
-      octokit
+      octokitFactory
     );
     await createCheck(
       {
-        privateKey,
-        appId: argv['app-id'],
-        installation: argv.installation,
         pr: argv.pr,
         repo: argv.repo,
         text: buildStatus.text,
@@ -106,7 +101,7 @@ export const triggerBuildCommand: yargs.CommandModule<{}, Args> = {
         conclusion: buildStatus.conclusion,
         title: `🦉 OwlBot - ${buildStatus.summary}`,
       },
-      octokit
+      await octokitFactory.getShortLivedOctokit()
     );
   },
 };

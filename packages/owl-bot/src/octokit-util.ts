@@ -41,7 +41,8 @@ export interface OctokitParams {
  */
 export async function octokitFrom(params: OctokitParams): Promise<OctokitType> {
   const token = await githubTokenFrom(params);
-  return await getAuthenticatedOctokit(token.token);
+  return new Octokit({auth: token.token });
+
 }
 
 /**
@@ -73,7 +74,7 @@ export function octokitFactoryFrom(params: OctokitParams): OctokitFactory {
     getGitHubShortLivedAccessToken() { return githubTokenFrom(params); },
     async getShortLivedOctokit(token?: Token) {
       const atoken = token ?? await githubTokenFrom(params);
-      return await getAuthenticatedOctokit(atoken.token);
+      return new Octokit({auth: atoken.token });
     }
   };
 }
@@ -121,31 +122,4 @@ async function getGitHubShortLivedAccessToken(
 
 function getAccessTokenURL(installation: number) {
   return `https://api.github.com/app/installations/${installation}/access_tokens`;
-}
-
-async function getAuthenticatedOctokit(
-  auth: string | AuthArgs,
-  cache = true
-): Promise<OctokitType> {
-  let tokenString: string;
-  if (auth instanceof Object) {
-    const token = await getGitHubShortLivedAccessToken(
-      auth.privateKey,
-      auth.appId,
-      auth.installation
-    );
-    tokenString = token.token;
-  } else {
-    tokenString = auth;
-  }
-  const octokit = new Octokit({
-    auth: tokenString,
-  });
-  return octokit;
-}
-
-interface AuthArgs {
-  privateKey: string;
-  appId: number;
-  installation: number;
 }

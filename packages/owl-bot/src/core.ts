@@ -23,9 +23,6 @@ import {OctokitType, OctokitFactory} from './octokit-util';
 
 interface BuildArgs {
   image: string;
-  privateKey: string;
-  appId: number;
-  installation: number;
   repo: string;
   pr: number;
   project?: string;
@@ -33,9 +30,6 @@ interface BuildArgs {
 }
 
 export interface CheckArgs {
-  privateKey: string;
-  appId: number;
-  installation: number;
   pr: number;
   repo: string;
   summary: string;
