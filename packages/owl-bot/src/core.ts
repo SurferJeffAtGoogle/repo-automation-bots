@@ -16,13 +16,10 @@ import {promisify} from 'util';
 const execAsync = promisify(exec);
 import {load} from 'js-yaml';
 import {logger} from 'gcf-utils';
-import {sign} from 'jsonwebtoken';
-import {request} from 'gaxios';
 import {CloudBuildClient} from '@google-cloud/cloudbuild';
-import {Octokit} from '@octokit/rest';
 // eslint-disable-next-line node/no-extraneous-import
 import {OwlBotLock, owlBotLockPath, owlBotLockFrom} from './config-files';
-import {OctokitType} from './octokit-util';
+import {OctokitType, OctokitFactory} from './octokit-util';
 
 interface BuildArgs {
   image: string;
@@ -47,12 +44,6 @@ export interface CheckArgs {
   title: string;
 }
 
-interface AuthArgs {
-  privateKey: string;
-  appId: number;
-  installation: number;
-}
-
 interface BuildResponse {
   conclusion: 'success' | 'failure';
   summary: string;
@@ -72,22 +63,16 @@ export interface Token {
 
 export async function triggerPostProcessBuild(
   args: BuildArgs,
-  octokit?: OctokitType
+  octokitFactory: OctokitFactory
 ): Promise<BuildResponse> {
-  const token = await core.getGitHubShortLivedAccessToken(
-    args.privateKey,
-    args.appId,
-    args.installation
-  );
   const project = args.project || process.env.PROJECT_ID;
   if (!project) {
     throw Error('gcloud project must be provided');
   }
   const cb = core.getCloudBuildInstance();
   const [owner, repo] = args.repo.split('/');
-  if (!octokit) {
-    octokit = await core.getAuthenticatedOctokit(token.token);
-  }
+  const token = await octokitFactory.getGitHubShortLivedAccessToken();
+  const octokit = await octokitFactory.getShortLivedOctokit(token);
   const {data: prData} = await octokit.pulls.get({
     owner,
     repo,
@@ -190,14 +175,7 @@ export async function getHeadCommit(
   else return headCommit as Commit;
 }
 
-export async function createCheck(args: CheckArgs, octokit?: OctokitType) {
-  if (!octokit) {
-    octokit = await core.getAuthenticatedOctokit({
-      privateKey: args.privateKey,
-      appId: args.appId,
-      installation: args.installation,
-    });
-  }
+export async function createCheck(args: CheckArgs, octokit: OctokitType) {
   const [owner, repo] = args.repo.split('/');
   const headCommit = await getHeadCommit(owner, repo, Number(args.pr), octokit);
   if (!headCommit) {
@@ -217,65 +195,6 @@ export async function createCheck(args: CheckArgs, octokit?: OctokitType) {
       text: args.text,
     },
   });
-}
-
-export async function getGitHubShortLivedAccessToken(
-  privateKey: string,
-  appId: number,
-  installation: number
-): Promise<Token> {
-  const payload = {
-    // issued at time
-    // Note: upstream API seems to fail if decimals are included
-    // in unixtime, this is why parseInt is run:
-    iat: parseInt('' + Date.now() / 1000),
-    // JWT expiration time (10 minute maximum)
-    exp: parseInt('' + Date.now() / 1000 + 10 * 60),
-    // GitHub App's identifier
-    iss: appId,
-  };
-  const jwt = sign(payload, privateKey, {algorithm: 'RS256'});
-  const resp = await request<Token>({
-    url: getAccessTokenURL(installation),
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-      Accept: 'application/vnd.github.v3+json',
-    },
-  });
-  if (resp.status !== 201) {
-    throw Error(`unexpected response http = ${resp.status}`);
-  } else {
-    return resp.data;
-  }
-}
-
-export function getAccessTokenURL(installation: number) {
-  return `https://api.github.com/app/installations/${installation}/access_tokens`;
-}
-
-let cachedOctokit: OctokitType;
-export async function getAuthenticatedOctokit(
-  auth: string | AuthArgs,
-  cache = true
-): Promise<OctokitType> {
-  if (cache && cachedOctokit) return cachedOctokit;
-  let tokenString: string;
-  if (auth instanceof Object) {
-    const token = await getGitHubShortLivedAccessToken(
-      auth.privateKey,
-      auth.appId,
-      auth.installation
-    );
-    tokenString = token.token;
-  } else {
-    tokenString = auth;
-  }
-  const octokit = new Octokit({
-    auth: tokenString,
-  });
-  if (cache) cachedOctokit = octokit;
-  return octokit;
 }
 
 function getCloudBuildInstance() {
@@ -418,12 +337,9 @@ export async function* commitsIterator(
 export const core = {
   commitsIterator,
   createCheck,
-  getAccessTokenURL,
-  getAuthenticatedOctokit,
   getCloudBuildInstance,
   getFilesModifiedBySha,
   getFileContent,
-  getGitHubShortLivedAccessToken,
   getOwlBotLock,
   owlBotLockPath,
   triggerPostProcessBuild,
