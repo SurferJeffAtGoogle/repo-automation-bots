@@ -28,7 +28,6 @@ import {Configs, ConfigsStore} from '../src/configs-store';
 import {dump} from 'js-yaml';
 import * as suggester from 'code-suggester';
 import {Octokit} from '@octokit/rest';
-
 import * as sinon from 'sinon';
 import {OwlBotLock} from '../src/config-files';
 import {
@@ -36,6 +35,7 @@ import {
   getAuthenticatedOctokit,
   getGitHubShortLivedAccessToken,
 } from '../src/core';
+import { FakeConfigsStore } from './fake-configs-store';
 const sandbox = sinon.createSandbox();
 
 type Changes = Array<[string, {content: string; mode: string}]>;
@@ -190,56 +190,6 @@ describe('handlers', () => {
   });
 });
 
-class FakeConfigStore implements ConfigsStore {
-  readonly configs: Map<string, Configs>;
-
-  constructor(configs?: Map<string, Configs>) {
-    this.configs = configs ?? new Map<string, Configs>();
-  }
-  findReposAffectedByFileChanges(
-    changedFilePaths: string[]
-  ): Promise<string[]> {
-    throw new Error('Method not implemented.');
-  }
-
-  getConfigs(repo: string): Promise<Configs | undefined> {
-    return Promise.resolve(this.configs.get(repo));
-  }
-
-  storeConfigs(
-    repo: string,
-    configs: Configs,
-    replaceCommithash: string | null
-  ): Promise<boolean> {
-    const existingCommitHash = this.configs.get(repo)?.commitHash ?? null;
-    if (existingCommitHash === replaceCommithash) {
-      this.configs.set(repo, configs);
-      return Promise.resolve(true);
-    } else {
-      return Promise.resolve(false);
-    }
-  }
-
-  findReposWithPostProcessor(
-    dockerImageName: string
-  ): Promise<[string, Configs][]> {
-    throw new Error('Method not implemented.');
-  }
-  findPullRequestForUpdatingLock(
-    repo: string,
-    lock: OwlBotLock
-  ): Promise<string | undefined> {
-    throw new Error('Method not implemented.');
-  }
-  recordPullRequestForUpdatingLock(
-    repo: string,
-    lock: OwlBotLock,
-    pullRequestId: string
-  ): Promise<string> {
-    throw new Error('Method not implemented.');
-  }
-}
-
 describe('refreshConfigs', () => {
   afterEach(() => {
     sandbox.restore();
@@ -261,7 +211,7 @@ describe('refreshConfigs', () => {
   } as any) as InstanceType<typeof Octokit>;
 
   it('stores a good yaml', async () => {
-    const configsStore = new FakeConfigStore();
+    const configsStore = new FakeConfigsStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
@@ -299,7 +249,7 @@ describe('refreshConfigs', () => {
   });
 
   it('stores a good lock.yaml', async () => {
-    const configsStore = new FakeConfigStore();
+    const configsStore = new FakeConfigsStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
@@ -339,7 +289,7 @@ describe('refreshConfigs', () => {
   });
 
   it('stores empty config files', async () => {
-    const configsStore = new FakeConfigStore();
+    const configsStore = new FakeConfigsStore();
     sandbox.stub(core, 'getFileContent').resolves(undefined);
 
     await refreshConfigs(
@@ -368,7 +318,7 @@ describe('refreshConfigs', () => {
   });
 
   it("stores nothing when there's a mid-air collision", async () => {
-    const configsStore = new FakeConfigStore(
+    const configsStore = new FakeConfigsStore(
       new Map([
         [
           'googleapis/nodejs-vision',
@@ -413,7 +363,7 @@ describe('refreshConfigs', () => {
       commitHash: '123',
       installationId: 42,
     };
-    const configsStore = new FakeConfigStore();
+    const configsStore = new FakeConfigsStore();
     sandbox.stub(core, 'getFileContent').resolves(undefined);
 
     await refreshConfigs(
@@ -505,7 +455,7 @@ describe('scanGithubForConfigs', () => {
   } as any) as InstanceType<typeof Octokit>;
 
   it('works with an installationId', async () => {
-    const configsStore = new FakeConfigStore();
+    const configsStore = new FakeConfigsStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
@@ -567,7 +517,7 @@ describe('scanGithubForConfigs', () => {
   });
 
   it('recovers from 404 when scanning configs', async () => {
-    const configsStore = new FakeConfigStore();
+    const configsStore = new FakeConfigsStore();
     sandbox.stub(core, 'getFileContent').resolves(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
