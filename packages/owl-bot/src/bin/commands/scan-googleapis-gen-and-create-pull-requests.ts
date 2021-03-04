@@ -16,12 +16,12 @@
 
 import admin from 'firebase-admin';
 import yargs = require('yargs');
-import { scanGoogleapisGenAndCreatePullRequests } from '../../scan-googleapis-gen-and-create-pull-requests';
-import { FirestoreConfigsStore } from '../../database';
-import { OctokitParams } from '../../octokit-util';
+import {scanGoogleapisGenAndCreatePullRequests} from '../../scan-googleapis-gen-and-create-pull-requests';
+import {FirestoreConfigsStore} from '../../database';
+import {OctokitParams} from '../../octokit-util';
 
 interface Args extends OctokitParams {
-  "source-repo": string;
+  'source-repo': string;
   'firestore-project': string;
 }
 
@@ -52,13 +52,13 @@ export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
       .option('source-repo', {
         describe: 'The source repository.  Example: googleapis/googleapis-gen',
         type: 'string',
-        default: 'googleapis/googleapis-gen'
+        default: 'googleapis/googleapis-gen',
       })
       .option('firestore-project', {
         describe: 'project used for firestore database',
         type: 'string',
         default: 'repo-automation-bots-metrics',
-      })
+      });
   },
   async handler(argv) {
     admin.initializeApp({
@@ -67,6 +67,10 @@ export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
     });
     const db = admin.firestore();
     const configsStore = new FirestoreConfigsStore(db!);
-    scanGoogleapisGenAndCreatePullRequests(argv['source-repo'], argv, configsStore);
+    scanGoogleapisGenAndCreatePullRequests(
+      argv['source-repo'],
+      argv,
+      configsStore
+    );
   },
 };
