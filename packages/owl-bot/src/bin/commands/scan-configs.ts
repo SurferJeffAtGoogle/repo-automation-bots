@@ -16,12 +16,9 @@ import admin from 'firebase-admin';
 import {readFile} from 'fs';
 import {FirestoreConfigsStore} from '../../database';
 import {scanGithubForConfigs} from '../../handlers';
-import {
-  getAuthenticatedOctokit,
-  getGitHubShortLivedAccessToken,
-} from '../../core';
 import {promisify} from 'util';
 import yargs = require('yargs');
+import { octokitFrom } from '../../octokit-util';
 
 const readFileAsync = promisify(readFile);
 
@@ -66,19 +63,12 @@ export const scanConfigs: yargs.CommandModule<{}, Args> = {
       });
   },
   async handler(argv) {
-    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-    const token = await getGitHubShortLivedAccessToken(
-      privateKey,
-      argv['app-id'],
-      argv.installation
-    );
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
       projectId: argv.project,
     });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const db = admin.firestore();
-    const octokit = await getAuthenticatedOctokit(token.token);
+    const octokit = await octokitFrom(argv);
     const configStore = new FirestoreConfigsStore(db!);
     await scanGithubForConfigs(
       configStore,

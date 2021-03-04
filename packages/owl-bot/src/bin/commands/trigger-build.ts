@@ -13,14 +13,13 @@
 // limitations under the License.
 import {
   createCheck,
-  getAuthenticatedOctokit,
-  getGitHubShortLivedAccessToken,
   getOwlBotLock,
   triggerPostProcessBuild,
 } from '../../core';
 import {promisify} from 'util';
 import {readFile} from 'fs';
 import yargs = require('yargs');
+import { octokitFrom } from '../../octokit-util';
 
 const readFileAsync = promisify(readFile);
 
@@ -75,13 +74,7 @@ export const triggerBuildCommand: yargs.CommandModule<{}, Args> = {
       });
   },
   async handler(argv) {
-    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-    const token = await getGitHubShortLivedAccessToken(
-      privateKey,
-      argv['app-id'],
-      argv.installation
-    );
-    const octokit = await getAuthenticatedOctokit(token.token);
+    const octokit = await octokitFrom(argv);
     const lock = await getOwlBotLock(argv.repo, Number(argv.pr), octokit);
     if (!lock) {
       console.info('no .OwlBot.lock.yaml found');

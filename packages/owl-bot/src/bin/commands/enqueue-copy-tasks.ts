@@ -13,8 +13,6 @@
 // limitations under the License.
 import admin from 'firebase-admin';
 import {
-  getAuthenticatedOctokit,
-  getGitHubShortLivedAccessToken,
   getFilesModifiedBySha,
   commitsIterator,
 } from '../../core';
@@ -23,6 +21,7 @@ import {promisify} from 'util';
 import {readFile} from 'fs';
 import yargs = require('yargs');
 import {logger} from 'gcf-utils';
+import { octokitFrom } from '../../octokit-util';
 
 const readFileAsync = promisify(readFile);
 
@@ -85,13 +84,6 @@ export const enqueueCopyTasks: yargs.CommandModule<{}, Args> = {
       });
   },
   async handler(argv) {
-    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-    const token = await getGitHubShortLivedAccessToken(
-      privateKey,
-      argv['app-id'],
-      argv.installation
-    );
-    const octokit = await getAuthenticatedOctokit(token.token);
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
       projectId: argv['firestore-project'],
@@ -101,6 +93,7 @@ export const enqueueCopyTasks: yargs.CommandModule<{}, Args> = {
     const configStore = new FirestoreConfigsStore(db!);
 
     let sha: string | undefined = undefined;
+    const octokit = await octokitFrom(argv);
     for await (const s of commitsIterator(argv['source-repo'], octokit)) {
       sha = s;
     }

@@ -18,12 +18,9 @@
 import {readFile} from 'fs';
 import {ConfigsStore} from '../../configs-store';
 import {createOnePullRequestForUpdatingLock} from '../../handlers';
-import {
-  getAuthenticatedOctokit,
-  getGitHubShortLivedAccessToken,
-} from '../../core';
 import {promisify} from 'util';
 import yargs = require('yargs');
+import { octokitFrom } from '../../octokit-util';
 
 const readFileAsync = promisify(readFile);
 
@@ -74,17 +71,11 @@ export const openPR: yargs.CommandModule<{}, Args> = {
       });
   },
   async handler(argv) {
-    const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-    const token = await getGitHubShortLivedAccessToken(
-      privateKey,
-      argv['app-id'],
-      argv.installation
-    );
     const fakeConfigStore = ({
       findPullRequestForUpdatingLock: () => undefined,
       recordPullRequestForUpdatingLock: () => {},
     } as unknown) as ConfigsStore;
-    const octokit = await getAuthenticatedOctokit(token.token);
+    const octokit = await octokitFrom(argv);
     await createOnePullRequestForUpdatingLock(
       fakeConfigStore,
       octokit,
