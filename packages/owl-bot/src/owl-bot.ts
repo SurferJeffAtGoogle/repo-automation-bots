@@ -21,6 +21,7 @@ import {logger} from 'gcf-utils';
 import {core} from './core';
 import {Octokit} from '@octokit/rest';
 import {onPostProcessorPublished, scanGithubForConfigs} from './handlers';
+import { octokitFactoryFrom, AuthArgs } from './octokit-util';
 
 interface PubSubContext {
   github: Octokit;
@@ -96,25 +97,20 @@ export = (privateKey: string | undefined, app: Probot, db?: Db) => {
       }
       const image = `${lock.docker.image}@${lock.docker.digest}`;
       // Run time image from .Owlbot.lock.yaml on Cloud Build:
+      const octokitFactory = await octokitFactoryFrom({privateKey, appId, installation});
       const buildStatus = await core.triggerPostProcessBuild(
         {
           image,
           project,
-          privateKey,
-          appId,
-          installation,
           repo: head.repo.full_name,
           pr: context.payload.number,
           trigger,
         },
-        context.octokit
+        octokitFactory
       );
       // Update pull request with status of job:
       await core.createCheck(
         {
-          privateKey,
-          appId,
-          installation,
           pr: context.payload.number,
           repo: head.repo.full_name,
           text: buildStatus.text,
@@ -122,7 +118,7 @@ export = (privateKey: string | undefined, app: Probot, db?: Db) => {
           conclusion: buildStatus.conclusion,
           title: `🦉 OwlBot - ${buildStatus.summary}`,
         },
-        context.octokit
+        await octokitFactory.getShortLivedOctokit()
       );
     }
   );

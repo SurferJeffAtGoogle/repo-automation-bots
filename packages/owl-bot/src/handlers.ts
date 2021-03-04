@@ -29,7 +29,7 @@ import yaml from 'js-yaml';
 // Conflicting linters think the next line is extraneous or necessary.
 // eslint-disable-next-line node/no-extraneous-import
 import {Endpoints} from '@octokit/types';
-import {OctokitType, getAuthenticatedOctokit} from './octokit-util';
+import {OctokitType, octokitFrom} from './octokit-util';
 
 type ListReposResponse = Endpoints['GET /orgs/{org}/repos']['response'];
 
@@ -73,7 +73,7 @@ export async function onPostProcessorPublished(
           image: dockerImageName,
         },
       };
-      const octokit = await getAuthenticatedOctokit({
+      const octokit = await octokitFrom({
         privateKey,
         appId,
         installation: configs.installationId,

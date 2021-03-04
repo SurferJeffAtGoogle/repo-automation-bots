@@ -33,8 +33,6 @@ import * as sinon from 'sinon';
 import {OwlBotLock} from '../src/config-files';
 import {
   core,
-  getAuthenticatedOctokit,
-  getGitHubShortLivedAccessToken,
 } from '../src/core';
 const sandbox = sinon.createSandbox();
 

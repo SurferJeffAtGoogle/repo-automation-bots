@@ -37,23 +37,42 @@ export interface OctokitParams {
 }
 
 /**
+ * Like OctokitParams, but privateKey contains the text that was stored in pem-path.
+ */
+export interface AuthArgs {
+  privateKey: string;
+  appId: number;
+  installation: number;
+}
+
+/**
+ * Convert OctokitParams to AuthArgs.
+ */
+export async function authArgsFrom(params: OctokitParams): Promise<AuthArgs> {
+  return {
+    privateKey: await readFileAsync(params['pem-path'], 'utf8'),
+    appId: params["app-id"],
+    installation: params.installation
+  };
+}
+
+/**
  * Creates an authenticated instance of octokit.
  */
-export async function octokitFrom(params: OctokitParams): Promise<OctokitType> {
+export async function octokitFrom(params: OctokitParams | AuthArgs): Promise<OctokitType> {
   const token = await githubTokenFrom(params);
   return new Octokit({auth: token.token });
-
 }
 
 /**
  * Fetchs a short lived token from the github API.
  */
-export async function githubTokenFrom(params: OctokitParams): Promise<Token> {
-  const privateKey = await readFileAsync(params['pem-path'], 'utf8');
+export async function githubTokenFrom(params: OctokitParams | AuthArgs): Promise<Token> {
+  const args: AuthArgs = 'privateKey' in params ? params : await authArgsFrom(params);
   const token = await getGitHubShortLivedAccessToken(
-    privateKey,
-    params['app-id'],
-    params.installation
+    args.privateKey,
+    args.appId,
+    args.installation
   );
   return token;
 }
@@ -69,7 +88,7 @@ export interface OctokitFactory {
 /**
  * Creates an octokit factory from the common params.
  */
-export function octokitFactoryFrom(params: OctokitParams): OctokitFactory {
+export function octokitFactoryFrom(params: OctokitParams | AuthArgs): OctokitFactory {
   return {
     getGitHubShortLivedAccessToken() { return githubTokenFrom(params); },
     async getShortLivedOctokit(token?: Token) {
