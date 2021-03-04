@@ -71,16 +71,6 @@ export async function copyCodeAndCreatePullRequest(
   args: Args,
   logger = console
 ): Promise<void> {
-  let octokit = await octokitFrom(args);
-  if (
-    await copyExists(
-      octokit,
-      args['dest-repo'],
-      args['source-repo-commit-hash']
-    )
-  ) {
-    return; // Copy already exists.  Don't copy again.
-  }
   const workDir = tmp.dirSync().name;
   logger.info(`Working in ${workDir}`);
 
@@ -109,6 +99,7 @@ export async function copyCodeAndCreatePullRequest(
       args['source-repo'],
       args['source-repo-commit-hash']
     );
+    const octokit = await octokitFrom(args);
     const issue = await octokit.issues.create({
       owner,
       repo,
@@ -145,7 +136,7 @@ ${err}`,
     args.installation
   );
   // Octokit token may have expired; refresh it.
-  octokit = await core.getAuthenticatedOctokit(token.token);
+  const octokit = await core.getAuthenticatedOctokit(token.token);
   if (
     await copyExists(
       octokit,
@@ -204,12 +195,18 @@ export async function loadOwlBotYaml(destDir: string): Promise<OwlBotYaml> {
  * @param depth the depth param to pass to git clone.
  * @returns the path to the local repo.
  */
-export function toLocalRepo(repo: string, workDir: string, logger=console, depth=100): string {
+export function toLocalRepo(
+  repo: string,
+  workDir: string,
+  logger = console,
+  depth = 100
+): string {
   if (stat(repo)?.isDirectory()) {
     logger.info(`Using local source repo directory ${repo}`);
     return repo;
   } else {
-    const localDir = path.join(workDir, 'source');
+    const [, repoName] = repo.split('/');
+    const localDir = path.join(workDir, repoName);
     const cmd = newCmd(logger);
     cmd(
       `git clone --depth=${depth} "https://github.com/${repo}.git" ${localDir}`
