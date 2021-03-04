@@ -28,7 +28,7 @@ interface Todo {
   commitHash: string;
 }
 
-export async function copyNewCode(
+export async function scanGoogleapisGenAndCreatePullRequests(
   sourceRepo: string,
   octokitParams: OctokitParams,
   configsStore: ConfigsStore,

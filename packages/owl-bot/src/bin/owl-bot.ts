@@ -22,7 +22,7 @@ import {enqueueCopyTasks} from './commands/enqueue-copy-tasks';
 import {copyExists} from './commands/copy-exists';
 import {copyCodeCommand} from './commands/copy-code';
 import {copyCodeAndCreatePullRequestCommand} from './commands/copy-code-and-create-pull-request';
-import {copyNewCodeCommand} from './commands/copy-new-code';
+import { scanGoogleapisGenAndCreatePullRequestsCommand } from './commands/scan-googleapis-gen-and-create-pull-requests';
 
 yargs(process.argv.slice(2))
   .command(triggerBuildCommand)
@@ -32,7 +32,7 @@ yargs(process.argv.slice(2))
   .command(enqueueCopyTasks)
   .command(copyExists)
   .command(copyCodeCommand)
-  .command(copyNewCodeCommand)
+  .command(scanGoogleapisGenAndCreatePullRequestsCommand)
   .command(copyCodeAndCreatePullRequestCommand)
   .demandCommand(1)
   .strictCommands()

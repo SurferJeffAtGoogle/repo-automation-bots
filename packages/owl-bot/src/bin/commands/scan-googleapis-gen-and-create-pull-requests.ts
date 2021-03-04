@@ -16,7 +16,7 @@
 
 import admin from 'firebase-admin';
 import yargs = require('yargs');
-import { copyNewCode } from '../../copy-new-code';
+import { scanGoogleapisGenAndCreatePullRequests } from '../../scan-googleapis-gen-and-create-pull-requests';
 import { FirestoreConfigsStore } from '../../database';
 import { OctokitParams } from '../../octokit-util';
 
@@ -25,11 +25,11 @@ interface Args extends OctokitParams {
   'firestore-project': string;
 }
 
-export const copyNewCodeCommand: yargs.CommandModule<
+export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
   {},
   Args
 > = {
-  command: 'copy-new-code',
+  command: 'scan-googleapis-gen-and-create-pull-requests',
   describe:
     'Searches through googleapis-gen commit history, and copies code to dest repos.',
   builder(yargs) {
@@ -67,6 +67,6 @@ export const copyNewCodeCommand: yargs.CommandModule<
     });
     const db = admin.firestore();
     const configsStore = new FirestoreConfigsStore(db!);
-    copyNewCode(argv['source-repo'], argv, configsStore);
+    scanGoogleapisGenAndCreatePullRequests(argv['source-repo'], argv, configsStore);
   },
 };
