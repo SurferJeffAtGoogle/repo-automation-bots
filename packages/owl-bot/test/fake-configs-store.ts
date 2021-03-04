@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {Configs, ConfigsStore} from '../src/configs-store';
-import { OwlBotLock } from '../src/config-files';
+import { OwlBotLock, toFullMatchRegExp } from '../src/config-files';
 
 export class FakeConfigsStore implements ConfigsStore {
     readonly configs: Map<string, Configs>;
@@ -23,7 +23,21 @@ export class FakeConfigsStore implements ConfigsStore {
     findReposAffectedByFileChanges(
       changedFilePaths: string[]
     ): Promise<string[]> {
-      throw new Error('Method not implemented.');
+      const result: string[] = [];
+      for (const [repoName, config] of this.configs) {
+        repoLoop: for (const deepCopy of config.yaml?.["deep-copy-regex"] ?? []) {
+          for (const source of deepCopy.source) {
+            const regexp = toFullMatchRegExp(source);
+            for (const filePath in changedFilePaths) {
+              if (regexp.test(filePath)) {
+                result.push(filePath);
+                break repoLoop;
+              }
+            }
+          }
+        }
+      }
+      return Promise.resolve(result);
     }
   
     getConfigs(repo: string): Promise<Configs | undefined> {
