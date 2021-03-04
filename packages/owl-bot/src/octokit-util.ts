@@ -18,7 +18,7 @@ import {Octokit} from '@octokit/rest';
 import {ProbotOctokit} from 'probot';
 import {promisify} from 'util';
 import {readFile} from 'fs';
-import {getGitHubShortLivedAccessToken, core} from './core';
+import {getGitHubShortLivedAccessToken, core, Token} from './core';
 
 const readFileAsync = promisify(readFile);
 
@@ -35,14 +35,36 @@ export interface OctokitParams {
 /**
  * Creates an authenticated instance of octokit.
  */
-export async function octokitFrom(argv: OctokitParams): Promise<OctokitType> {
-  // TODO: replace all instances of the following code with a call to
-  //       octokitFrom().
-  const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
+export async function octokitFrom(params: OctokitParams): Promise<OctokitType> {
+  const token = await githubTokenFrom(params);
+  return await core.getAuthenticatedOctokit(token.token);
+}
+
+/**
+ * Fetchs a short lived token from the github API.
+ */
+export async function githubTokenFrom(params: OctokitParams): Promise<Token> {
+  const privateKey = await readFileAsync(params['pem-path'], 'utf8');
   const token = await getGitHubShortLivedAccessToken(
     privateKey,
-    argv['app-id'],
-    argv.installation
+    params['app-id'],
+    params.installation
   );
-  return await core.getAuthenticatedOctokit(token.token);
+  return token;
+}
+
+
+export interface OctokitFactory {
+  getGitHubShortLivedAccessToken(): Promise<Token>;
+  getShortLivedOctokit(token?: Token) : Promise<OctokitType>;
+}
+
+export function octokitFactoryFrom(params: OctokitParams): OctokitFactory {
+  return {
+    getGitHubShortLivedAccessToken() { return githubTokenFrom(params); },
+    async getShortLivedOctokit(token?: Token) {
+      const atoken = token ?? await githubTokenFrom(params);
+      return await core.getAuthenticatedOctokit(atoken.token);
+    }
+  };
 }

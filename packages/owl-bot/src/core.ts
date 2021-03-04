@@ -63,7 +63,7 @@ interface Commit {
   sha: string;
 }
 
-interface Token {
+export interface Token {
   token: string;
   expires_at: string;
   permissions: object;

@@ -25,7 +25,7 @@ import path from 'path';
 import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
-import {OctokitParams, octokitFrom, OctokitType} from './octokit-util';
+import {OctokitParams, octokitFrom, OctokitType, OctokitFactory} from './octokit-util';
 import {core} from './core';
 import tmp from 'tmp';
 import glob from 'glob';
@@ -36,7 +36,7 @@ import glob from 'glob';
 // 2. Calling sync functions yields simpler code.
 
 const readFileAsync = promisify(readFile);
-export interface Args extends OctokitParams {
+export interface Args {
   'source-repo': string;
   'source-repo-commit-hash': string;
   'dest-repo': string;
@@ -69,6 +69,7 @@ function sourceLinkFrom(sourceRepo: string, sourceCommitHash: string): string {
  */
 export async function copyCodeAndCreatePullRequest(
   args: Args,
+  octokitFactory: OctokitFactory,
   logger = console
 ): Promise<void> {
   const workDir = tmp.dirSync().name;
@@ -99,7 +100,7 @@ export async function copyCodeAndCreatePullRequest(
       args['source-repo'],
       args['source-repo-commit-hash']
     );
-    const octokit = await octokitFrom(args);
+    const octokit = await octokitFactory.getShortLivedOctokit();
     const issue = await octokit.issues.create({
       owner,
       repo,
@@ -129,14 +130,9 @@ ${err}`,
   );
 
   // Check for existing pull request one more time before we push.
-  const privateKey = await readFileAsync(args['pem-path'], 'utf8');
-  const token = await core.getGitHubShortLivedAccessToken(
-    privateKey,
-    args['app-id'],
-    args.installation
-  );
+  const token = await octokitFactory.getGitHubShortLivedAccessToken();
   // Octokit token may have expired; refresh it.
-  const octokit = await core.getAuthenticatedOctokit(token.token);
+  const octokit = await octokitFactory.getShortLivedOctokit(token);
   if (
     await copyExists(
       octokit,

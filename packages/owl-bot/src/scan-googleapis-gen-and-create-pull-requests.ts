@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import {ConfigsStore} from './configs-store';
-import {octokitFrom, OctokitParams} from './octokit-util';
 import tmp from 'tmp';
 import {
   copyCodeAndCreatePullRequest,
@@ -22,6 +21,7 @@ import {
   toLocalRepo,
 } from './copy-code';
 import {getFilesModifiedBySha} from '.';
+import { OctokitFactory } from './octokit-util';
 
 interface Todo {
   repo: string;
@@ -30,7 +30,7 @@ interface Todo {
 
 export async function scanGoogleapisGenAndCreatePullRequests(
   sourceRepo: string,
-  octokitParams: OctokitParams,
+  octokitFactory: OctokitFactory,
   configsStore: ConfigsStore,
   cloneDepth = 100,
   logger = console
@@ -47,7 +47,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
   const commitHashes = stdout.toString('utf8').split(/\r?\n/);
 
   const todoStack: Todo[] = [];
-  const octokit = await octokitFrom(octokitParams);
+  const octokit = await octokitFactory.getShortLivedOctokit();
 
   // Search the commit history for commits that still need to be copied
   // to destination repos.
@@ -91,10 +91,8 @@ export async function scanGoogleapisGenAndCreatePullRequests(
         'source-repo': sourceDir,
         'source-repo-commit-hash': todo.commitHash,
         'dest-repo': todo.repo,
-        'app-id': octokitParams['app-id'],
-        'pem-path': octokitParams['pem-path'],
-        installation: octokitParams.installation,
       },
+      octokitFactory,
       logger
     );
   }
