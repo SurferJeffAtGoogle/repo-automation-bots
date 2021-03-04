@@ -369,7 +369,9 @@ export async function getFilesModifiedBySha(
   path: string,
   sha: string
 ): Promise<string[]> {
-  const out = await execAsync(`git show --name-only ${sha}`, {
+  // --no-renames to avoid
+  // warning: inexact rename detection was skipped due to too many files.
+  const out = await execAsync(`git show --name-only --no-renames ${sha}`, {
     cwd: path,
     // Handle 100,000+ files changing:
     maxBuffer: 1024 * 1024 * 512,
