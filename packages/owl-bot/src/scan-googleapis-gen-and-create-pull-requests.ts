@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {ConfigsStore} from './configs-store';
-import {octokitFrom, OctokitParams} from './octokit-util';
+import {octokitFrom, OctokitParams, OctokitType} from './octokit-util';
 import tmp from 'tmp';
 import {
   copyCodeAndCreatePullRequest,
@@ -47,7 +47,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
   const commitHashes = stdout.toString('utf8').split(/\r?\n/);
 
   const todoStack: Todo[] = [];
-  const octokit = await octokitFrom(octokitParams);
+  let octokit: null | OctokitType = null;
 
   // Search the commit history for commits that still need to be copied
   // to destination repos.
@@ -68,6 +68,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     repos.forEach(repo => logger.info(repo));
     const stackSize = todoStack.length;
     for (const repo of repos) {
+      octokit = octokit ?? await octokitFrom(octokitParams);
       if (!copyExists(octokit, repo, commitHash, logger)) {
         const todo: Todo = {repo, commitHash};
         logger.info(`Pushing todo onto stack: ${todo}`);
