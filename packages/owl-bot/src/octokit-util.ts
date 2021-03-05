@@ -18,7 +18,7 @@ import {Octokit} from '@octokit/rest';
 import {ProbotOctokit} from 'probot';
 import {promisify} from 'util';
 import {readFile} from 'fs';
-import {getGitHubShortLivedAccessToken, core} from './core';
+import {core} from './core';
 
 const readFileAsync = promisify(readFile);
 
@@ -39,7 +39,7 @@ export async function octokitFrom(argv: OctokitParams): Promise<OctokitType> {
   // TODO: replace all instances of the following code with a call to
   //       octokitFrom().
   const privateKey = await readFileAsync(argv['pem-path'], 'utf8');
-  const token = await getGitHubShortLivedAccessToken(
+  const token = await core.getGitHubShortLivedAccessToken(
     privateKey,
     argv['app-id'],
     argv.installation
