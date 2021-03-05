@@ -18,7 +18,7 @@ import admin from 'firebase-admin';
 import yargs = require('yargs');
 import {scanGoogleapisGenAndCreatePullRequests} from '../../scan-googleapis-gen-and-create-pull-requests';
 import {FirestoreConfigsStore} from '../../database';
-import {OctokitParams} from '../../octokit-util';
+import {OctokitParams, octokitFactoryFrom} from '../../octokit-util';
 
 interface Args extends OctokitParams {
   'source-repo': string;
@@ -77,7 +77,7 @@ export const scanGoogleapisGenAndCreatePullRequestsCommand: yargs.CommandModule<
     const configsStore = new FirestoreConfigsStore(db!);
     scanGoogleapisGenAndCreatePullRequests(
       argv['source-repo'],
-      argv,
+      octokitFactoryFrom(argv),
       configsStore,
       argv['clone-depth']
     );

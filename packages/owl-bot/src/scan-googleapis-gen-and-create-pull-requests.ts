@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {ConfigsStore} from './configs-store';
-import {octokitFrom, OctokitParams, OctokitType} from './octokit-util';
+import {octokitFrom, OctokitParams, OctokitType, OctokitFactory} from './octokit-util';
 import tmp from 'tmp';
 import {
   copyCodeAndCreatePullRequest,
@@ -30,7 +30,7 @@ interface Todo {
 
 export async function scanGoogleapisGenAndCreatePullRequests(
   sourceRepo: string,
-  octokitParams: OctokitParams,
+  octokitFactory: OctokitFactory,
   configsStore: ConfigsStore,
   cloneDepth = 100,
   logger = console
@@ -68,7 +68,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     repos.forEach(repo => logger.info(repo));
     const stackSize = todoStack.length;
     for (const repo of repos) {
-      octokit = octokit ?? (await octokitFrom(octokitParams));
+      octokit = octokit ?? await octokitFactory.getShortLivedOctokit();
       if (!copyExists(octokit, repo, commitHash, logger)) {
         const todo: Todo = {repo, commitHash};
         logger.info(`Pushing todo onto stack: ${todo}`);
@@ -92,10 +92,8 @@ export async function scanGoogleapisGenAndCreatePullRequests(
         'source-repo': sourceDir,
         'source-repo-commit-hash': todo.commitHash,
         'dest-repo': todo.repo,
-        'app-id': octokitParams['app-id'],
-        'pem-path': octokitParams['pem-path'],
-        installation: octokitParams.installation,
       },
+      octokitFactory,
       logger
     );
   }

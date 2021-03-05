@@ -19,16 +19,10 @@ import {scanGoogleapisGenAndCreatePullRequests} from '../src/scan-googleapis-gen
 import {newCmd} from '../src/copy-code';
 import {makeDirTree} from './dir-tree';
 import {FakeConfigsStore} from './fake-configs-store';
-import {OctokitParams} from '../src/octokit-util';
+import {OctokitParams, OctokitFactory} from '../src/octokit-util';
 import {OwlBotYaml} from '../src/config-files';
 
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
-  const octokitParams: OctokitParams = {
-    'app-id': 4,
-    installation: 5,
-    'pem-path': '/no/where',
-  };
-
   function makeAbcRepo(): string {
     // Create a git repo.
     const dir = tmp.dirSync().name;
@@ -57,7 +51,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     assert.strictEqual(
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
-        octokitParams,
+        {} as OctokitFactory,
         configsStore
       ),
       0
@@ -90,7 +84,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     assert.strictEqual(
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
-        octokitParams,
+        {} as OctokitFactory,
         configsStore
       ),
       0
