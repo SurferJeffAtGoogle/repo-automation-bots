@@ -69,7 +69,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     const stackSize = todoStack.length;
     for (const repo of repos) {
       octokit = octokit ?? await octokitFactory.getShortLivedOctokit();
-      if (!copyExists(octokit, repo, commitHash, logger)) {
+      if (!await copyExists(octokit, repo, commitHash, logger)) {
         const todo: Todo = {repo, commitHash};
         logger.info(`Pushing todo onto stack: ${todo}`);
         todoStack.push(todo);

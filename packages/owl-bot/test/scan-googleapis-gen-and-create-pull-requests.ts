@@ -97,8 +97,40 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     const octokit = ({
         search: {
           commits() {
-            return { data: ["yes"]};
+            return Promise.resolve({ data: { total_count: 1}});
           },
+        }
+    });
+
+    assert.strictEqual(
+      await scanGoogleapisGenAndCreatePullRequests(
+        abcRepo,
+        factory(octokit),
+        configsStoreWithAYaml
+      ),
+      0
+    );
+  });
+
+  it('copies files', async () => {
+    const octokit = ({
+        search: {
+          commits() {
+            return Promise.resolve({ data: { total_count: 0}});
+          },
+          issuesAndPullRequests() {
+            return Promise.resolve({ data: { total_count: 0}});
+          },
+        },
+        pulls: {
+            list() {
+                return Promise.resolve({data:[]});
+            }
+        },
+        issues: {
+            listForRepo() {
+                return Promise.resolve({data:[]});
+            }
         }
     });
 
