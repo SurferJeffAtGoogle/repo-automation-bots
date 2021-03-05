@@ -19,7 +19,7 @@ import {scanGoogleapisGenAndCreatePullRequests} from '../src/scan-googleapis-gen
 import {newCmd} from '../src/copy-code';
 import {makeDirTree} from './dir-tree';
 import {FakeConfigsStore} from './fake-configs-store';
-import {OctokitParams, OctokitFactory} from '../src/octokit-util';
+import {OctokitParams, OctokitFactory, OctokitType} from '../src/octokit-util';
 import {OwlBotYaml} from '../src/config-files';
 
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
@@ -58,34 +58,55 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     );
   });
 
-  it('wokrs', async () => {
-    const yaml: OwlBotYaml = {
-      'deep-copy-regex': [
+  function factory(octokit: any): OctokitFactory {
+      return {
+        getGitHubShortLivedAccessToken(): Promise<string> {
+            return Promise.resolve("fake-token")
+        },
+        getShortLivedOctokit(token?: string): Promise<OctokitType> {
+            return Promise.resolve(octokit as OctokitType);
+        }
+      };
+  }
+
+  const aYaml: OwlBotYaml = {
+    'deep-copy-regex': [
+      {
+        source: '/a.txt',
+        dest: '/src/a.txt',
+        'rm-dest': '',
+      },
+    ],
+  };
+
+  const configsStoreWithAYaml = new FakeConfigsStore(
+    new Map([
+      [
+        'googleapis/nodejs-vision',
         {
-          source: '/a.txt',
-          dest: '/src/a.txt',
-          'rm-dest': '',
+          branchName: 'main',
+          commitHash: '456',
+          installationId: 42,
+          yaml: aYaml,
         },
       ],
-    };
-    const configsStore = new FakeConfigsStore(
-      new Map([
-        [
-          'googleapis/nodejs-vision',
-          {
-            branchName: 'main',
-            commitHash: '456',
-            installationId: 42,
-            yaml,
+    ])
+  );
+
+  it('does nothing when a pull request already exists', async () => {
+    const octokit = ({
+        search: {
+          commits() {
+            return { data: ["yes"]};
           },
-        ],
-      ])
-    );
+        }
+    });
+
     assert.strictEqual(
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
-        {} as OctokitFactory,
-        configsStore
+        factory(octokit),
+        configsStoreWithAYaml
       ),
       0
     );
