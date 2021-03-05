@@ -34,7 +34,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
   configsStore: ConfigsStore,
   cloneDepth = 100,
   logger = console
-): Promise<void> {
+): Promise<number> {
   // Clone the source repo.
   const workDir = tmp.dirSync().name;
   // cloneDepth + 1 because the final commit in a shallow clone is grafted: it contains
@@ -99,4 +99,5 @@ export async function scanGoogleapisGenAndCreatePullRequests(
       logger
     );
   }
+  return todoStack.length;
 }
