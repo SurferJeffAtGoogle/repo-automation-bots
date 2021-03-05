@@ -17,7 +17,7 @@ import * as fs from 'fs';
 
 /**
  * Creates a directory struture with files.
- * 
+ *
  * @param rootDir the root directory under which to create files and directories.
  * @param specs a list of files and directories in this format:
  *   files are specified by <path>:<content>  For example:
@@ -26,15 +26,15 @@ import * as fs from 'fs';
  *      "/empty/dir"
  */
 export function makeDirTree(rootDir: string, specs: string[]): void {
-    for (const spec of specs) {
-        const [apath, content] = spec.split(':', 2);
-        const fpath = path.join(rootDir, apath);
-        const dirName = content ? path.dirname(fpath) : fpath;
-        fs.mkdirSync(dirName, { recursive: true });
-        if (content) {
-            fs.writeFileSync(fpath, content);
-        }
+  for (const spec of specs) {
+    const [apath, content] = spec.split(':', 2);
+    const fpath = path.join(rootDir, apath);
+    const dirName = content ? path.dirname(fpath) : fpath;
+    fs.mkdirSync(dirName, {recursive: true});
+    if (content) {
+      fs.writeFileSync(fpath, content);
     }
+  }
 }
 
 /**
@@ -48,16 +48,16 @@ export function makeDirTree(rootDir: string, specs: string[]): void {
 
  */
 export function collectDirTree(dir: string): string[] {
-    const tree: string[] = [];
-    for (const apath of glob.sync('**', { cwd: dir })) {
-        const fullPath = path.join(dir, apath);
-        if (fs.lstatSync(fullPath).isDirectory()) {
-            tree.push(apath);
-        } else {
-            const content = fs.readFileSync(fullPath, { encoding: 'utf8' });
-            tree.push(`${apath}:${content}`);
-        }
+  const tree: string[] = [];
+  for (const apath of glob.sync('**', {cwd: dir})) {
+    const fullPath = path.join(dir, apath);
+    if (fs.lstatSync(fullPath).isDirectory()) {
+      tree.push(apath);
+    } else {
+      const content = fs.readFileSync(fullPath, {encoding: 'utf8'});
+      tree.push(`${apath}:${content}`);
     }
-    tree.sort();
-    return tree;
+  }
+  tree.sort();
+  return tree;
 }

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it } from 'mocha';
+import {describe, it} from 'mocha';
 import * as assert from 'assert';
-import { copyDirs } from '../src/copy-code';
+import {copyDirs} from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
 import tmp from 'tmp';
-import { OwlBotYaml } from '../src/config-files';
-import { collectDirTree, makeDirTree } from './dir-tree';
+import {OwlBotYaml} from '../src/config-files';
+import {collectDirTree, makeDirTree} from './dir-tree';
 
 describe('copyDirs', () => {
   /**
@@ -33,10 +33,12 @@ describe('copyDirs', () => {
       'source/a/x',
       'source/b/y',
       'source/b/z',
-      'source/q.txt:q', 'source/a/r.txt:r', 'source/b/y/s.txt:s']);
+      'source/q.txt:q',
+      'source/a/r.txt:r',
+      'source/b/y/s.txt:s',
+    ]);
     return path.join(rootDir, 'source');
   }
-
 
   function makeSourceAndDestDirs(): [string, string] {
     const tempo = tmp.dirSync();
@@ -92,7 +94,7 @@ describe('copyDirs', () => {
       sourceDir,
       'google/cloud/asset/v1p1beta1/google-cloud-asset-v1p1beta1-java/grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java'
     );
-    fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
+    fs.mkdirSync(path.dirname(sourcePath), {recursive: true});
     fs.writeFileSync(sourcePath, 'from java import *;');
 
     // prepare the dest.
@@ -104,7 +106,7 @@ describe('copyDirs', () => {
     for (const file of files) {
       const [relPath, content] = file.split(':');
       const fullPath = path.join(destDir, relPath);
-      fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+      fs.mkdirSync(path.dirname(fullPath), {recursive: true});
       fs.writeFileSync(fullPath, content);
     }
     const yaml: OwlBotYaml = {

@@ -35,7 +35,7 @@ import {
   getAuthenticatedOctokit,
   getGitHubShortLivedAccessToken,
 } from '../src/core';
-import { FakeConfigsStore } from './fake-configs-store';
+import {FakeConfigsStore} from './fake-configs-store';
 const sandbox = sinon.createSandbox();
 
 type Changes = Array<[string, {content: string; mode: string}]>;
