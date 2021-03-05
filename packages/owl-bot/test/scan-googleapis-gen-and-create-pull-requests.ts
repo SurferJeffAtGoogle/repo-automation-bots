@@ -119,7 +119,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
             return Promise.resolve({ data: { total_count: 0}});
           },
           issuesAndPullRequests() {
-            return Promise.resolve({ data: { total_count: 0}});
+            return Promise.resolve({ data: { items: []}});
           },
         },
         pulls: {
