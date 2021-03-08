@@ -20,9 +20,11 @@ import {GithubRepo, githubRepoFromOwnerSlashName} from '../src/github-repo';
 
 export class FakeConfigsStore implements ConfigsStore {
   readonly configs: Map<string, Configs>;
+  readonly githubRepos: Map<string, GithubRepo>;
 
   constructor(configs?: Map<string, Configs>) {
     this.configs = configs ?? new Map<string, Configs>();
+    this.githubRepos = new Map();
   }
   findReposAffectedByFileChanges(
     changedFilePaths: string[]
@@ -30,15 +32,13 @@ export class FakeConfigsStore implements ConfigsStore {
     const result: GithubRepo[] = [];
     for (const [repoName, config] of this.configs) {
       repoLoop: for (const deepCopy of config.yaml?.['deep-copy-regex'] ?? []) {
-        for (const source of deepCopy.source) {
-          const regexp = toFullMatchRegExp(source);
-          for (const filePath in changedFilePaths) {
+          const regexp = toFullMatchRegExp(deepCopy.source);
+          for (const filePath of changedFilePaths) {
             if (regexp.test(filePath)) {
-              result.push(githubRepoFromOwnerSlashName(repoName));
+              result.push(this.githubRepos.get(repoName) ?? githubRepoFromOwnerSlashName(repoName));
               break repoLoop;
             }
           }
-        }
       }
     }
     return Promise.resolve(result);
