@@ -140,10 +140,14 @@ ${err}`,
   // Use the commit's subject and body as the pull request's title and body.
   const title: string = cmd('git log -1 --format=%s', {
     cwd: destDir,
-  }).toString('utf8').trim();
+  })
+    .toString('utf8')
+    .trim();
   const body: string = cmd('git log -1 --format=%b', {
     cwd: destDir,
-  }).toString('utf8').trim();
+  })
+    .toString('utf8')
+    .trim();
 
   // Create a pull request.
   const pull = await octokit.pulls.create({

@@ -14,54 +14,56 @@
 
 import tmp from 'tmp';
 import * as assert from 'assert';
-import { describe, it } from 'mocha';
-import { scanGoogleapisGenAndCreatePullRequests } from '../src/scan-googleapis-gen-and-create-pull-requests';
+import {describe, it} from 'mocha';
+import {scanGoogleapisGenAndCreatePullRequests} from '../src/scan-googleapis-gen-and-create-pull-requests';
 import * as cc from '../src/copy-code';
-import { makeDirTree } from './dir-tree';
-import { OctokitFactory, OctokitType } from '../src/octokit-util';
-import { OwlBotYaml, owlBotYamlPath } from '../src/config-files';
+import {makeDirTree} from './dir-tree';
+import {OctokitFactory, OctokitType} from '../src/octokit-util';
+import {OwlBotYaml, owlBotYamlPath} from '../src/config-files';
 import * as fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import { GithubRepo } from '../src/github-repo';
-import { FakeConfigsStore } from './fake-configs-store';
+import {GithubRepo} from '../src/github-repo';
+import {FakeConfigsStore} from './fake-configs-store';
 
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
   const cmd = cc.newCmd();
   function makeAbcRepo(): string {
     // Create a git repo.
     const dir = tmp.dirSync().name;
-    cmd('git init', { cwd: dir });
+    cmd('git init', {cwd: dir});
 
     // Add 3 commits
     makeDirTree(dir, ['a.txt:1']);
-    cmd('git add -A', { cwd: dir });
-    cmd('git commit -m a', { cwd: dir });
+    cmd('git add -A', {cwd: dir});
+    cmd('git commit -m a', {cwd: dir});
 
     makeDirTree(dir, ['b.txt:2']);
-    cmd('git add -A', { cwd: dir });
-    cmd('git commit -m b', { cwd: dir });
+    cmd('git add -A', {cwd: dir});
+    cmd('git commit -m b', {cwd: dir});
 
     makeDirTree(dir, ['c.txt:3']);
-    cmd('git add -A', { cwd: dir });
-    cmd('git commit -m c', { cwd: dir });
+    cmd('git add -A', {cwd: dir});
+    cmd('git commit -m c', {cwd: dir});
     return dir;
   }
 
   const abcRepo = makeAbcRepo();
-  const abcCommits = cmd("git log --format=%H", {cwd: abcRepo}).toString('utf8').split(/\r?\n/);
+  const abcCommits = cmd('git log --format=%H', {cwd: abcRepo})
+    .toString('utf8')
+    .split(/\r?\n/);
 
   function makeRepoWithOwlBotYaml(owlBotYaml: OwlBotYaml): string {
     const dir = tmp.dirSync().name;
-    cmd('git init', { cwd: dir });
+    cmd('git init', {cwd: dir});
 
     const yamlPath = path.join(dir, owlBotYamlPath);
-    fs.mkdirSync(path.dirname(yamlPath), { recursive: true });
+    fs.mkdirSync(path.dirname(yamlPath), {recursive: true});
     const text = yaml.dump(owlBotYaml);
     fs.writeFileSync(yamlPath, text);
 
-    cmd('git add -A', { cwd: dir });
-    cmd('git commit -m "Hello OwlBot"', { cwd: dir });
+    cmd('git add -A', {cwd: dir});
+    cmd('git commit -m "Hello OwlBot"', {cwd: dir});
 
     return dir;
   }
@@ -71,7 +73,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
         {} as OctokitFactory,
-        new FakeConfigsStore(),
+        new FakeConfigsStore()
       ),
       0
     );
@@ -102,7 +104,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     const octokit = {
       search: {
         commits() {
-          return Promise.resolve({ data: { total_count: 1 } });
+          return Promise.resolve({data: {total_count: 1}});
         },
       },
     };
@@ -111,7 +113,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
         factory(octokit),
-        new FakeConfigsStore(),
+        new FakeConfigsStore()
       ),
       0
     );
@@ -125,13 +127,13 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     }
 
     listForRepo() {
-      return Promise.resolve({ data: this.issues });
+      return Promise.resolve({data: this.issues});
     }
 
     create(issue: any) {
       this.issues.push(issue);
       issue.html_url = `http://github.com/fake/issues/${this.issues.length}`;
-      return Promise.resolve({ data: issue });
+      return Promise.resolve({data: issue});
     }
   }
 
@@ -139,12 +141,14 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     pulls: any[] = [];
 
     list() {
-      return Promise.resolve({ data: this.pulls });
+      return Promise.resolve({data: this.pulls});
     }
 
     create(pull: any) {
       this.pulls.push(pull);
-      return Promise.resolve({ data: { html_url: `http://github.com/fake/pulls/${this.pulls.length}` } });
+      return Promise.resolve({
+        data: {html_url: `http://github.com/fake/pulls/${this.pulls.length}`},
+      });
     }
   }
 
@@ -153,10 +157,10 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     const octokit = {
       search: {
         commits() {
-          return Promise.resolve({ data: { total_count: 0 } });
+          return Promise.resolve({data: {total_count: 0}});
         },
         issuesAndPullRequests() {
-          return Promise.resolve({ data: { items: [] } });
+          return Promise.resolve({data: {items: []}});
         },
       },
       pulls: pulls,
@@ -165,47 +169,54 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
         get() {
           return {
             data: {
-              default_branch: "main"
-            }
+              default_branch: 'main',
+            },
           };
-        }
-      }
+        },
+      },
     };
 
     const destDir = makeRepoWithOwlBotYaml(bYaml);
     const destRepo: GithubRepo = {
       owner: 'googleapis',
       repo: 'nodejs-spell-check',
-      getCloneUrl(): string { return destDir; }
+      getCloneUrl(): string {
+        return destDir;
+      },
     };
 
     const destRepoName = `${destRepo.owner}/${destRepo.repo}`;
-    const configsStore = new FakeConfigsStore(new Map([
-      [
-        destRepoName,
-        {
-          branchName: 'main',
-          commitHash: '456',
-          installationId: 42,
-          yaml: bYaml
-        },
-      ],
-    ]));
+    const configsStore = new FakeConfigsStore(
+      new Map([
+        [
+          destRepoName,
+          {
+            branchName: 'main',
+            commitHash: '456',
+            installationId: 42,
+            yaml: bYaml,
+          },
+        ],
+      ])
+    );
     configsStore.githubRepos.set(destRepoName, destRepo);
     await scanGoogleapisGenAndCreatePullRequests(
       abcRepo,
       factory(octokit),
-      configsStore,
+      configsStore
     );
 
     // Confirm it created one pull request.
     assert.strictEqual(pulls.pulls.length, 1);
     const pull = pulls.pulls[0];
-    assert.strictEqual(pull.owner, "googleapis");
-    assert.strictEqual(pull.repo, "nodejs-spell-check");
-    assert.strictEqual(pull.title, "b");
-    assert.strictEqual(pull.base, "main");
-    assert.strictEqual(pull.body, `Source-Link: https://github.com/${abcRepo}/commit/${abcCommits[1]}`);
+    assert.strictEqual(pull.owner, 'googleapis');
+    assert.strictEqual(pull.repo, 'nodejs-spell-check');
+    assert.strictEqual(pull.title, 'b');
+    assert.strictEqual(pull.base, 'main');
+    assert.strictEqual(
+      pull.body,
+      `Source-Link: https://github.com/${abcRepo}/commit/${abcCommits[1]}`
+    );
 
     // Confirm the pull request branch contains the new file.
     cmd(`git checkout ${pull.head}`, {cwd: destDir});
@@ -213,7 +224,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     assert.strictEqual(fs.readFileSync(bpath).toString('utf8'), '2');
 
     // But of course the main branch doesn't have it until the PR is merged.
-    cmd(`git checkout main`, {cwd: destDir});
+    cmd('git checkout main', {cwd: destDir});
     assert.ok(!cc.stat(bpath));
   });
 });

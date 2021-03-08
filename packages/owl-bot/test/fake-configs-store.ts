@@ -32,13 +32,16 @@ export class FakeConfigsStore implements ConfigsStore {
     const result: GithubRepo[] = [];
     for (const [repoName, config] of this.configs) {
       repoLoop: for (const deepCopy of config.yaml?.['deep-copy-regex'] ?? []) {
-          const regexp = toFullMatchRegExp(deepCopy.source);
-          for (const filePath of changedFilePaths) {
-            if (regexp.test(filePath)) {
-              result.push(this.githubRepos.get(repoName) ?? githubRepoFromOwnerSlashName(repoName));
-              break repoLoop;
-            }
+        const regexp = toFullMatchRegExp(deepCopy.source);
+        for (const filePath of changedFilePaths) {
+          if (regexp.test(filePath)) {
+            result.push(
+              this.githubRepos.get(repoName) ??
+                githubRepoFromOwnerSlashName(repoName)
+            );
+            break repoLoop;
           }
+        }
       }
     }
     return Promise.resolve(result);
