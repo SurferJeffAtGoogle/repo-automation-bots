@@ -234,7 +234,7 @@ export async function copyCode(
 }
 
 // returns undefined instead of throwing an exception.
-function stat(path: string): fs.Stats | undefined {
+export function stat(path: string): fs.Stats | undefined {
   try {
     return fs.statSync(path);
   } catch (e) {

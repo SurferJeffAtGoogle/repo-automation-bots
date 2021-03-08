@@ -16,11 +16,10 @@ import tmp from 'tmp';
 import * as assert from 'assert';
 import { describe, it } from 'mocha';
 import { scanGoogleapisGenAndCreatePullRequests } from '../src/scan-googleapis-gen-and-create-pull-requests';
-import { newCmd } from '../src/copy-code';
+import * as cc from '../src/copy-code';
 import { makeDirTree } from './dir-tree';
 import { OctokitFactory, OctokitType } from '../src/octokit-util';
 import { OwlBotYaml, owlBotYamlPath } from '../src/config-files';
-import { ConfigsStore } from '../src/configs-store';
 import * as fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
@@ -28,10 +27,10 @@ import { GithubRepo } from '../src/github-repo';
 import { FakeConfigsStore } from './fake-configs-store';
 
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
+  const cmd = cc.newCmd();
   function makeAbcRepo(): string {
     // Create a git repo.
     const dir = tmp.dirSync().name;
-    const cmd = newCmd();
     cmd('git init', { cwd: dir });
 
     // Add 3 commits
@@ -50,7 +49,6 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
   }
 
   const abcRepo = makeAbcRepo();
-  const cmd = newCmd();
   const abcCommits = cmd("git log --format=%H", {cwd: abcRepo}).toString('utf8').split(/\r?\n/);
 
   function makeRepoWithOwlBotYaml(owlBotYaml: OwlBotYaml): string {
@@ -150,7 +148,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     }
   }
 
-  it('copies files', async () => {
+  it('copies files and creates a pull request', async () => {
     const pulls = new FakePulls();
     const octokit = {
       search: {
@@ -199,6 +197,8 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       factory(octokit),
       configsStore,
     );
+
+    // Confirm it created one pull request.
     assert.strictEqual(pulls.pulls.length, 1);
     const pull = pulls.pulls[0];
     assert.strictEqual(pull.owner, "googleapis");
@@ -206,5 +206,14 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     assert.strictEqual(pull.title, "b");
     assert.strictEqual(pull.base, "main");
     assert.strictEqual(pull.body, `Source-Link: https://github.com/${abcRepo}/commit/${abcCommits[1]}`);
+
+    // Confirm the pull request branch contains the new file.
+    cmd(`git checkout ${pull.head}`, {cwd: destDir});
+    const bpath = path.join(destDir, 'src', 'b.txt');
+    assert.strictEqual(fs.readFileSync(bpath).toString('utf8'), '2');
+
+    // But of course the main branch doesn't have it until the PR is merged.
+    cmd(`git checkout main`, {cwd: destDir});
+    assert.ok(!cc.stat(bpath));
   });
 });
