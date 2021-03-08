@@ -162,6 +162,19 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     }
   }
 
+  class FakePulls {
+      pulls: any[] = [];
+
+      list() {
+        return Promise.resolve({data: this.pulls});
+      }
+
+      create(pull: any) {
+          this.pulls.push(pull);
+          return Promise.resolve({data: {html_url: `http://github.com/fake/pulls/${this.pulls.length}`}});
+      }
+  }
+
   it('copies files', async () => {
     const octokit = {
       search: {
@@ -172,12 +185,15 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
           return Promise.resolve({data: {items: []}});
         },
       },
-      pulls: {
-        list() {
-          return Promise.resolve({data: []});
-        },
-      },
+      pulls: new FakePulls(),
       issues: new FakeIssues(),
+      repos: {
+          get() {
+              return { data: {
+                default_branch: "main"
+              }};
+          }
+      }
     };
 
     const destDir = makeRepoWithOwlBotYaml(bYaml);
