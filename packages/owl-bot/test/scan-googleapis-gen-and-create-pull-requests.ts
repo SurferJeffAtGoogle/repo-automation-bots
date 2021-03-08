@@ -176,6 +176,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
   }
 
   it('copies files', async () => {
+    const pulls = new FakePulls();
     const octokit = {
       search: {
         commits() {
@@ -185,7 +186,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
           return Promise.resolve({data: {items: []}});
         },
       },
-      pulls: new FakePulls(),
+      pulls: pulls,
       issues: new FakeIssues(),
       repos: {
           get() {
@@ -204,13 +205,11 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     };
 
 
-    assert.strictEqual(
-      await scanGoogleapisGenAndCreatePullRequests(
+    await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
         factory(octokit),
         new FakeStore([destRepo])
-      ),
-      0
     );
+    assert.deepStrictEqual(pulls, {});
   });
 });

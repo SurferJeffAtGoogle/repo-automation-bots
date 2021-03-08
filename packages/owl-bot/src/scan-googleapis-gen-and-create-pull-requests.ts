@@ -45,7 +45,8 @@ export async function scanGoogleapisGenAndCreatePullRequests(
   // Collect the history of commit hashes.
   const cmd = newCmd(logger);
   const stdout = cmd(`git log -${cloneDepth} --format=%H`, {cwd: sourceDir});
-  const commitHashes = stdout.toString('utf8').split(/\r?\n/);
+  const text = stdout.toString('utf8');
+  const commitHashes = text.split(/\r?\n/).filter(x => x);
 
   const todoStack: Todo[] = [];
   let octokit: null | OctokitType = null;
