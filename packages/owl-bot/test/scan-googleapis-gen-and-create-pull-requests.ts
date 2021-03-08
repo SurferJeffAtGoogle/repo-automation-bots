@@ -21,6 +21,7 @@ import {makeDirTree} from './dir-tree';
 import {FakeConfigsStore} from './fake-configs-store';
 import {OctokitFactory, OctokitType} from '../src/octokit-util';
 import {OwlBotYaml} from '../src/config-files';
+import { ConfigsStore } from '../src/configs-store';
 
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
   function makeAbcRepo(): string {
@@ -79,20 +80,6 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     ],
   };
 
-  const configsStoreWithAYaml = new FakeConfigsStore(
-    new Map([
-      [
-        'googleapis/nodejs-vision',
-        {
-          branchName: 'main',
-          commitHash: '456',
-          installationId: 42,
-          yaml: aYaml,
-        },
-      ],
-    ])
-  );
-
   it('does nothing when a pull request already exists', async () => {
     const octokit = {
       search: {
@@ -106,7 +93,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
         factory(octokit),
-        configsStoreWithAYaml
+        null as unknown as ConfigsStore
       ),
       0
     );
@@ -152,7 +139,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
         factory(octokit),
-        configsStoreWithAYaml
+        null as unknown as ConfigsStore
       ),
       0
     );
