@@ -16,9 +16,13 @@
 
 import yargs = require('yargs');
 import * as cc from '../../copy-code';
-import {octokitFrom, octokitFactoryFrom, OctokitParams} from '../../octokit-util';
+import { octokitFactoryFrom, OctokitParams } from '../../octokit-util';
 
-interface Args extends cc.Args, OctokitParams {}
+interface Args extends OctokitParams {
+  'source-repo': string,
+  'source-repo-commit-hash': string,
+  'dest-repo': string
+}
 
 export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<
   {},
@@ -70,7 +74,7 @@ export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<
       argv['source-repo-commit-hash']
     );
     if (!exists) {
-      await cc.copyCodeAndCreatePullRequest(argv, octokitFactory);
+      await cc.copyCodeAndCreatePullRequest(argv['source-repo'], argv['source-repo-commit-hash'], cc.githubRepoFromArg(argv['dest-repo']), octokitFactory);
     }
   },
 };

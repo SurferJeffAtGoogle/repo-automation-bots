@@ -112,6 +112,24 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     );
   });
 
+  class FakeIssues {
+      issues: any[] = []
+
+      constructor(issues: any[] = []) {
+          this.issues = issues;
+      }
+
+      listForRepo() {
+        return Promise.resolve({data: this.issues});
+      }
+
+      create(issue: any) {
+        this.issues.push(issue);
+        issue.html_url = `http://github.com/fake/issues/${this.issues.length}`;
+        return Promise.resolve({data: issue});
+      }
+  }
+
   it('copies files', async () => {
     const octokit = ({
         search: {
@@ -127,11 +145,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
                 return Promise.resolve({data:[]});
             }
         },
-        issues: {
-            listForRepo() {
-                return Promise.resolve({data:[]});
-            }
-        }
+        issues: new FakeIssues()
     });
 
     assert.strictEqual(

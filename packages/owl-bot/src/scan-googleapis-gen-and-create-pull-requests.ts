@@ -20,6 +20,7 @@ import {
   copyExists,
   newCmd,
   toLocalRepo,
+  githubRepoFromArg,
 } from './copy-code';
 import {getFilesModifiedBySha} from '.';
 
@@ -88,11 +89,9 @@ export async function scanGoogleapisGenAndCreatePullRequests(
   // Copy files beginning with the oldest commit hash.
   for (const todo of todoStack.reverse()) {
     await copyCodeAndCreatePullRequest(
-      {
-        'source-repo': sourceDir,
-        'source-repo-commit-hash': todo.commitHash,
-        'dest-repo': todo.repo,
-      },
+      sourceDir,
+      todo.commitHash,
+      githubRepoFromArg(todo.repo),
       octokitFactory,
       logger
     );
