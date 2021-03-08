@@ -14,6 +14,7 @@
 
 import {Configs, ConfigsStore} from '../src/configs-store';
 import {OwlBotLock, toFullMatchRegExp} from '../src/config-files';
+import { GithubRepo, githubRepoFromOwnerSlashName } from '../src/github-repo';
 // There are lots of unused args on fake functions, and that's ok.
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
@@ -25,15 +26,15 @@ export class FakeConfigsStore implements ConfigsStore {
   }
   findReposAffectedByFileChanges(
     changedFilePaths: string[]
-  ): Promise<string[]> {
-    const result: string[] = [];
+  ): Promise<GithubRepo[]> {
+    const result: GithubRepo[] = [];
     for (const [repoName, config] of this.configs) {
       repoLoop: for (const deepCopy of config.yaml?.['deep-copy-regex'] ?? []) {
         for (const source of deepCopy.source) {
           const regexp = toFullMatchRegExp(source);
           for (const filePath in changedFilePaths) {
             if (regexp.test(filePath)) {
-              result.push(repoName);
+              result.push(githubRepoFromOwnerSlashName(repoName));
               break repoLoop;
             }
           }

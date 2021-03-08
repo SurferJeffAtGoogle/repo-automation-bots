@@ -13,19 +13,19 @@
 // limitations under the License.
 
 import {ConfigsStore} from './configs-store';
-import {octokitFrom, OctokitParams, OctokitType, OctokitFactory} from './octokit-util';
+import {OctokitType, OctokitFactory} from './octokit-util';
 import tmp from 'tmp';
 import {
   copyCodeAndCreatePullRequest,
   copyExists,
   newCmd,
   toLocalRepo,
-  githubRepoFromArg,
 } from './copy-code';
 import {getFilesModifiedBySha} from '.';
+import { GithubRepo } from './github-repo';
 
 interface Todo {
-  repo: string;
+  repo: GithubRepo;
   commitHash: string;
 }
 
@@ -91,7 +91,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     await copyCodeAndCreatePullRequest(
       sourceDir,
       todo.commitHash,
-      githubRepoFromArg(todo.repo),
+      todo.repo,
       octokitFactory,
       logger
     );

@@ -28,6 +28,7 @@ import * as fse from 'fs-extra';
 import { OctokitType, OctokitFactory } from './octokit-util';
 import tmp from 'tmp';
 import glob from 'glob';
+import { GithubRepo } from './github-repo';
 
 // This code generally uses Sync functions because:
 // 1. None of our current designs including calling this code from a web
@@ -35,25 +36,6 @@ import glob from 'glob';
 // 2. Calling sync functions yields simpler code.
 
 const readFileAsync = promisify(readFile);
-
-// This interface allows us to write tests.
-interface GithubRepo {
-  getCloneUrl(accessToken?: string): string;
-  readonly owner: string;
-  readonly repo: string;
-}
-
-export function githubRepoFromArg(arg: string): GithubRepo {
-  const [owner, repo] = arg.split('/');
-  return {
-    owner, repo,
-    getCloneUrl(accessToken?: string): string {
-      return accessToken
-        ? `https://x-access-token:${accessToken}@github.com/${arg}.git`
-        : `https://github.com/${arg}.git`;
-    }
-  };
-}
 
 // Creates a function that first prints, then executes a shell command.
 export type Cmd = (
@@ -152,7 +134,7 @@ ${err}`,
   if (
     await copyExists(
       octokit,
-      `${owner}/${repo}`,
+      destRepo,
       sourceRepoCommitHash
     )
   ) {
@@ -340,7 +322,7 @@ export function copyDirs(
  */
 export async function copyExists(
   octokit: OctokitType,
-  destRepo: string,
+  destRepo: GithubRepo,
   sourceCommitHash: string,
   logger = console
 ): Promise<boolean> {
@@ -359,7 +341,8 @@ export async function copyExists(
   }
   // I observed octokit.search.issuesAndPullRequests() not finding recent, open
   // pull requests.  So enumerate them.
-  const [owner, repo] = destRepo.split('/');
+  const owner = destRepo.owner;
+  const repo = destRepo.repo;
   const pulls = await octokit.pulls.list({ owner, repo, per_page: 100 });
   for (const pull of pulls.data) {
     const pos: number = pull.body?.indexOf(sourceCommitHash) ?? -1;

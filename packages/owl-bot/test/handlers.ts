@@ -36,6 +36,7 @@ import {
   getGitHubShortLivedAccessToken,
 } from '../src/core';
 import {FakeConfigsStore} from './fake-configs-store';
+import { GithubRepo } from '../src/github-repo';
 const sandbox = sinon.createSandbox();
 
 type Changes = Array<[string, {content: string; mode: string}]>;
@@ -58,7 +59,7 @@ describe('handlers', () => {
       class FakeConfigStore implements ConfigsStore {
         findReposAffectedByFileChanges(
           changedFilePaths: string[]
-        ): Promise<string[]> {
+        ): Promise<GithubRepo[]> {
           throw new Error('Method not implemented.');
         }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -136,7 +137,7 @@ describe('handlers', () => {
       class FakeConfigStore implements ConfigsStore {
         findReposAffectedByFileChanges(
           changedFilePaths: string[]
-        ): Promise<string[]> {
+        ): Promise<GithubRepo[]> {
           throw new Error('Method not implemented.');
         }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
