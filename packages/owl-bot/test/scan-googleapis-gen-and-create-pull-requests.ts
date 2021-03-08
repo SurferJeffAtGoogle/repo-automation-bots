@@ -50,10 +50,11 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
   }
 
   const abcRepo = makeAbcRepo();
+  const cmd = newCmd();
+  const abcCommits = cmd("git log --format=%H", {cwd: abcRepo}).toString('utf8').split(/\r?\n/);
 
   function makeRepoWithOwlBotYaml(owlBotYaml: OwlBotYaml): string {
     const dir = tmp.dirSync().name;
-    const cmd = newCmd();
     cmd('git init', { cwd: dir });
 
     const yamlPath = path.join(dir, owlBotYamlPath);
@@ -198,6 +199,12 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       factory(octokit),
       configsStore,
     );
-    assert.deepStrictEqual(pulls, {});
+    assert.strictEqual(pulls.pulls.length, 1);
+    const pull = pulls.pulls[0];
+    assert.strictEqual(pull.owner, "googleapis");
+    assert.strictEqual(pull.repo, "nodejs-spell-check");
+    assert.strictEqual(pull.title, "b");
+    assert.strictEqual(pull.base, "main");
+    assert.strictEqual(pull.body, `Source-Link: https://github.com/${abcRepo}/commit/${abcCommits[1]}`);
   });
 });

@@ -138,12 +138,12 @@ ${err}`,
   cmd(`git push origin ${destBranch}`, {cwd: destDir});
 
   // Use the commit's subject and body as the pull request's title and body.
-  const title = cmd('git log -1 --format=%s', {
+  const title: string = cmd('git log -1 --format=%s', {
     cwd: destDir,
-  }).toString('utf8');
-  const body = cmd('git log -1 --format=%b', {
+  }).toString('utf8').trim();
+  const body: string = cmd('git log -1 --format=%b', {
     cwd: destDir,
-  }).toString('utf8');
+  }).toString('utf8').trim();
 
   // Create a pull request.
   const pull = await octokit.pulls.create({
