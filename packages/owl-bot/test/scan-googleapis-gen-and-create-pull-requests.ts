@@ -26,6 +26,11 @@ import yaml from 'js-yaml';
 import {GithubRepo} from '../src/github-repo';
 import {FakeConfigsStore} from './fake-configs-store';
 
+// Use anys to mock parts of the octokit API.
+// We'll still see compile time errors if in the src/ code if there's a type error
+// calling the octokit APIs.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
   const cmd = cc.newCmd();
   function makeAbcRepo(): string {
@@ -84,7 +89,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       getGitHubShortLivedAccessToken(): Promise<string> {
         return Promise.resolve('fake-token');
       },
-      getShortLivedOctokit(token?: string): Promise<OctokitType> {
+      getShortLivedOctokit(): Promise<OctokitType> {
         return Promise.resolve(octokit as OctokitType);
       },
     };
