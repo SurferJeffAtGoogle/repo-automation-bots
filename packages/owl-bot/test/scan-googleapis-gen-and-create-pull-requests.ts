@@ -18,10 +18,13 @@ import {describe, it} from 'mocha';
 import {scanGoogleapisGenAndCreatePullRequests} from '../src/scan-googleapis-gen-and-create-pull-requests';
 import {newCmd} from '../src/copy-code';
 import {makeDirTree} from './dir-tree';
-import {FakeConfigsStore} from './fake-configs-store';
 import {OctokitFactory, OctokitType} from '../src/octokit-util';
-import {OwlBotYaml} from '../src/config-files';
+import {OwlBotYaml, owlBotYamlPath} from '../src/config-files';
 import { ConfigsStore } from '../src/configs-store';
+import * as fs from 'fs';
+import path from 'path';
+import yaml from 'js-yaml';
+import { GithubRepo } from '../src/github-repo';
 
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
   function makeAbcRepo(): string {
@@ -47,13 +50,55 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
 
   const abcRepo = makeAbcRepo();
 
+  function makeRepoWithOwlBotYaml(owlBotYaml: OwlBotYaml): string {
+    const dir = tmp.dirSync().name;
+    const cmd = newCmd();
+    cmd('git init', {cwd: dir});
+
+    const yamlPath = path.join(dir, owlBotYamlPath);
+    fs.mkdirSync(path.dirname(yamlPath), {recursive: true});
+    const text = yaml.dump(owlBotYaml);
+    fs.writeFileSync(yamlPath, text);
+
+    cmd('git add -A', {cwd: dir});
+    cmd('git commit -m "Hello OwlBot"', {cwd: dir});
+
+    return dir;
+  }
+
+  class FakeStore implements ConfigsStore {
+      affectedRepos: GithubRepo[];
+      constructor(affectedRepos: GithubRepo[] = []) {
+        this.affectedRepos = affectedRepos;
+      }
+
+    getConfigs(repo: string): Promise<import("../src/configs-store").Configs | undefined> {
+        throw new Error("Method not implemented.");
+    }
+    storeConfigs(repo: string, configs: import("../src/configs-store").Configs, replaceCommithash: string | null): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    findReposWithPostProcessor(dockerImageName: string): Promise<[string, import("../src/configs-store").Configs][]> {
+        throw new Error("Method not implemented.");
+    }
+    findPullRequestForUpdatingLock(repo: string, lock: import("../src/config-files").OwlBotLock): Promise<string | undefined> {
+        throw new Error("Method not implemented.");
+    }
+    recordPullRequestForUpdatingLock(repo: string, lock: import("../src/config-files").OwlBotLock, pullRequestId: string): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
+    findReposAffectedByFileChanges(changedFilePaths: string[]): Promise<GithubRepo[]> {
+        return Promise.resolve(this.affectedRepos);
+    }
+}
+
+
   it('does nothing with zero repos affected', async () => {
-    const configsStore = new FakeConfigsStore();
     assert.strictEqual(
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
         {} as OctokitFactory,
-        configsStore
+        new FakeStore(),
       ),
       0
     );
@@ -70,12 +115,12 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     };
   }
 
-  const aYaml: OwlBotYaml = {
+  const bYaml: OwlBotYaml = {
     'deep-copy-regex': [
       {
-        source: '/a.txt',
-        dest: '/src/a.txt',
-        'rm-dest': '',
+        source: '/b.txt',
+        dest: '/src/b.txt',
+        'rm-dest': '/src',
       },
     ],
   };
@@ -93,7 +138,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
         factory(octokit),
-        null as unknown as ConfigsStore
+        new FakeStore(),
       ),
       0
     );
@@ -135,11 +180,19 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       issues: new FakeIssues(),
     };
 
+    const destDir = makeRepoWithOwlBotYaml(bYaml);
+    const destRepo: GithubRepo = {
+        owner: 'googleapis',
+        repo: 'nodejs-spell-check',
+        getCloneUrl(): string { return destDir; }
+    };
+
+
     assert.strictEqual(
       await scanGoogleapisGenAndCreatePullRequests(
         abcRepo,
         factory(octokit),
-        null as unknown as ConfigsStore
+        new FakeStore([destRepo])
       ),
       0
     );
