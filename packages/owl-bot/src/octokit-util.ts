@@ -32,7 +32,6 @@ export interface OctokitParams {
   installation: number;
 }
 
-
 /**
  * Creates an authenticated token for octokit.
  */
@@ -65,9 +64,7 @@ export interface OctokitFactory {
 /**
  * Creates an octokit factory from the common params.
  */
-export function octokitFactoryFrom(
-  params: OctokitParams
-): OctokitFactory {
+export function octokitFactoryFrom(params: OctokitParams): OctokitFactory {
   return {
     getGitHubShortLivedAccessToken() {
       return octokitTokenFrom(params);

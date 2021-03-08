@@ -19,7 +19,7 @@ import {scanGoogleapisGenAndCreatePullRequests} from '../src/scan-googleapis-gen
 import {newCmd} from '../src/copy-code';
 import {makeDirTree} from './dir-tree';
 import {FakeConfigsStore} from './fake-configs-store';
-import {OctokitParams, OctokitFactory, OctokitType} from '../src/octokit-util';
+import {OctokitFactory, OctokitType} from '../src/octokit-util';
 import {OwlBotYaml} from '../src/config-files';
 
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
@@ -59,14 +59,14 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
   });
 
   function factory(octokit: any): OctokitFactory {
-      return {
-        getGitHubShortLivedAccessToken(): Promise<string> {
-            return Promise.resolve("fake-token")
-        },
-        getShortLivedOctokit(token?: string): Promise<OctokitType> {
-            return Promise.resolve(octokit as OctokitType);
-        }
-      };
+    return {
+      getGitHubShortLivedAccessToken(): Promise<string> {
+        return Promise.resolve('fake-token');
+      },
+      getShortLivedOctokit(token?: string): Promise<OctokitType> {
+        return Promise.resolve(octokit as OctokitType);
+      },
+    };
   }
 
   const aYaml: OwlBotYaml = {
@@ -94,13 +94,13 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
   );
 
   it('does nothing when a pull request already exists', async () => {
-    const octokit = ({
-        search: {
-          commits() {
-            return Promise.resolve({ data: { total_count: 1}});
-          },
-        }
-    });
+    const octokit = {
+      search: {
+        commits() {
+          return Promise.resolve({data: {total_count: 1}});
+        },
+      },
+    };
 
     assert.strictEqual(
       await scanGoogleapisGenAndCreatePullRequests(
@@ -113,40 +113,40 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
   });
 
   class FakeIssues {
-      issues: any[] = []
+    issues: any[] = [];
 
-      constructor(issues: any[] = []) {
-          this.issues = issues;
-      }
+    constructor(issues: any[] = []) {
+      this.issues = issues;
+    }
 
-      listForRepo() {
-        return Promise.resolve({data: this.issues});
-      }
+    listForRepo() {
+      return Promise.resolve({data: this.issues});
+    }
 
-      create(issue: any) {
-        this.issues.push(issue);
-        issue.html_url = `http://github.com/fake/issues/${this.issues.length}`;
-        return Promise.resolve({data: issue});
-      }
+    create(issue: any) {
+      this.issues.push(issue);
+      issue.html_url = `http://github.com/fake/issues/${this.issues.length}`;
+      return Promise.resolve({data: issue});
+    }
   }
 
   it('copies files', async () => {
-    const octokit = ({
-        search: {
-          commits() {
-            return Promise.resolve({ data: { total_count: 0}});
-          },
-          issuesAndPullRequests() {
-            return Promise.resolve({ data: { items: []}});
-          },
+    const octokit = {
+      search: {
+        commits() {
+          return Promise.resolve({data: {total_count: 0}});
         },
-        pulls: {
-            list() {
-                return Promise.resolve({data:[]});
-            }
+        issuesAndPullRequests() {
+          return Promise.resolve({data: {items: []}});
         },
-        issues: new FakeIssues()
-    });
+      },
+      pulls: {
+        list() {
+          return Promise.resolve({data: []});
+        },
+      },
+      issues: new FakeIssues(),
+    };
 
     assert.strictEqual(
       await scanGoogleapisGenAndCreatePullRequests(

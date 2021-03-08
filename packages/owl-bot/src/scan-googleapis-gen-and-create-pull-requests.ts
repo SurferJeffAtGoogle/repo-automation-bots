@@ -22,7 +22,7 @@ import {
   toLocalRepo,
 } from './copy-code';
 import {getFilesModifiedBySha} from '.';
-import { GithubRepo } from './github-repo';
+import {GithubRepo} from './github-repo';
 
 interface Todo {
   repo: GithubRepo;
@@ -69,8 +69,8 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     repos.forEach(repo => logger.info(repo));
     const stackSize = todoStack.length;
     for (const repo of repos) {
-      octokit = octokit ?? await octokitFactory.getShortLivedOctokit();
-      if (!await copyExists(octokit, repo, commitHash, logger)) {
+      octokit = octokit ?? (await octokitFactory.getShortLivedOctokit());
+      if (!(await copyExists(octokit, repo, commitHash, logger))) {
         const todo: Todo = {repo, commitHash};
         logger.info(`Pushing todo onto stack: ${todo}`);
         todoStack.push(todo);

@@ -14,7 +14,7 @@
 
 import {Configs, ConfigsStore} from '../src/configs-store';
 import {OwlBotLock, toFullMatchRegExp} from '../src/config-files';
-import { GithubRepo, githubRepoFromOwnerSlashName } from '../src/github-repo';
+import {GithubRepo, githubRepoFromOwnerSlashName} from '../src/github-repo';
 // There are lots of unused args on fake functions, and that's ok.
 /* eslint-disable @typescript-eslint/no-unused-vars */
 

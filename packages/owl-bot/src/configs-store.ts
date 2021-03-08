@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {OwlBotLock, OwlBotYaml} from './config-files';
-import { GithubRepo } from './github-repo';
+import {GithubRepo} from './github-repo';
 
 export interface Configs {
   // The body of .Owlbot.lock.yaml.
@@ -97,5 +97,7 @@ export interface ConfigsStore {
    * @returns the list of repo names.
    *   ex: ["googleapis/nodejs-vision", "googleapis/python-vision"]
    */
-  findReposAffectedByFileChanges(changedFilePaths: string[]): Promise<GithubRepo[]>;
+  findReposAffectedByFileChanges(
+    changedFilePaths: string[]
+  ): Promise<GithubRepo[]>;
 }

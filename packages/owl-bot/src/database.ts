@@ -16,7 +16,7 @@ import admin from 'firebase-admin';
 import {OwlBotLock, toFullMatchRegExp} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
 import {CopyTasksStore} from './copy-tasks-store';
-import { GithubRepo, githubRepoFromOwnerSlashName } from './github-repo';
+import {GithubRepo, githubRepoFromOwnerSlashName} from './github-repo';
 
 export type Db = admin.firestore.Firestore;
 interface UpdatePr {

@@ -17,23 +17,23 @@
  * instead of touching Github.
  */
 export interface GithubRepo {
-    getCloneUrl(accessToken?: string): string;
-    readonly owner: string;
-    readonly repo: string;
+  getCloneUrl(accessToken?: string): string;
+  readonly owner: string;
+  readonly repo: string;
 }
-  
+
 /**
  * Create a GithubRepo instance from its usual `owner/repo` syntax.
  */
 export function githubRepoFromOwnerSlashName(arg: string): GithubRepo {
-    const [owner, repo] = arg.split('/');
-    return {
-      owner, repo,
-      getCloneUrl(accessToken?: string): string {
-        return accessToken
-          ? `https://x-access-token:${accessToken}@github.com/${arg}.git`
-          : `https://github.com/${arg}.git`;
-      },
-    };
-  }
-  
+  const [owner, repo] = arg.split('/');
+  return {
+    owner,
+    repo,
+    getCloneUrl(accessToken?: string): string {
+      return accessToken
+        ? `https://x-access-token:${accessToken}@github.com/${arg}.git`
+        : `https://github.com/${arg}.git`;
+    },
+  };
+}

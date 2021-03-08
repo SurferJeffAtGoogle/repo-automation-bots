@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { promisify } from 'util';
-import { readFile } from 'fs';
+import {promisify} from 'util';
+import {readFile} from 'fs';
 import * as proc from 'child_process';
 import {
   owlBotYamlPath,
@@ -22,13 +22,13 @@ import {
   toFullMatchRegExp,
 } from './config-files';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
-import { OctokitType, OctokitFactory } from './octokit-util';
+import {OctokitType, OctokitFactory} from './octokit-util';
 import tmp from 'tmp';
 import glob from 'glob';
-import { GithubRepo } from './github-repo';
+import {GithubRepo} from './github-repo';
 
 // This code generally uses Sync functions because:
 // 1. None of our current designs including calling this code from a web
@@ -79,12 +79,10 @@ export async function copyCodeAndCreatePullRequest(
 
   // Clone the dest repo.
   const cloneUrl = destRepo.getCloneUrl();
-  cmd(
-    `git clone --single-branch "${cloneUrl}" ${destDir}`
-  );
+  cmd(`git clone --single-branch "${cloneUrl}" ${destDir}`);
 
   // Check out a dest branch.
-  cmd(`git checkout -b ${destBranch}`, { cwd: destDir });
+  cmd(`git checkout -b ${destBranch}`, {cwd: destDir});
 
   const owner = destRepo.owner;
   const repo = destRepo.repo;
@@ -94,10 +92,7 @@ export async function copyCodeAndCreatePullRequest(
   } catch (err) {
     logger.error(err);
     // Create a github issue.
-    const sourceLink = sourceLinkFrom(
-      sourceRepo,
-      sourceRepoCommitHash
-    );
+    const sourceLink = sourceLinkFrom(sourceRepo, sourceRepoCommitHash);
     const octokit = await octokitFactory.getShortLivedOctokit();
     const issue = await octokit.issues.create({
       owner,
@@ -131,25 +126,16 @@ ${err}`,
   const token = await octokitFactory.getGitHubShortLivedAccessToken();
   // Octokit token may have expired; refresh it.
   const octokit = await octokitFactory.getShortLivedOctokit(token);
-  if (
-    await copyExists(
-      octokit,
-      destRepo,
-      sourceRepoCommitHash
-    )
-  ) {
+  if (await copyExists(octokit, destRepo, sourceRepoCommitHash)) {
     return; // Mid-air collision!
   }
 
-  const githubRepo = await octokit.repos.get({ owner, repo });
+  const githubRepo = await octokit.repos.get({owner, repo});
 
   // Push to origin.
   const pushUrl = destRepo.getCloneUrl(token);
-  cmd(
-    `git remote set-url origin ${pushUrl}`,
-    { cwd: destDir }
-  );
-  cmd(`git push origin ${destBranch}`, { cwd: destDir });
+  cmd(`git remote set-url origin ${pushUrl}`, {cwd: destDir});
+  cmd(`git push origin ${destBranch}`, {cwd: destDir});
 
   // Use the commit's subject and body as the pull request's title and body.
   const title = cmd('git log -1 --format=%s', {
@@ -231,7 +217,7 @@ export async function copyCode(
   const cmd = newCmd(logger);
   const sourceDir = toLocalRepo(sourceRepo, workDir, logger);
   // Check out the specific hash we want to copy from.
-  cmd(`git checkout ${sourceCommitHash}`, { cwd: sourceDir });
+  cmd(`git checkout ${sourceCommitHash}`, {cwd: sourceDir});
 
   copyDirs(sourceDir, destDir, yaml, logger);
 
@@ -243,8 +229,8 @@ export async function copyCode(
   const sourceLink = sourceLinkFrom(sourceRepo, sourceCommitHash);
   commitMsg += `Source-Link: ${sourceLink}\n`;
   fs.writeFileSync(commitMsgPath, commitMsg);
-  cmd('git add -A', { cwd: destDir });
-  cmd(`git commit -F "${commitMsgPath}" --allow-empty`, { cwd: destDir });
+  cmd('git add -A', {cwd: destDir});
+  cmd(`git commit -F "${commitMsgPath}" --allow-empty`, {cwd: destDir});
 }
 
 // returns undefined instead of throwing an exception.
@@ -274,7 +260,7 @@ export function copyDirs(
     const rmDest = deepCopy['rm-dest'];
     if (rmDest && stat(destDir)) {
       const rmRegExp = toFullMatchRegExp(rmDest);
-      const allDestPaths = glob.sync('**', { cwd: destDir });
+      const allDestPaths = glob.sync('**', {cwd: destDir});
       deadPaths.push(...allDestPaths.filter(path => rmRegExp.test('/' + path)));
     }
   }
@@ -282,14 +268,14 @@ export function copyDirs(
     deadPath = path.join(destDir, deadPath);
     if (stat(deadPath)) {
       logger.info(`rm -r ${deadPath}`);
-      fs.rmSync(deadPath, { recursive: true });
+      fs.rmSync(deadPath, {recursive: true});
     }
   }
 
   // Copy the files from source to dest.
   for (const deepCopy of yaml['deep-copy-regex'] ?? []) {
     const regExp = toFullMatchRegExp(deepCopy.source);
-    const allSourcePaths = glob.sync('**', { cwd: sourceDir });
+    const allSourcePaths = glob.sync('**', {cwd: sourceDir});
     const sourcePathsToCopy = allSourcePaths.filter(path =>
       regExp.test('/' + path)
     );
@@ -300,7 +286,7 @@ export function copyDirs(
       const dirName = path.dirname(fullDestPath);
       if (!stat(dirName)?.isDirectory()) {
         logger.info('mkdir ' + dirName);
-        fs.mkdirSync(dirName, { recursive: true });
+        fs.mkdirSync(dirName, {recursive: true});
       }
       logger.info(`cp -r ${fullSourcePath} ${fullDestPath}`);
       fse.copySync(fullSourcePath, fullDestPath, {
@@ -327,12 +313,12 @@ export async function copyExists(
   logger = console
 ): Promise<boolean> {
   const q = `repo:${destRepo}+${sourceCommitHash}`;
-  const foundCommits = await octokit.search.commits({ q });
+  const foundCommits = await octokit.search.commits({q});
   if (foundCommits.data.total_count > 0) {
     logger.info(`Commit with ${sourceCommitHash} exists in ${destRepo}.`);
     return true;
   }
-  const found = await octokit.search.issuesAndPullRequests({ q });
+  const found = await octokit.search.issuesAndPullRequests({q});
   for (const item of found.data.items) {
     logger.info(
       `Issue or pull request ${item.number} with ${sourceCommitHash} exists in ${destRepo}.`
@@ -343,7 +329,7 @@ export async function copyExists(
   // pull requests.  So enumerate them.
   const owner = destRepo.owner;
   const repo = destRepo.repo;
-  const pulls = await octokit.pulls.list({ owner, repo, per_page: 100 });
+  const pulls = await octokit.pulls.list({owner, repo, per_page: 100});
   for (const pull of pulls.data) {
     const pos: number = pull.body?.indexOf(sourceCommitHash) ?? -1;
     if (pos >= 0) {
@@ -354,7 +340,7 @@ export async function copyExists(
     }
   }
   // And enumerate recent issues too.
-  const issues = await octokit.issues.listForRepo({ owner, repo, per_page: 100 });
+  const issues = await octokit.issues.listForRepo({owner, repo, per_page: 100});
   for (const issue of issues.data) {
     const pos: number = issue.body?.indexOf(sourceCommitHash) ?? -1;
     if (pos >= 0) {

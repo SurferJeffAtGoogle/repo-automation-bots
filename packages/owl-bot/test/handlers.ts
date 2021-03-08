@@ -36,7 +36,7 @@ import {
   getGitHubShortLivedAccessToken,
 } from '../src/core';
 import {FakeConfigsStore} from './fake-configs-store';
-import { GithubRepo } from '../src/github-repo';
+import {GithubRepo} from '../src/github-repo';
 const sandbox = sinon.createSandbox();
 
 type Changes = Array<[string, {content: string; mode: string}]>;

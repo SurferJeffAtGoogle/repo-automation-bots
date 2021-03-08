@@ -17,7 +17,7 @@
 import yargs = require('yargs');
 import * as copyCode from '../../copy-code';
 import {octokitFrom} from '../../octokit-util';
-import { githubRepoFromOwnerSlashName } from '../../github-repo';
+import {githubRepoFromOwnerSlashName} from '../../github-repo';
 
 export interface Args {
   'pem-path': string;
