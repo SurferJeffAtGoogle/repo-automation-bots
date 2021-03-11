@@ -265,7 +265,7 @@ export function copyDirs(
     toFrontMatchRegExp(x)
   );
   const excluded = (path: string) => {
-    if (excludes.some(x => x.test(path))) {
+    if (excludes.some(x => x.test('/' + path))) {
       logger.info(`Excluding ${path}.`);
       return true;
     } else {
@@ -285,11 +285,24 @@ export function copyDirs(
       deadPaths.push(...matchingDestPaths.filter(path => !excluded(path)));
     }
   }
+  const deadDirs: string[] = [];
+  // Remove files first.
   for (let deadPath of deadPaths) {
     deadPath = path.join(destDir, deadPath);
-    if (stat(deadPath)) {
-      logger.info(`rm -r ${deadPath}`);
-      fs.rmdirSync(deadPath, {recursive: true});
+    if (stat(deadPath)?.isDirectory()) {
+      deadDirs.push(deadPath);
+    } else {
+      logger.info(`rm  ${deadPath}`);
+      fs.rmSync(deadPath);
+    }
+  }  
+  // Then remove directories.  Some removes may fail because inner files were excluded.
+  for (let deadDir of deadDirs) {
+    logger.info(`rmdir  ${deadDir}`);
+    try {
+      fs.rmdirSync(deadDir);
+    } catch (e) {
+      logger.info(e);
     }
   }
 
