@@ -88,19 +88,21 @@ describe('copyDirs', () => {
     const tempDir = tmp.dirSync().name;
     const sourceDir = path.join(tempDir, 'googleapis');
     // prepare the source
-    const sourcePath = path.join(
-      sourceDir,
-      'google/cloud/asset/v1p1beta1/google-cloud-asset-v1p1beta1-java/grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java'
+    makeDirTree(path.join(sourceDir,
+      'google/cloud/asset/v1p1beta1/google-cloud-asset-v1p1beta1-java/'
+      ), [
+        'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java:from java import *;',
+        'grpc-google-cloud-asset-v1p1beta1-java/src/maven.xml:New version.',
+      ]
     );
-    fs.mkdirSync(path.dirname(sourcePath), {recursive: true});
-    fs.writeFileSync(sourcePath, 'from java import *;');
 
     // prepare the dest.
     const destDir = path.join(tempDir, 'java-asset');
     const files = [
       'README.md:I should be preserved.',
       'grpc-google-cloud-asset-v1p1beta1/src/main/delete-me.txt:I should be deleted.',
-      'grpc-google-cloud-asset-v1p1beta1/src/index.java:I should be preserved.',
+      'grpc-google-cloud-asset-v1p1beta1/src/index.java:I should not be removed.',
+      'grpc-google-cloud-asset-v1p1beta1/src/maven.xml:I should not be overwritten.',
     ];
     for (const file of files) {
       const [relPath, content] = file.split(':');
@@ -117,7 +119,8 @@ describe('copyDirs', () => {
         },
       ],
       'deep-remove-regex': ['/grpc-google-cloud-asset-.*'],
-      'deep-exclude-regex': ['/grpc-google-cloud-asset-v1p1beta1/src/index.java'],
+      'deep-exclude-regex': ['/grpc-google-cloud-asset-v1p1beta1/src/index.java',
+      '/grpc-google-cloud-asset-v1p1beta1/src/maven.xml'],
     };
 
     // CopyDirs and confirm.
@@ -126,7 +129,7 @@ describe('copyDirs', () => {
       'README.md:I should be preserved.',
       'grpc-google-cloud-asset-v1p1beta1',
       'grpc-google-cloud-asset-v1p1beta1/src',
-      'grpc-google-cloud-asset-v1p1beta1/src/index.java:I should be preserved.',
+      'grpc-google-cloud-asset-v1p1beta1/src/index.java:I should not be removed.',
       'grpc-google-cloud-asset-v1p1beta1/src/main',
       'grpc-google-cloud-asset-v1p1beta1/src/main/java',
       'grpc-google-cloud-asset-v1p1beta1/src/main/java/com',
@@ -135,6 +138,7 @@ describe('copyDirs', () => {
       'grpc-google-cloud-asset-v1p1beta1/src/main/java/com/google/cloud/asset',
       'grpc-google-cloud-asset-v1p1beta1/src/main/java/com/google/cloud/asset/v1p1beta1',
       'grpc-google-cloud-asset-v1p1beta1/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java:from java import *;',
+      'grpc-google-cloud-asset-v1p1beta1/src/maven.xml:I should not be overwritten.',
     ]);
   });
 });

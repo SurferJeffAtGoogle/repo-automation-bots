@@ -265,10 +265,15 @@ export function copyDirs(
     toFrontMatchRegExp(x)
   );
   const excluded = (path: string) => {
-    if (excludes.some(x => x.test('/' + path))) {
+    if (excludes.some(x => x.test(path))) {
       logger.info(`Excluding ${path}.`);
       return true;
     } else {
+      if (excludes.length > 0) {
+        logger.info("mismatch:");
+        logger.info(path);
+        logger.info(excludes[0]);
+      }
       return false;
     }
   };
@@ -282,7 +287,7 @@ export function copyDirs(
       const matchingDestPaths = allDestPaths.filter(path =>
         rmRegExp.test('/' + path)
       );
-      deadPaths.push(...matchingDestPaths.filter(path => !excluded(path)));
+      deadPaths.push(...matchingDestPaths.filter(path => !excluded('/' + path)));
     }
   }
   const deadDirs: string[] = [];
@@ -320,14 +325,15 @@ export function copyDirs(
         continue;
       }
       const fullDestPath = path.join(destDir, relPath);
-      const dirName = path.dirname(fullDestPath);
-      if (!stat(dirName)?.isDirectory()) {
-        logger.info('mkdir ' + dirName);
-        fs.mkdirSync(dirName, {recursive: true});
+      if (stat(fullSourcePath)?.isDirectory()) {
+        if (!stat(fullDestPath)?.isDirectory()) {
+          logger.info('mkdir ' + fullDestPath);
+          fs.mkdirSync(fullDestPath, {recursive: true});
+        }
+        continue;
       }
-      logger.info(`cp -r ${fullSourcePath} ${fullDestPath}`);
+      logger.info(`cp ${fullSourcePath} ${fullDestPath}`);
       fse.copySync(fullSourcePath, fullDestPath, {
-        recursive: true,
         overwrite: true,
       });
     }
