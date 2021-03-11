@@ -261,8 +261,10 @@ export function copyDirs(
   logger = console
 ): void {
   // Prepare to exclude paths.
-  const excludes: RegExp[] = (yaml["deep-preserve-regex"] ?? []).map(x => toFrontMatchRegExp(x));
-  const excluded = (path: string) => { 
+  const excludes: RegExp[] = (yaml['deep-preserve-regex'] ?? []).map(x =>
+    toFrontMatchRegExp(x)
+  );
+  const excluded = (path: string) => {
     if (excludes.some(x => x.test(path))) {
       logger.info(`Excluding ${path}.`);
       return true;
@@ -277,7 +279,9 @@ export function copyDirs(
     if (rmDest && stat(destDir)) {
       const rmRegExp = toFrontMatchRegExp(rmDest);
       const allDestPaths = glob.sync('**', {cwd: destDir});
-      const matchingDestPaths = allDestPaths.filter(path => rmRegExp.test('/' + path));
+      const matchingDestPaths = allDestPaths.filter(path =>
+        rmRegExp.test('/' + path)
+      );
       deadPaths.push(...matchingDestPaths.filter(path => !excluded(path)));
     }
   }

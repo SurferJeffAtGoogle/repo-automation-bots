@@ -115,7 +115,7 @@ describe('copyDirs', () => {
           dest: '/$1',
         },
       ],
-      'deep-remove-regex': ['/grpc-google-cloud-asset-.*']
+      'deep-remove-regex': ['/grpc-google-cloud-asset-.*'],
     };
 
     // CopyDirs and confirm.

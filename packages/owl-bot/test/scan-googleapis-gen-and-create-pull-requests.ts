@@ -107,7 +107,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
         dest: '/src/b.txt',
       },
     ],
-    'deep-remove-regex': ['/src']
+    'deep-remove-regex': ['/src'],
   };
 
   it('does nothing when a pull request already exists', async () => {
