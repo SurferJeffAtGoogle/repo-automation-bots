@@ -19,7 +19,7 @@ import {
   owlBotYamlPath,
   owlBotYamlFromText,
   OwlBotYaml,
-  toFullMatchRegExp,
+  toFrontMatchRegExp,
 } from './config-files';
 import path from 'path';
 import {v4 as uuidv4} from 'uuid';
@@ -260,14 +260,25 @@ export function copyDirs(
   yaml: OwlBotYaml,
   logger = console
 ): void {
+  // Prepare to exclude paths.
+  const excludes: RegExp[] = (yaml["deep-preserve-regex"] ?? []).map(x => toFrontMatchRegExp(x));
+  const excluded = (path: string) => { 
+    if (excludes.some(x => x.test(path))) {
+      logger.info(`Excluding ${path}.`);
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   // Wipe out the existing contents of the dest directory.
   const deadPaths: string[] = [];
-  for (const deepCopy of yaml['deep-copy-regex'] ?? []) {
-    const rmDest = deepCopy['rm-dest'];
+  for (const rmDest of yaml['deep-remove-regex'] ?? []) {
     if (rmDest && stat(destDir)) {
-      const rmRegExp = toFullMatchRegExp(rmDest);
+      const rmRegExp = toFrontMatchRegExp(rmDest);
       const allDestPaths = glob.sync('**', {cwd: destDir});
-      deadPaths.push(...allDestPaths.filter(path => rmRegExp.test('/' + path)));
+      const matchingDestPaths = allDestPaths.filter(path => rmRegExp.test('/' + path));
+      deadPaths.push(...matchingDestPaths.filter(path => !excluded(path)));
     }
   }
   for (let deadPath of deadPaths) {
@@ -280,7 +291,7 @@ export function copyDirs(
 
   // Copy the files from source to dest.
   for (const deepCopy of yaml['deep-copy-regex'] ?? []) {
-    const regExp = toFullMatchRegExp(deepCopy.source);
+    const regExp = toFrontMatchRegExp(deepCopy.source);
     const allSourcePaths = glob.sync('**', {cwd: sourceDir});
     const sourcePathsToCopy = allSourcePaths.filter(path =>
       regExp.test('/' + path)
@@ -288,6 +299,9 @@ export function copyDirs(
     for (const sourcePath of sourcePathsToCopy) {
       const fullSourcePath = path.join(sourceDir, sourcePath);
       const relPath = ('/' + sourcePath).replace(regExp, deepCopy.dest);
+      if (excluded(relPath)) {
+        continue;
+      }
       const fullDestPath = path.join(destDir, relPath);
       const dirName = path.dirname(fullDestPath);
       if (!stat(dirName)?.isDirectory()) {

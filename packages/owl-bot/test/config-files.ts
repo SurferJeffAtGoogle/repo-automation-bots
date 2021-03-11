@@ -22,7 +22,12 @@ describe('config-files', () => {
 deep-copy-regex:
   - source: /google/cloud/vision
     dest: /src
-    rm-dest: ''
+
+deep-remove-regex:
+  /src
+
+deep-preserve-regex:
+  /src/index.ts
 
 docker:
   image: gcr.io/cloud-devrel-resources/synthtool-nodejs:prod

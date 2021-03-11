@@ -54,7 +54,6 @@ describe('copyDirs', () => {
         {
           source: '/b/(y)',
           dest: '/src/$1',
-          'rm-dest': '',
         },
       ],
     };
@@ -73,7 +72,6 @@ describe('copyDirs', () => {
         {
           source: '/a',
           dest: '/m/n',
-          'rm-dest': '',
         },
       ],
     };
@@ -115,9 +113,9 @@ describe('copyDirs', () => {
           source:
             '/google/cloud/asset/.*/.*-java/(grpc-google-cloud-asset-.*)-java',
           dest: '/$1',
-          'rm-dest': '/grpc-google-cloud-asset-.*',
         },
       ],
+      'deep-remove-regex': ['/grpc-google-cloud-asset-.*']
     };
 
     // CopyDirs and confirm.
