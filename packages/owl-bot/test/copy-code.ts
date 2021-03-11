@@ -122,7 +122,7 @@ describe('copyDirs', () => {
         },
       ],
       'deep-remove-regex': ['/grpc-google-cloud-asset-.*'],
-      'deep-exclude-regex': [
+      'deep-preserve-regex': [
         '/grpc-google-cloud-asset-v1p1beta1/src/index.java',
         '/grpc-google-cloud-asset-v1p1beta1/src/maven.xml',
       ],

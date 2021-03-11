@@ -26,7 +26,7 @@ deep-copy-regex:
 deep-remove-regex:
   - /src
 
-deep-exclude-regex:
+deep-preserve-regex:
   - /src/index.ts
 
 docker:
@@ -35,7 +35,7 @@ docker:
     const config = owlBotYamlFromText(text);
     assert.deepStrictEqual(config, {
       'deep-copy-regex': [{source: '/google/cloud/vision', dest: '/src'}],
-      'deep-exclude-regex': ['/src/index.ts'],
+      'deep-preserve-regex': ['/src/index.ts'],
       'deep-remove-regex': ['/src'],
       docker: {image: 'gcr.io/cloud-devrel-resources/synthtool-nodejs:prod'},
     });

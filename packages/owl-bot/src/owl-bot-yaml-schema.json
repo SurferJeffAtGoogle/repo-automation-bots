@@ -41,7 +41,7 @@
         "type": "string" 
       }
     },
-    "deep-exclude-regex": {
+    "deep-preserve-regex": {
       "description": "Directories files in the local repo to leave untouched during copy and remove.",
       "type": "array",
       "items": {
