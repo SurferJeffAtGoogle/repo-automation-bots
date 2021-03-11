@@ -261,7 +261,7 @@ export function copyDirs(
   logger = console
 ): void {
   // Prepare to exclude paths.
-  const excludes: RegExp[] = (yaml['deep-preserve-regex'] ?? []).map(x =>
+  const excludes: RegExp[] = (yaml['deep-exclude-regex'] ?? []).map(x =>
     toFrontMatchRegExp(x)
   );
   const excluded = (path: string) => {

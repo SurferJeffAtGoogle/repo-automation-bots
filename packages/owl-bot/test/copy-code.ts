@@ -100,6 +100,7 @@ describe('copyDirs', () => {
     const files = [
       'README.md:I should be preserved.',
       'grpc-google-cloud-asset-v1p1beta1/src/main/delete-me.txt:I should be deleted.',
+      'grpc-google-cloud-asset-v1p1beta1/src/index.java:I should be preserved.',
     ];
     for (const file of files) {
       const [relPath, content] = file.split(':');
@@ -116,6 +117,7 @@ describe('copyDirs', () => {
         },
       ],
       'deep-remove-regex': ['/grpc-google-cloud-asset-.*'],
+      'deep-exclude-regex': ['/grpc-google-cloud-asset-v1p1beta1/src/index.java'],
     };
 
     // CopyDirs and confirm.
@@ -124,6 +126,7 @@ describe('copyDirs', () => {
       'README.md:I should be preserved.',
       'grpc-google-cloud-asset-v1p1beta1',
       'grpc-google-cloud-asset-v1p1beta1/src',
+      'grpc-google-cloud-asset-v1p1beta1/src/index.java:I should be preserved.',
       'grpc-google-cloud-asset-v1p1beta1/src/main',
       'grpc-google-cloud-asset-v1p1beta1/src/main/java',
       'grpc-google-cloud-asset-v1p1beta1/src/main/java/com',

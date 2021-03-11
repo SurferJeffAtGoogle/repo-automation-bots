@@ -59,7 +59,7 @@ export interface OwlBotYaml {
   };
   'deep-copy-regex'?: DeepCopyRegex[];
   'deep-remove-regex'?: string[];
-  'deep-preserve-regex'?: string[];
+  'deep-exclude-regex'?: string[];
 }
 
 // The default path where .OwlBot.yaml is expected to be found.
@@ -85,8 +85,8 @@ export function owlBotYamlFromText(yamlText: string): OwlBotYaml {
     for (const removePath of yaml['deep-remove-regex'] ?? []) {
       validatePath(removePath, 'deep-remove-regex');
     }
-    for (const excludePath of yaml['deep-preserve-regex'] ?? []) {
-      validatePath(excludePath, 'deep-preserve-regex');
+    for (const excludePath of yaml['deep-exclude-regex'] ?? []) {
+      validatePath(excludePath, 'deep-exclude-regex');
     }
     return yaml;
   } else {
