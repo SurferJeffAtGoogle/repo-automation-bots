@@ -24,10 +24,10 @@ deep-copy-regex:
     dest: /src
 
 deep-remove-regex:
-  /src
+  - /src
 
 deep-preserve-regex:
-  /src/index.ts
+  - /src/index.ts
 
 docker:
   image: gcr.io/cloud-devrel-resources/synthtool-nodejs:prod
