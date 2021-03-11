@@ -270,7 +270,7 @@ export function copyDirs(
       return true;
     } else {
       if (excludes.length > 0) {
-        logger.info("mismatch:");
+        logger.info('mismatch:');
         logger.info(path);
         logger.info(excludes[0]);
       }
@@ -287,7 +287,9 @@ export function copyDirs(
       const matchingDestPaths = allDestPaths.filter(path =>
         rmRegExp.test('/' + path)
       );
-      deadPaths.push(...matchingDestPaths.filter(path => !excluded('/' + path)));
+      deadPaths.push(
+        ...matchingDestPaths.filter(path => !excluded('/' + path))
+      );
     }
   }
   const deadDirs: string[] = [];
@@ -300,9 +302,9 @@ export function copyDirs(
       logger.info(`rm  ${deadPath}`);
       fs.rmSync(deadPath);
     }
-  }  
+  }
   // Then remove directories.  Some removes may fail because inner files were excluded.
-  for (let deadDir of deadDirs) {
+  for (const deadDir of deadDirs) {
     logger.info(`rmdir  ${deadDir}`);
     try {
       fs.rmdirSync(deadDir);

@@ -88,9 +88,12 @@ describe('copyDirs', () => {
     const tempDir = tmp.dirSync().name;
     const sourceDir = path.join(tempDir, 'googleapis');
     // prepare the source
-    makeDirTree(path.join(sourceDir,
-      'google/cloud/asset/v1p1beta1/google-cloud-asset-v1p1beta1-java/'
-      ), [
+    makeDirTree(
+      path.join(
+        sourceDir,
+        'google/cloud/asset/v1p1beta1/google-cloud-asset-v1p1beta1-java/'
+      ),
+      [
         'grpc-google-cloud-asset-v1p1beta1-java/src/main/java/com/google/cloud/asset/v1p1beta1/AssetServiceGrpc.java:from java import *;',
         'grpc-google-cloud-asset-v1p1beta1-java/src/maven.xml:New version.',
       ]
@@ -119,8 +122,10 @@ describe('copyDirs', () => {
         },
       ],
       'deep-remove-regex': ['/grpc-google-cloud-asset-.*'],
-      'deep-exclude-regex': ['/grpc-google-cloud-asset-v1p1beta1/src/index.java',
-      '/grpc-google-cloud-asset-v1p1beta1/src/maven.xml'],
+      'deep-exclude-regex': [
+        '/grpc-google-cloud-asset-v1p1beta1/src/index.java',
+        '/grpc-google-cloud-asset-v1p1beta1/src/maven.xml',
+      ],
     };
 
     // CopyDirs and confirm.
