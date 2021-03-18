@@ -36,7 +36,7 @@ Write-Host -ForegroundColor Blue "Working in $workDir"
 function CloneOrPull-Repo([string]$repo) {
     $name = $repo.split('/')[1]
     if (Test-Path $name) {
-        git -C $name pull | Write-Host
+        # git -C $name pull | Write-Host
     } else {
         gh repo clone $repo | Write-Host
     }
@@ -110,10 +110,15 @@ deep-copy-regex:
     git -C $destRepo add -A
     git -C $destRepo commit -m "chore: migrate to owl bot"
     ThrowFail "git commit"
-    $sourceRepo = gci googleapis-gen
+
+    echo "node $owlbotDir/build/src/bin/owl-bot.js copy-code"
+    echo "  --source-repo $sourceRepo"
+    echo "  --source-repo-commit-hash $commitHash"
+    echo "  --dest $destRepo"
+
 
     # Run copy-code to simulate a copy from googleapis-gen.
-    node "$owlbotDir/build/src/bin/commands/copy-code.js" `
+    node "$owlbotDir/build/src/bin/owl-bot.js" copy-code `
         --source-repo $sourceRepo `
         --source-repo-commit-hash $commitHash `
         --dest $destRepo
@@ -149,7 +154,7 @@ try {
             Write-Host -ForegroundColor Blue "Skipping $name;  Found $owlBotPath."
         } else {
             Write-Host -ForegroundColor Blue "Migrating $name..."
-            Migrate-Repo $name
+            Migrate-Repo (Get-Item $name) (Get-Item googleapis-gen) $currentHash
         }
     }
 
