@@ -56,7 +56,7 @@ function Migrate-Repo([string]$destRepo, [string]$sourceRepo, [string]$commitHas
             return;
         }
     }
-    $apiName = Read-Host "What's the API name?"
+    $apiPath = Read-Host "What's the API path in googleapis-gen?"
     $dv = Read-Host "What's the default version?"
 
     # Create a branch
@@ -91,7 +91,7 @@ deep-remove-regex:
   - /owl-bot-staging
 
 deep-copy-regex:
-  - source: /google/cloud/${apiName}/(.*)/.*-nodejs/(.*)
+  - source: /${apiPath}/(.*)/.*-nodejs/(.*)
     dest: /owl-bot-staging/`$1/`$2
 "
     $yaml | Out-File $yamlPath -Encoding UTF8
