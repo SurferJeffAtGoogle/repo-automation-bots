@@ -56,8 +56,8 @@ function Migrate-Repo([string]$destRepo, [string]$sourceRepo, [string]$commitHas
             return;
         }
     }
-    $dv = Read-Host "What's the default version?"
     $apiName = Read-Host "What's the API name?"
+    $dv = Read-Host "What's the default version?"
 
     # Create a branch
     git -C $destRepo checkout -b owl-bot
