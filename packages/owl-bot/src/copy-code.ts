@@ -121,6 +121,7 @@ ${err}`,
     destDir,
     workDir,
     yaml,
+    true,
     logger
   );
 
@@ -218,6 +219,7 @@ export async function copyCode(
   destDir: string,
   workDir: string,
   yaml: OwlBotYaml,
+  allowEmptyCommit: boolean,
   logger = console
 ) {
   const cmd = newCmd(logger);
@@ -236,7 +238,8 @@ export async function copyCode(
   commitMsg += `Source-Link: ${sourceLink}\n`;
   fs.writeFileSync(commitMsgPath, commitMsg);
   cmd('git add -A', {cwd: destDir});
-  cmd(`git commit -F "${commitMsgPath}" --allow-empty`, {cwd: destDir});
+  const allowEmptyFlag = allowEmptyCommit ? "--allow-empty" : "";
+  cmd(`git commit -F "${commitMsgPath}" ${allowEmptyFlag}`, {cwd: destDir});
 }
 
 // returns undefined instead of throwing an exception.

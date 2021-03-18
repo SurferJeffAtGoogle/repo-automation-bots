@@ -55,7 +55,8 @@ export const copyCodeCommand: yargs.CommandModule<{}, Args> = {
       argv['source-repo-commit-hash'],
       destDir,
       tmp.dirSync().name,
-      await loadOwlBotYaml(destDir)
+      await loadOwlBotYaml(destDir),
+      false
     );
   },
 };
