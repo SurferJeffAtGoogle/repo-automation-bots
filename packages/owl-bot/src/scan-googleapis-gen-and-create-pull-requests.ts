@@ -46,14 +46,14 @@ export async function scanGoogleapisGenAndCreatePullRequests(
   const cmd = newCmd(logger);
   const stdout = cmd(`git log -${cloneDepth} --format=%H`, {cwd: sourceDir});
   const text = stdout.toString('utf8');
-  const commitHashes = text.split(/\r?\n/).filter(x => x);
+  const commitHashes = text.split(/\r?\n/).map(s => s.trim()).filter(x => x);
 
   const todoStack: Todo[] = [];
   let octokit: null | OctokitType = null;
 
   // Search the commit history for commits that still need to be copied
   // to destination repos.
-  for (const commitHash of commitHashes) {
+  for (const [i, commitHash] of commitHashes.entries()) {
     const commitText = cmd(`git log -1 --pretty=oneline ${commitHash}`, {
       cwd: sourceDir,
     }).toString('utf8');
@@ -71,7 +71,13 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     const stackSize = todoStack.length;
     for (const repo of repos) {
       octokit = octokit ?? (await octokitFactory.getShortLivedOctokit());
-      if (!(await copyExists(octokit, repo, commitHash, logger))) {
+      const repoString = repo.toString();
+      const configs = await configsStore.getConfigs(repoString);
+      const beginAfterCommitHash =
+        configs?.yaml?.['begin-after-commit-hash']?.trim() ?? "";
+      if (beginAfterCommitHash && commitHashes.indexOf(beginAfterCommitHash) <= i) {
+        logger.info(`Ignoring ${repoString} because ${commitHash} is older than ${beginAfterCommitHash}.`);
+      } else if (!(await copyExists(octokit, repo, commitHash, logger))) {
         const todo: Todo = {repo, commitHash};
         logger.info(`Pushing todo onto stack: ${todo}`);
         todoStack.push(todo);
