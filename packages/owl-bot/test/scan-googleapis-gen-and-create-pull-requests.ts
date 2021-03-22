@@ -90,10 +90,6 @@ const bYaml: OwlBotYaml = {
       source: '/b.txt',
       dest: '/src/b.txt',
     },
-    {
-      source: '/a.txt',
-      dest: '/src/a.txt',
-    },
   ],
   'deep-remove-regex': ['/src'],
 };
@@ -191,6 +187,10 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     .map(s => s.trim())
     .filter(s => s);
 
+  beforeEach(() => {
+    cmd('git checkout main', {cwd: abcRepo});
+  });
+
   it('does nothing with zero repos affected', async () => {
     assert.strictEqual(
       await scanGoogleapisGenAndCreatePullRequests(
@@ -202,13 +202,8 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     );
   });
 
-
   it('copies files and creates a pull request', async () => {
-    const myYaml = JSON.parse(JSON.stringify(bYaml)) as OwlBotYaml;
-    // It should ignore the oldest commit to a.txt because 
-    // begin-after-commit-hash is newer than that commit.
-    myYaml['begin-after-commit-hash'] = abcCommits[2];
-    const [destRepo, configsStore] = makeDestRepoAndConfigsStore(myYaml);
+    const [destRepo, configsStore] = makeDestRepoAndConfigsStore(bYaml);
 
     const pulls = new FakePulls();
     const octokit = newFakeOctokit(pulls);
@@ -240,4 +235,26 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     cmd('git checkout main', {cwd: destDir});
     assert.ok(!cc.stat(bpath));
   });
+
+  it('creates 3 pull requests for 3 matching commits', async () => {
+    const myYaml = JSON.parse(JSON.stringify(bYaml)) as OwlBotYaml;
+    myYaml['deep-copy-regex']?.push({
+      source: '/.*',
+      dest: '/$1',
+    });
+
+    const [, configsStore] = makeDestRepoAndConfigsStore(myYaml);
+
+    const pulls = new FakePulls();
+    const octokit = newFakeOctokit(pulls);
+    await scanGoogleapisGenAndCreatePullRequests(
+      abcRepo,
+      factory(octokit),
+      configsStore
+    );
+
+    // Confirm it created one pull request.
+    assert.strictEqual(pulls.pulls.length, 3);
+  });
+
 });
