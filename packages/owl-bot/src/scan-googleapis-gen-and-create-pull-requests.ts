@@ -74,6 +74,8 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     const stackSize = todoStack.length;
     for (const repo of repos) {
       octokit = octokit ?? (await octokitFactory.getShortLivedOctokit());
+      // Compare the config's begin-after-commit-hash and this commit hash,
+      // and don't create a pull request if this commit hash is older.
       const repoString = repo.toString();
       const configs = await configsStore.getConfigs(repoString);
       const beginAfterCommitHash =
