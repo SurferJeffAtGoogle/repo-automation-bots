@@ -50,6 +50,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
 
   const todoStack: Todo[] = [];
   let octokit: null | OctokitType = null;
+  const upToDateRepos = new Set<string>();
 
   // Search the commit history for commits that still need to be copied
   // to destination repos.
@@ -71,7 +72,12 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     const stackSize = todoStack.length;
     for (const repo of repos) {
       octokit = octokit ?? (await octokitFactory.getShortLivedOctokit());
-      if (!(await copyExists(octokit, repo, commitHash, logger))) {
+      const repoString = repo.toString();
+      if (upToDateRepos.has(repoString)) {
+        logger.info(`${repoString} is already up to date.`);
+      } else if (await copyExists(octokit, repo, commitHash, logger)) {
+        upToDateRepos.add(repoString);
+      } else {
         const todo: Todo = {repo, commitHash};
         logger.info(`Pushing todo onto stack: ${todo}`);
         todoStack.push(todo);
