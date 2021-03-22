@@ -112,9 +112,13 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
 
   it('does nothing when a pull request already exists', async () => {
     const octokit = {
-      search: {
-        commits() {
-          return Promise.resolve({data: {total_count: 1}});
+      repos: {
+        get() {
+          return {
+            data: {
+              default_branch: 'main',
+            },
+          };
         },
       },
     };
@@ -165,14 +169,6 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
   it('copies files and creates a pull request', async () => {
     const pulls = new FakePulls();
     const octokit = {
-      search: {
-        commits() {
-          return Promise.resolve({data: {total_count: 0}});
-        },
-        issuesAndPullRequests() {
-          return Promise.resolve({data: {items: []}});
-        },
-      },
       pulls: pulls,
       issues: new FakeIssues(),
       repos: {
