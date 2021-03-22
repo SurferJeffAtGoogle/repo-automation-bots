@@ -59,7 +59,9 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
   const abcRepo = makeAbcRepo();
   const abcCommits = cmd('git log --format=%H', {cwd: abcRepo})
     .toString('utf8')
-    .split(/\r?\n/);
+    .split(/\r?\n/)
+    .map(s => s.trim())
+    .filter(x => x);
 
   function makeRepoWithOwlBotYaml(owlBotYaml: OwlBotYaml): string {
     const dir = tmp.dirSync().name;
@@ -106,8 +108,13 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
         source: '/b.txt',
         dest: '/src/b.txt',
       },
+      {
+        source: '/a.txt',
+        dest: '/src/a.txt',
+      },
     ],
     'deep-remove-regex': ['/src'],
+    'begin-after-commit-hash': abcCommits[2]
   };
 
   it('does nothing when a pull request already exists', async () => {
@@ -193,6 +200,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
       getCloneUrl(): string {
         return destDir;
       },
+      toString() { return `${this.owner}/${this.repo}`; }
     };
 
     const destRepoName = `${destRepo.owner}/${destRepo.repo}`;
