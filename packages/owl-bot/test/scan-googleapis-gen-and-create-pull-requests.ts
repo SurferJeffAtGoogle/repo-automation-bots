@@ -25,6 +25,7 @@ import path from 'path';
 import yaml from 'js-yaml';
 import {GithubRepo} from '../src/github-repo';
 import {FakeConfigsStore} from './fake-configs-store';
+import { ConfigsStore } from '../src/configs-store';
 
 // Use anys to mock parts of the octokit API.
 // We'll still see compile time errors if in the src/ code if there's a type error
@@ -162,6 +163,26 @@ function makeDestRepo(yaml: OwlBotYaml): GithubRepo {
   return destRepo;
 }
 
+function makeDestRepoAndConfigsStore(yaml: OwlBotYaml): [GithubRepo, ConfigsStore] {
+  const destRepo: GithubRepo = makeDestRepo(yaml);
+
+  const configsStore = new FakeConfigsStore(
+    new Map([
+      [
+        destRepo.toString(),
+        {
+          branchName: 'main',
+          commitHash: '456',
+          installationId: 42,
+          yaml: yaml,
+        },
+      ],
+    ])
+  );
+  configsStore.githubRepos.set(destRepo.toString(), destRepo);
+  return [destRepo, configsStore];
+}
+
 describe('scanGoogleapisGenAndCreatePullRequests', () => {
   const abcRepo = makeAbcRepo();
   const abcCommits = cmd('git log --format=%H', {cwd: abcRepo})
@@ -184,23 +205,11 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
 
   it('copies files and creates a pull request', async () => {
     const myYaml = JSON.parse(JSON.stringify(bYaml)) as OwlBotYaml;
+    // It should ignore the oldest commit to a.txt because 
+    // begin-after-commit-hash is newer than that commit.
     myYaml['begin-after-commit-hash'] = abcCommits[2];
-    const destRepo: GithubRepo = makeDestRepo(myYaml);
+    const [destRepo, configsStore] = makeDestRepoAndConfigsStore(myYaml);
 
-    const configsStore = new FakeConfigsStore(
-      new Map([
-        [
-          destRepo.toString(),
-          {
-            branchName: 'main',
-            commitHash: '456',
-            installationId: 42,
-            yaml: myYaml,
-          },
-        ],
-      ])
-    );
-    configsStore.githubRepos.set(destRepo.toString(), destRepo);
     const pulls = new FakePulls();
     const octokit = newFakeOctokit(pulls);
     await scanGoogleapisGenAndCreatePullRequests(
