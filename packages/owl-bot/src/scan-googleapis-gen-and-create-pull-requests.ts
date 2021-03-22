@@ -46,7 +46,10 @@ export async function scanGoogleapisGenAndCreatePullRequests(
   const cmd = newCmd(logger);
   const stdout = cmd(`git log -${cloneDepth} --format=%H`, {cwd: sourceDir});
   const text = stdout.toString('utf8');
-  const commitHashes = text.split(/\r?\n/).map(s => s.trim()).filter(x => x);
+  const commitHashes = text
+    .split(/\r?\n/)
+    .map(s => s.trim())
+    .filter(x => x);
 
   const todoStack: Todo[] = [];
   let octokit: null | OctokitType = null;
@@ -74,10 +77,14 @@ export async function scanGoogleapisGenAndCreatePullRequests(
       const repoString = repo.toString();
       const configs = await configsStore.getConfigs(repoString);
       const beginAfterCommitHash =
-        configs?.yaml?.['begin-after-commit-hash']?.trim() ?? "";
-      const beginIndex = beginAfterCommitHash ? commitHashes.indexOf(beginAfterCommitHash) : -1;
+        configs?.yaml?.['begin-after-commit-hash']?.trim() ?? '';
+      const beginIndex = beginAfterCommitHash
+        ? commitHashes.indexOf(beginAfterCommitHash)
+        : -1;
       if (beginIndex >= 0 && beginIndex <= commitIndex) {
-        logger.info(`Ignoring ${repoString} because ${commitHash} is older than ${beginAfterCommitHash}.`);
+        logger.info(
+          `Ignoring ${repoString} because ${commitHash} is older than ${beginAfterCommitHash}.`
+        );
       } else if (!(await copyExists(octokit, repo, commitHash, logger))) {
         const todo: Todo = {repo, commitHash};
         logger.info(`Pushing todo onto stack: ${todo}`);

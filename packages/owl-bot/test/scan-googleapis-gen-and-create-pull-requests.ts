@@ -25,7 +25,7 @@ import path from 'path';
 import yaml from 'js-yaml';
 import {GithubRepo} from '../src/github-repo';
 import {FakeConfigsStore} from './fake-configs-store';
-import { ConfigsStore } from '../src/configs-store';
+import {ConfigsStore} from '../src/configs-store';
 
 // Use anys to mock parts of the octokit API.
 // We'll still see compile time errors if in the src/ code if there's a type error
@@ -147,19 +147,23 @@ function newFakeOctokit(pulls?: FakePulls, issues?: FakeIssues) {
  * Makes a local destination repo where files will be copied to.
  */
 function makeDestRepo(yaml: OwlBotYaml): GithubRepo {
-  const destDir = makeRepoWithOwlBotYaml(bYaml);
+  const destDir = makeRepoWithOwlBotYaml(yaml);
   const destRepo: GithubRepo = {
     owner: 'googleapis',
     repo: 'nodejs-spell-check',
     getCloneUrl(): string {
       return destDir;
     },
-    toString() { return `${this.owner}/${this.repo}`; }
+    toString() {
+      return `${this.owner}/${this.repo}`;
+    },
   };
   return destRepo;
 }
 
-function makeDestRepoAndConfigsStore(yaml: OwlBotYaml): [GithubRepo, ConfigsStore] {
+function makeDestRepoAndConfigsStore(
+  yaml: OwlBotYaml
+): [GithubRepo, ConfigsStore] {
   const destRepo: GithubRepo = makeDestRepo(yaml);
 
   const configsStore = new FakeConfigsStore(
@@ -179,7 +183,10 @@ function makeDestRepoAndConfigsStore(yaml: OwlBotYaml): [GithubRepo, ConfigsStor
   return [destRepo, configsStore];
 }
 
-describe('scanGoogleapisGenAndCreatePullRequests', () => {
+describe('scanGoogleapisGenAndCreatePullRequests', function () {
+  // These tests use git locally and read and write a lot to the file system,
+  // so a slow file system will slow them down.
+  this.timeout(60000); // 1 minute.
   const abcRepo = makeAbcRepo();
   const abcCommits = cmd('git log --format=%H', {cwd: abcRepo})
     .toString('utf8')
@@ -296,5 +303,4 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     // Confirm it created one pull request.
     assert.strictEqual(pulls.pulls.length, 1);
   });
-
 });
