@@ -257,4 +257,44 @@ describe('scanGoogleapisGenAndCreatePullRequests', () => {
     assert.strictEqual(pulls.pulls.length, 3);
   });
 
+  it('ignores pull requests older than begin', async () => {
+    const myYaml = JSON.parse(JSON.stringify(bYaml)) as OwlBotYaml;
+    myYaml['deep-copy-regex']?.push({
+      source: '/.*',
+      dest: '/$1',
+    });
+    myYaml['begin-after-commit-hash'] = abcCommits[1];
+
+    const [, configsStore] = makeDestRepoAndConfigsStore(myYaml);
+
+    const pulls = new FakePulls();
+    const octokit = newFakeOctokit(pulls);
+    await scanGoogleapisGenAndCreatePullRequests(
+      abcRepo,
+      factory(octokit),
+      configsStore
+    );
+
+    // Confirm it created one pull request.
+    assert.strictEqual(pulls.pulls.length, 1);
+  });
+
+  it('ignores no pull requests when begin not found', async () => {
+    const myYaml = JSON.parse(JSON.stringify(bYaml)) as OwlBotYaml;
+    myYaml['begin-after-commit-hash'] = 'bogus-commit-hash';
+
+    const [, configsStore] = makeDestRepoAndConfigsStore(myYaml);
+
+    const pulls = new FakePulls();
+    const octokit = newFakeOctokit(pulls);
+    await scanGoogleapisGenAndCreatePullRequests(
+      abcRepo,
+      factory(octokit),
+      configsStore
+    );
+
+    // Confirm it created one pull request.
+    assert.strictEqual(pulls.pulls.length, 1);
+  });
+
 });
