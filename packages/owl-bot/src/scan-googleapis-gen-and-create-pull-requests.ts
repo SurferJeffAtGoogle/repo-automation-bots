@@ -53,7 +53,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
 
   // Search the commit history for commits that still need to be copied
   // to destination repos.
-  for (const [i, commitHash] of commitHashes.entries()) {
+  for (const [commitIndex, commitHash] of commitHashes.entries()) {
     const commitText = cmd(`git log -1 --pretty=oneline ${commitHash}`, {
       cwd: sourceDir,
     }).toString('utf8');
@@ -75,7 +75,8 @@ export async function scanGoogleapisGenAndCreatePullRequests(
       const configs = await configsStore.getConfigs(repoString);
       const beginAfterCommitHash =
         configs?.yaml?.['begin-after-commit-hash']?.trim() ?? "";
-      if (beginAfterCommitHash && commitHashes.indexOf(beginAfterCommitHash) <= i) {
+      const beginIndex = beginAfterCommitHash ? commitHashes.indexOf(beginAfterCommitHash) : -1;
+      if (beginIndex >= 0 && beginIndex <= commitIndex) {
         logger.info(`Ignoring ${repoString} because ${commitHash} is older than ${beginAfterCommitHash}.`);
       } else if (!(await copyExists(octokit, repo, commitHash, logger))) {
         const todo: Todo = {repo, commitHash};
