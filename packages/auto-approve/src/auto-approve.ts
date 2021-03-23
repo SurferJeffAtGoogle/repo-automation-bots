@@ -46,10 +46,10 @@ export async function logicForConfigCheck(
   headSha: string
 ): Promise<Boolean> {
   // Check if the YAML is formatted correctly
-  const isYamlValid = validateYaml(config);
+  const loadError = validateYaml(config);
 
   // Check if config has correct schema
-  const isSchemaValid = await validateSchema(config);
+  const schemaError = await validateSchema(config);
 
   // Check if codeowners includes @github-automation for auto-approve.yml file
   const isCodeOwnersCorrect = await checkCodeOwners(
@@ -61,8 +61,8 @@ export async function logicForConfigCheck(
 
   // If all files are correct, then submit a passing check for the config
   if (
-    isYamlValid.isValid === true &&
-    isSchemaValid.isValid === true &&
+    !schemaError &&
+    !loadError &&
     isCodeOwnersCorrect.isValid === true
   ) {
     await octokit.checks.create({
@@ -86,10 +86,8 @@ export async function logicForConfigCheck(
       'See the following errors in your auto-approve.yml config:\n' +
       `${isCodeOwnersCorrect.checkType}:\n` +
       `${isCodeOwnersCorrect.message}\n` +
-      `${isYamlValid.checkType}:\n` +
-      `${isYamlValid.message}\n` +
-      `${isSchemaValid.checkType}:\n` +
-      `${isSchemaValid.message}\n`;
+      (loadError ? `Error loading config: ${loadError}\n` : '') +
+      (schemaError ? `Config failed to matche schema: ${schemaError}\n` : '');
 
     await octokit.checks.create({
       owner,

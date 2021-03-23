@@ -55,46 +55,36 @@ function isFile(file: File | unknown): file is File {
  * Takes in the auto-approve.yml file and checks to see that it is formatted correctly
  *
  * @param configYaml the string of auto-approve.yml
- * @returns true if it is a valid YAML object, an error message if it is not valid
+ * @returns empty if the yaml is valid, otherwise an error message.
  */
-export function validateYaml(configYaml: string): validationResult {
-  let isValid: boolean;
-  let message: string | undefined = undefined;
+export function validateYaml(configYaml: string): string {
   try {
     const isYaml = yaml.load(configYaml);
     if (typeof isYaml === 'object') {
-      isValid = true;
+      return '';
     } else {
-      message = 'File is not a YAML object';
-      isValid = false;
+      return `Expected yaml to parse to an object; instead, it parsed to ${isYaml}`;
     }
   } catch (err) {
-    message = 'File is not properly configured YAML';
-    isValid = false;
+    return String(err) ?? "Unknown error in validateYaml()";
   }
-
-  return {checkType: 'Yaml', isValid, message};
 }
 
 /**
  * Takes in the auto-approve.yml file and checks to see that the schema matches the valid-pr-schema.json rules
  *
  * @param configYaml the string of auto-approve.yml
- * @returns true if it matches valid-pr-schema.json, the error messages if it doesn't match
+ * @returns empty if the yaml matches the schema, otherwise an error message.
  */
 export async function validateSchema(
   configYaml: string | undefined | null | number | object
-): Promise<validationResult> {
+): Promise<string> {
   const validateSchema = await ajv.compile(schema);
-  const isValid = await validateSchema(configYaml);
-  const errorText = (await validateSchema).errors?.map(x => {
-    return {wrongProperty: x.params, message: x.message};
-  });
-  return {
-    checkType: 'Schema',
-    isValid: isValid === true ? true : false,
-    errorMessages: errorText,
-  };
+  if (await validateSchema(configYaml)) {
+    return '';
+  } else {
+    return JSON.stringify((await validateSchema).errors, undefined, 2) ?? 'Unknown error in validateSchema().';
+  }
 }
 
 /**
