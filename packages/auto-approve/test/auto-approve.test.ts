@@ -96,7 +96,7 @@ describe('auto-approve', () => {
     getChangedFilesStub = sinon.stub(getPRInfo, 'getChangedFiles');
     getBlobFromPRFilesStub = sinon.stub(getPRInfo, 'getBlobFromPRFiles');
     validateSchemaStub = sinon.stub(checkConfig, 'validateSchema');
-    validateYamlStub = sinon.stub(checkConfig, 'validateYaml');
+    // validateYamlStub = sinon.stub(checkConfig, 'validateYaml');
     checkCodeOwnersStub = sinon.stub(checkConfig, 'checkCodeOwners');
   });
 

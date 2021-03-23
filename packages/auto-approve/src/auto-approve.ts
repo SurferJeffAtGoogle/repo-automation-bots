@@ -19,7 +19,7 @@ import {Probot, Context, ProbotOctokit} from 'probot';
 import {logger} from 'gcf-utils';
 import {ValidPr, checkPRAgainstConfig} from './check-pr';
 import {getChangedFiles, getBlobFromPRFiles} from './get-PR-info';
-import {validateYaml, validateSchema, checkCodeOwners} from './check-config.js';
+import {validateSchema, checkCodeOwners} from './check-config.js';
 
 interface Configuration {
   rules: ValidPr[];
@@ -45,11 +45,14 @@ export async function logicForConfigCheck(
   octokit: InstanceType<typeof ProbotOctokit>,
   headSha: string
 ): Promise<Boolean> {
-  // Check if the YAML is formatted correctly
-  const isYamlValid = validateYaml(config);
+  const errors: string[] = [];
 
   // Check if config has correct schema
-  const isSchemaValid = await validateSchema(config);
+  try {
+    await validateSchema(config);
+  } catch (e) {
+    errors.push(`Schema error: ${e}`);
+  }
 
   // Check if codeowners includes @github-automation for auto-approve.yml file
   const isCodeOwnersCorrect = await checkCodeOwners(
@@ -61,8 +64,7 @@ export async function logicForConfigCheck(
 
   // If all files are correct, then submit a passing check for the config
   if (
-    isYamlValid.isValid === true &&
-    isSchemaValid.isValid === true &&
+    errors.length === 0 &&
     isCodeOwnersCorrect.isValid === true
   ) {
     await octokit.checks.create({
@@ -82,15 +84,11 @@ export async function logicForConfigCheck(
   } else {
     // If any of the files are not correct, submit a failing check
     // logging the appropriate error messages
-    const errorMessage =
+    let errorMessage =
       'See the following errors in your auto-approve.yml config:\n' +
       `${isCodeOwnersCorrect.checkType}:\n` +
-      `${isCodeOwnersCorrect.message}\n` +
-      `${isYamlValid.checkType}:\n` +
-      `${isYamlValid.message}\n` +
-      `${isSchemaValid.checkType}:\n` +
-      `${isSchemaValid.message}\n`;
-
+      `${isCodeOwnersCorrect.message}\n`;
+    errorMessage += errors.join('\n');
     await octokit.checks.create({
       owner,
       repo,

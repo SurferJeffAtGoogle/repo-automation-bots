@@ -52,49 +52,19 @@ function isFile(file: File | unknown): file is File {
 }
 
 /**
- * Takes in the auto-approve.yml file and checks to see that it is formatted correctly
- *
- * @param configYaml the string of auto-approve.yml
- * @returns true if it is a valid YAML object, an error message if it is not valid
- */
-export function validateYaml(configYaml: string): validationResult {
-  let isValid: boolean;
-  let message: string | undefined = undefined;
-  try {
-    const isYaml = yaml.load(configYaml);
-    if (typeof isYaml === 'object') {
-      isValid = true;
-    } else {
-      message = 'File is not a YAML object';
-      isValid = false;
-    }
-  } catch (err) {
-    message = 'File is not properly configured YAML';
-    isValid = false;
-  }
-
-  return {checkType: 'Yaml', isValid, message};
-}
-
-/**
  * Takes in the auto-approve.yml file and checks to see that the schema matches the valid-pr-schema.json rules
  *
  * @param configYaml the string of auto-approve.yml
- * @returns true if it matches valid-pr-schema.json, the error messages if it doesn't match
+ * @throws an exception if yaml doesn't satisfy schema.
  */
 export async function validateSchema(
-  configYaml: string | undefined | null | number | object
-): Promise<validationResult> {
+  configYamlText: string
+): Promise<void> {
+  const configYaml = yaml.load(configYamlText);
   const validateSchema = await ajv.compile(schema);
-  const isValid = await validateSchema(configYaml);
-  const errorText = (await validateSchema).errors?.map(x => {
-    return {wrongProperty: x.params, message: x.message};
-  });
-  return {
-    checkType: 'Schema',
-    isValid: isValid === true ? true : false,
-    errorMessages: errorText,
-  };
+  if (!validateSchema(configYaml)) {
+    throw JSON.stringify(validateSchema.errors, undefined, 2);
+  }
 }
 
 /**
@@ -104,7 +74,7 @@ export async function validateSchema(
  * @param owner of the repo of the incoming PR
  * @param repo of the incoming PR
  * @param codeOwnersPRFile if the incoming PR includes a codeowners file, that codeowners file; undefined if not
- * @returns true if codeowners file is appropriately configured, the error message if not
+ * @throws an exception if the code owners are bad.
  */
 export async function checkCodeOwners(
   octokit: InstanceType<typeof ProbotOctokit>,
