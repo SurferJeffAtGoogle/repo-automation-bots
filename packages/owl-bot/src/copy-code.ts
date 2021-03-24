@@ -214,6 +214,9 @@ export function toLocalRepo(
  * @param destDir the locally checkout out repo with an .OwlBot.yaml file.
  * @param workDir a working directory where googleapis-gen will be cloned.
  * @param yaml the yaml file loaded from the destDir
+ * @returns the commit hash from which code was copied. That will match sourceCommitHash
+ *    parameter if it was provided.  If not, it will be the most recent commit from
+ *    the source repo.
  */
 export async function copyCode(
   sourceRepo: string,
