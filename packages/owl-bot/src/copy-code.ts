@@ -97,7 +97,6 @@ export async function copyCodeAndCreatePullRequest(
   } catch (err) {
     logger.error(err);
     // Create a github issue.
-    // TODO: don't report an error if the user is running the command line locally.
     const sourceLink = sourceLinkFrom(sourceRepoCommitHash);
     const octokit = await octokitFactory.getShortLivedOctokit();
     const issue = await octokit.issues.create({
