@@ -23,7 +23,7 @@ import path from 'path';
 import {GithubRepo} from '../src/github-repo';
 import {FakeConfigsStore} from './fake-configs-store';
 import {ConfigsStore} from '../src/configs-store';
-import { makeAbcRepo, makeRepoWithOwlBotYaml } from './make-repos';
+import {makeAbcRepo, makeRepoWithOwlBotYaml} from './make-repos';
 
 // Use anys to mock parts of the octokit API.
 // We'll still see compile time errors if in the src/ code if there's a type error

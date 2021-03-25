@@ -20,7 +20,7 @@ import * as fs from 'fs';
 import tmp from 'tmp';
 import {OwlBotYaml} from '../src/config-files';
 import {collectDirTree, makeDirTree} from './dir-tree';
-import { makeAbcRepo, makeRepoWithOwlBotYaml } from './make-repos';
+import {makeAbcRepo, makeRepoWithOwlBotYaml} from './make-repos';
 
 describe('copyDirs', () => {
   /**
@@ -149,7 +149,7 @@ describe('copyDirs', () => {
   });
 });
 
-describe('copyCode', function() {
+describe('copyCode', function () {
   // These tests use git locally and read and write a lot to the file system,
   // so a slow file system will slow them down.
   this.timeout(60000); // 1 minute.
@@ -174,29 +174,39 @@ describe('copyCode', function() {
     ],
     'deep-remove-regex': ['/src'],
   };
-  
 
   it('copies code at a specific commit hash.', async () => {
     const destRepo = makeRepoWithOwlBotYaml(owlBotYaml);
-    const commitHash = await copyCode(abcRepo, abcCommits[1], destRepo, tmp.dirSync().name, owlBotYaml);
+    const commitHash = await copyCode(
+      abcRepo,
+      abcCommits[1],
+      destRepo,
+      tmp.dirSync().name,
+      owlBotYaml
+    );
     assert.strictEqual(commitHash, abcCommits[1]);
     assert.deepStrictEqual(collectDirTree(destRepo), [
       'src',
       'src/a.txt:1',
-      'src/b.txt:2'
+      'src/b.txt:2',
     ]);
   });
 
   it('copies code at most recent commit hash.', async () => {
     const destRepo = makeRepoWithOwlBotYaml(owlBotYaml);
-    const commitHash = await copyCode(abcRepo, '', destRepo, tmp.dirSync().name, owlBotYaml);
+    const commitHash = await copyCode(
+      abcRepo,
+      '',
+      destRepo,
+      tmp.dirSync().name,
+      owlBotYaml
+    );
     assert.strictEqual(commitHash, abcCommits[0]);
     assert.deepStrictEqual(collectDirTree(destRepo), [
       'src',
       'src/a.txt:1',
       'src/b.txt:2',
-      'src/c.txt:3'
+      'src/c.txt:3',
     ]);
   });
-
 });

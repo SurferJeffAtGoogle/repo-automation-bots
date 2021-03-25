@@ -14,51 +14,54 @@
 
 import * as cc from '../src/copy-code';
 import tmp from 'tmp';
-import { makeDirTree } from './dir-tree';
+import {makeDirTree} from './dir-tree';
 import * as fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import { OwlBotYaml, owlBotYamlPath } from '../src/config-files';
+import {OwlBotYaml, owlBotYamlPath} from '../src/config-files';
 
 export function makeAbcRepo(logger = console): string {
   const cmd = cc.newCmd(logger);
 
   // Create a git repo.
   const dir = tmp.dirSync().name;
-  cmd('git init -b main', { cwd: dir });
-  cmd('git config user.email "test@example.com"', { cwd: dir });
-  cmd('git config user.name "test"', { cwd: dir });
+  cmd('git init -b main', {cwd: dir});
+  cmd('git config user.email "test@example.com"', {cwd: dir});
+  cmd('git config user.name "test"', {cwd: dir});
 
   // Add 3 commits
   makeDirTree(dir, ['a.txt:1']);
-  cmd('git add -A', { cwd: dir });
-  cmd('git commit -m a', { cwd: dir });
+  cmd('git add -A', {cwd: dir});
+  cmd('git commit -m a', {cwd: dir});
 
   makeDirTree(dir, ['b.txt:2']);
-  cmd('git add -A', { cwd: dir });
-  cmd('git commit -m b', { cwd: dir });
+  cmd('git add -A', {cwd: dir});
+  cmd('git commit -m b', {cwd: dir});
 
   makeDirTree(dir, ['c.txt:3']);
-  cmd('git add -A', { cwd: dir });
-  cmd('git commit -m c', { cwd: dir });
+  cmd('git add -A', {cwd: dir});
+  cmd('git commit -m c', {cwd: dir});
   return dir;
 }
 
-export function makeRepoWithOwlBotYaml(owlBotYaml: OwlBotYaml, logger = console): string {
+export function makeRepoWithOwlBotYaml(
+  owlBotYaml: OwlBotYaml,
+  logger = console
+): string {
   const cmd = cc.newCmd(logger);
 
   const dir = tmp.dirSync().name;
-  cmd('git init -b main', { cwd: dir });
-  cmd('git config user.email "test@example.com"', { cwd: dir });
-  cmd('git config user.name "test"', { cwd: dir });
+  cmd('git init -b main', {cwd: dir});
+  cmd('git config user.email "test@example.com"', {cwd: dir});
+  cmd('git config user.name "test"', {cwd: dir});
 
   const yamlPath = path.join(dir, owlBotYamlPath);
-  fs.mkdirSync(path.dirname(yamlPath), { recursive: true });
+  fs.mkdirSync(path.dirname(yamlPath), {recursive: true});
   const text = yaml.dump(owlBotYaml);
   fs.writeFileSync(yamlPath, text);
 
-  cmd('git add -A', { cwd: dir });
-  cmd('git commit -m "Hello OwlBot"', { cwd: dir });
+  cmd('git add -A', {cwd: dir});
+  cmd('git commit -m "Hello OwlBot"', {cwd: dir});
 
   return dir;
 }

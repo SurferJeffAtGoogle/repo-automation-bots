@@ -232,7 +232,9 @@ export async function copyCode(
   if (sourceCommitHash) {
     cmd(`git checkout ${sourceCommitHash}`, {cwd: sourceDir});
   } else {
-    sourceCommitHash = cmd('git log -1 --format=%H', {cwd: sourceDir}).toString('utf8').trim();
+    sourceCommitHash = cmd('git log -1 --format=%H', {cwd: sourceDir})
+      .toString('utf8')
+      .trim();
   }
 
   copyDirs(sourceDir, destDir, yaml, logger);
