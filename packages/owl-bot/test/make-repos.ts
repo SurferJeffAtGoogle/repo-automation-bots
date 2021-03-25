@@ -20,6 +20,11 @@ import path from 'path';
 import yaml from 'js-yaml';
 import {OwlBotYaml, owlBotYamlPath} from '../src/config-files';
 
+/**
+ * Makes a repo with three commits and 3 simple text files.
+ * Useful as a copy source repo for tests.
+ * @returns the local file path to the new repo
+ */
 export function makeAbcRepo(logger = console): string {
   const cmd = cc.newCmd(logger);
 
@@ -44,6 +49,11 @@ export function makeAbcRepo(logger = console): string {
   return dir;
 }
 
+/**
+ * Makes a repo that contains a single file: .OwlBot.yaml.
+ * Useful as the copy dest repo for tests.
+ * @returns the local file path to the new repo
+ */
 export function makeRepoWithOwlBotYaml(
   owlBotYaml: OwlBotYaml,
   logger = console
