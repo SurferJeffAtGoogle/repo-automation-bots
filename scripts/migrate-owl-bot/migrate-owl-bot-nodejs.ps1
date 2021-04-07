@@ -94,17 +94,9 @@ function Migrate-Repo([string]$localPath, [string]$sourceRepoPath) {
     # Create a branch
     git -C $localPath checkout -b owl-bot
 
-    $dv = Read-Host "What's the default version?"
-    if ($dv) {
-        $apiPath = Read-Host "What's the API path in googleapis-gen?"
-
-        # Update .repo-metadata.json with the default version.
-        $metadataPath = "$localPath/.repo-metadata.json"
-        $metadata = Get-Content $metadataPath | ConvertFrom-Json -AsHashTable
-        $metadata['default_version'] = $dv
-        $metadata | ConvertTo-Json | Out-File $metadataPath -Encoding UTF8
-
-        $copyYaml = "
+    $apiPath = Read-Host "What's the API path in googleapis-gen?"
+    if ($apiPath) {
+      $copyYaml = "
 deep-remove-regex:
   - /owl-bot-staging
 
@@ -112,6 +104,16 @@ deep-copy-regex:
   - source: /${apiPath}/(v.*)/.*-nodejs/(.*)
     dest: /owl-bot-staging/`$1/`$2
 "
+
+      $dv = Read-Host "What's the default version?"
+
+      if ($dv) {                
+        # Update .repo-metadata.json with the default version.
+        $metadataPath = "$localPath/.repo-metadata.json"
+        $metadata = Get-Content $metadataPath | ConvertFrom-Json -AsHashTable
+        $metadata['default_version'] = $dv
+        $metadata | ConvertTo-Json | Out-File $metadataPath -Encoding UTF8
+      }
     }
 
     $sourceCommitHash = Get-SourceCommitHash $localPath $sourceRepoPath
