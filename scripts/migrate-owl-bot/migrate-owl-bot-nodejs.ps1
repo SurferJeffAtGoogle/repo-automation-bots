@@ -91,20 +91,31 @@ function Migrate-Repo([string]$localPath, [string]$sourceRepoPath) {
         echo $null >> $yamlPath  # So we don't ask the user again.
         return
     }
-    $dv = Read-Host "What's the default version?"
-    $apiPath = Read-Host "What's the API path in googleapis-gen?"
-
-    $sourceCommitHash = Get-SourceCommitHash $localPath $sourceRepoPath
-    echo $sourceCommitHash
-
     # Create a branch
     git -C $localPath checkout -b owl-bot
 
-    # Update .repo-metadata.json with the default version.
-    $metadataPath = "$localPath/.repo-metadata.json"
-    $metadata = Get-Content $metadataPath | ConvertFrom-Json -AsHashTable
-    $metadata['default_version'] = $dv
-    $metadata | ConvertTo-Json | Out-File $metadataPath -Encoding UTF8
+    $dv = Read-Host "What's the default version?"
+    if ($dv) {
+        $apiPath = Read-Host "What's the API path in googleapis-gen?"
+
+        # Update .repo-metadata.json with the default version.
+        $metadataPath = "$localPath/.repo-metadata.json"
+        $metadata = Get-Content $metadataPath | ConvertFrom-Json -AsHashTable
+        $metadata['default_version'] = $dv
+        $metadata | ConvertTo-Json | Out-File $metadataPath -Encoding UTF8
+
+        $copyYaml = "
+deep-remove-regex:
+  - /owl-bot-staging
+
+deep-copy-regex:
+  - source: /${apiPath}/(v.*)/.*-nodejs/(.*)
+    dest: /owl-bot-staging/`$1/`$2
+"
+    }
+
+    $sourceCommitHash = Get-SourceCommitHash $localPath $sourceRepoPath
+    echo $sourceCommitHash
 
     # Write Owlbot config files.
     $lockPath = "$localPath/.github/.OwlBot.lock.yaml"
@@ -124,28 +135,22 @@ function Migrate-Repo([string]$localPath, [string]$sourceRepoPath) {
 docker:
   image: gcr.io/repo-automation-bots/owlbot-nodejs:latest
 
-deep-remove-regex:
-  - /owl-bot-staging
-
-deep-copy-regex:
-  - source: /${apiPath}/(v.*)/.*-nodejs/(.*)
-    dest: /owl-bot-staging/`$1/`$2
-
+${copyYaml}
 begin-after-commit-hash: ${sourceCommitHash}
 "
     $yaml | Out-File $yamlPath -Encoding UTF8
 
     $lock = "docker:
-  digest: sha256:b317576c0e66d348ab6c1ae50dc43405df37f957b58433c988c1e9ca257ba3d4
+  digest: sha256:1feb84e8b76860344b70d70e26f9f6d509f489be5f1ca37451bf4397254429e5
   image: gcr.io/repo-automation-bots/owlbot-nodejs:latest  
 "
     $lock | Out-File $lockPath -Encoding UTF8
 
     $cleanExit = $false
     try {
-
         # Remove obsolete files.
         Remove-Item "${localPath}/synth.metadata"
+        Rename-Item "${localPath}/synth.py" "${localPath}/owlbot.py"
         while ($true) {
             echo "Edit ${yamlPath} and edit or remove ${localPath}/synth.py before I commit changes."
             code -n -w $localPath
@@ -166,7 +171,7 @@ begin-after-commit-hash: ${sourceCommitHash}
                 --source-repo-commit-hash $sourceCommitHash
 
             git -C $localPath add -A
-            git -C $localpath commit -m "chore: copy files from googleapis-gen ${sourceCommitHash}"
+            git -C $localpath commit --allow-empty -m "chore: copy files from googleapis-gen ${sourceCommitHash}"
             $commitCount += 1
 
             function Rollback {
@@ -177,9 +182,9 @@ begin-after-commit-hash: ${sourceCommitHash}
             # And run the post processor.
             # TODO(rennie): change the docker image to repo-automation-bots when it's fixed.
             docker run --user "$(id -u):$(id -g)" --rm -v "${localPath}:/repo" -w /repo `
-                gcr.io/cloud-devrel-kokoro-resources/owlbot-nodejs:latest
+                gcr.io/repo-automation-bots/owlbot-nodejs:latest
             git -C $localPath add -A
-            git -C $localPath commit -m "chore: run the post processor"
+            git -C $localPath commit --allow-empty -m "chore: run the post processor"
             $commitCount += 1
 
             # Push the result to github and ask the user to look at it.
