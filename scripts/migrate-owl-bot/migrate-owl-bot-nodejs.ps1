@@ -156,6 +156,7 @@ begin-after-commit-hash: ${sourceCommitHash}
         while ($true) {
             echo "Edit ${yamlPath} and edit or remove ${localPath}/synth.py before I commit changes."
             code -n -w $localPath
+            Remove-Item -Force -Recursive $localPath/.vscode
 
             $commitCount = 0
 
