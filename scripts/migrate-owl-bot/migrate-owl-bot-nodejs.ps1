@@ -27,7 +27,7 @@ function New-TemporaryDirectory {
 function CloneOrPull-Repo([string]$repo) {
     $name = $repo.split('/')[1]
     if (Test-Path $name) {
-        git -C $name pull | Write-Host
+        "Using existing ${repo}" | Write-Host
     } else {
         gh repo clone $repo | Write-Host
     }
@@ -156,7 +156,7 @@ begin-after-commit-hash: ${sourceCommitHash}
         while ($true) {
             echo "Edit ${yamlPath} and edit or remove ${localPath}/synth.py before I commit changes."
             code -n -w $localPath
-            Remove-Item -Force -Recursive $localPath/.vscode
+            Remove-Item -Force -Recurse $localPath/.vscode
 
             $commitCount = 0
 
