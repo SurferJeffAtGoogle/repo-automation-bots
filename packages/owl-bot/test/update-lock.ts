@@ -22,10 +22,12 @@ import {collectDirTree, makeDirTree} from './dir-tree';
 import {makeAbcRepo, makeRepoWithOwlBotYaml} from './make-repos';
 import {newCmd} from '../src/cmd';
 import { maybeCreatePullRequestForLockUpdate } from '../src/update-lock';
-import { OctokitFactory } from '../src/octokit-util';
+import { OctokitFactory, OctokitType } from '../src/octokit-util';
 import { githubRepoFromOwnerSlashName } from '../src/github-repo';
 import { newFakeOctokitFactory } from './fake-octokit';
+import sinon from 'sinon';
 
+const sandbox = sinon.createSandbox();
 
 describe('maybeCreatePullRequestForLockUpdate', () => {
   const abcDir = makeAbcRepo();
@@ -41,7 +43,33 @@ describe('maybeCreatePullRequestForLockUpdate', () => {
     cmd(`git clone ${abcDir} ${cloneDir}`);
     makeDirTree(cloneDir, ['x.txt:New file added.']);
 
-    await maybeCreatePullRequestForLockUpdate(newFakeOctokitFactory(), 
-      githubRepoFromOwnerSlashName("googleapis/nodejs-speech"), cloneDir);
+    // Mock the call to createPullRequestFromLastCommit
+    const calls: any[][] = [];
+    function recordCall(...args: any[]) {
+      calls.push(args);
+      return Promise.resolve();
+    }
+
+    // Mock the octokit factory:
+    const factory: OctokitFactory = {
+      getGitHubShortLivedAccessToken: () => Promise.resolve('b4'),
+      getShortLivedOctokit: (token?: string) => Promise.resolve({fake: true} as unknown as OctokitType)
+    };
+
+    await maybeCreatePullRequestForLockUpdate(factory, 
+      githubRepoFromOwnerSlashName("googleapis/nodejs-speech"), cloneDir,
+      recordCall);
+
+    // Confirm createPullRequestFromLastCommit() was called once.
+    assert.deepStrictEqual(calls, [[
+      "googleapis",
+      "nodejs-speech",
+      cloneDir,
+      "main",
+      "https://x-access-token:b4@github.com/googleapis/nodejs-speech.git",
+      [ "owl-bot-update-lock"],
+      { fake: true },
+      console
+    ]]);
   });
 });

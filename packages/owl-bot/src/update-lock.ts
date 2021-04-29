@@ -13,7 +13,7 @@
 // limitations under the License.
 import {newCmd} from './cmd';
 import {core} from './core';
-import {createPullRequestFromLastCommit} from './create-pr';
+import * as createPr from './create-pr';
 import {GithubRepo, githubRepoFromUri} from './github-repo';
 import {OctokitFactory} from './octokit-util';
 
@@ -21,6 +21,7 @@ export async function maybeCreatePullRequestForLockUpdate(
   octokitFactory: OctokitFactory,
   githubRepo?: GithubRepo,
   localRepoDir?: string,
+  createPullRequestFromLastCommit = createPr.createPullRequestFromLastCommit,
   logger = console
 ): Promise<void> {
   const cmd = newCmd(logger);
