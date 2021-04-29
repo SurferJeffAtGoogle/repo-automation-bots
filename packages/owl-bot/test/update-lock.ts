@@ -26,9 +26,20 @@ import { OctokitFactory } from '../src/octokit-util';
 import { githubRepoFromOwnerSlashName } from '../src/github-repo';
 
 describe('maybeCreatePullRequestForLockUpdate', () => {
+  const abcDir = makeAbcRepo();
+
   it('does nothing when no files changed', async () => {
-    const repoDir = makeAbcRepo();
     await maybeCreatePullRequestForLockUpdate({} as OctokitFactory, 
-      githubRepoFromOwnerSlashName("googleapis/nodejs-speech"), repoDir);
+      githubRepoFromOwnerSlashName("googleapis/nodejs-speech"), abcDir);
+  });
+
+  it('creates a pull request when a file changed', async () => {
+    const cmd = newCmd();
+    const cloneDir = tmp.dirSync().name;
+    cmd(`git clone ${abcDir} ${cloneDir}`);
+    makeDirTree(cloneDir, ['x.txt:New file added.']);
+
+    await maybeCreatePullRequestForLockUpdate({} as OctokitFactory, 
+      githubRepoFromOwnerSlashName("googleapis/nodejs-speech"), cloneDir);
   });
 });
