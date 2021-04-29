@@ -14,6 +14,7 @@
 import {newCmd} from './cmd';
 import {core} from './core';
 import {createPullRequestFromLastCommit} from './create-pr';
+import { githubRepoFromUri } from './github-repo';
 import {OctokitFactory} from './octokit-util';
 
 export async function maybeCreatePullRequestForLockUpdate(
@@ -25,30 +26,27 @@ export async function maybeCreatePullRequestForLockUpdate(
   if (status) {
     // Commit additional changes.
     cmd('git add -A');
-    cmd('git commit --amend --no-edit -a');
+    cmd('git commit --amend --no-edit');
 
     // Create credentials.
     const token = await octokitFactory.getGitHubShortLivedAccessToken();
-    const url = cmd('git remote get-url origin').toString('utf8').trim();
-    const url_with_token = url.replace(
-      'https://github.com/',
-      `https://x-access-token:${token}@github.com/`
-    );
 
     // Create the pull request.
+    const uri = cmd('git remote get-url origin').toString('utf8').trim();
+    const githubRepo = githubRepoFromUri(uri);
     const branch = cmd('git branch --show-current').toString('utf8').trim();
     const octokit = await octokitFactory.getShortLivedOctokit(token);
-    const owner = '';
-    const repo = '';
     await createPullRequestFromLastCommit(
-      owner,
-      repo,
+      githubRepo.owner,
+      githubRepo.repo,
       '.',
       branch,
-      url_with_token,
+      githubRepo.getCloneUrl(token),
       [core.UPDATE_LOCK_PULL_REQUEST_LABEL],
       octokit,
       logger
     );
+  } else {
+      logger.log(`The post processor made no changes; I won't create a pull request.`);
   }
 }

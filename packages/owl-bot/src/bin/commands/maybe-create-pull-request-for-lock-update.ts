@@ -15,7 +15,8 @@
 // To Run: node ./build/src/bin/owl-bot.js copy-code-and-create-pull-request <args>
 
 import yargs = require('yargs');
-import {OctokitParams} from '../../octokit-util';
+import {octokitFactoryFrom, OctokitParams} from '../../octokit-util';
+import { maybeCreatePullRequestForLockUpdate } from '../../update-lock';
 
 type Args = OctokitParams;
 
@@ -44,5 +45,7 @@ export const maybeCreatePullRequestForLockUpdateCommand: yargs.CommandModule<
         demand: true,
       });
   },
-  async handler(argv) {},
+  async handler(argv) {
+      await maybeCreatePullRequestForLockUpdate(octokitFactoryFrom(argv));
+  },
 };
