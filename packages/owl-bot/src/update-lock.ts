@@ -20,29 +20,31 @@ import {OctokitFactory} from './octokit-util';
 export async function maybeCreatePullRequestForLockUpdate(
   octokitFactory: OctokitFactory,
   githubRepo?: GithubRepo,
+  localRepoDir?: string,
   logger = console
 ): Promise<void> {
   const cmd = newCmd(logger);
-  const status = cmd('git status --porcelain').toString('utf8');
+  const cwd = localRepoDir ?? ".";
+  const status = cmd('git status --porcelain', {cwd}).toString('utf8').trim();
   if (status) {
     // Commit additional changes.
-    cmd('git add -A');
-    cmd('git commit --amend --no-edit');
+    cmd('git add -A', {cwd});
+    cmd('git commit --amend --no-edit', {cwd});
 
     // Create credentials.
     const token = await octokitFactory.getGitHubShortLivedAccessToken();
 
     // Create the pull request.
-    const uri = cmd('git remote get-url origin').toString('utf8').trim();
+    const uri = cmd('git remote get-url origin', {cwd}).toString('utf8').trim();
     if (!githubRepo) {
       githubRepo = githubRepoFromUri(uri);
     }
-    const branch = cmd('git branch --show-current').toString('utf8').trim();
+    const branch = cmd('git branch --show-current', {cwd}).toString('utf8').trim();
     const octokit = await octokitFactory.getShortLivedOctokit(token);
     await createPullRequestFromLastCommit(
       githubRepo.owner,
       githubRepo.repo,
-      '.',
+      cwd,
       branch,
       githubRepo.getCloneUrl(token),
       [core.UPDATE_LOCK_PULL_REQUEST_LABEL],
