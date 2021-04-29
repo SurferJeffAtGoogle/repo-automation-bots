@@ -79,7 +79,7 @@ steps:
   - name: ${_CONTAINER}
     dir: '${_REPOSITORY}'
 
-  # Install our github credentials because we may need to push to github.
+  # Fetch our github credentials because we may need to push to github.
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args: [ '-c', "gcloud secrets versions access latest --secret=owl_bot_github_key --format='get(payload.data)' | tr '_-' '/+' | base64 -d > /workspace/owl-bot-github-key.pem" ]
@@ -94,9 +94,6 @@ steps:
       - 97063
       - --installation
       - 14395202
-
-      
-
     dir: '${_REPOSITORY}'
 
 
