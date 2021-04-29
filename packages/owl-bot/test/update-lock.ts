@@ -24,6 +24,8 @@ import {newCmd} from '../src/cmd';
 import { maybeCreatePullRequestForLockUpdate } from '../src/update-lock';
 import { OctokitFactory } from '../src/octokit-util';
 import { githubRepoFromOwnerSlashName } from '../src/github-repo';
+import { newFakeOctokitFactory } from './fake-octokit';
+
 
 describe('maybeCreatePullRequestForLockUpdate', () => {
   const abcDir = makeAbcRepo();
@@ -39,7 +41,7 @@ describe('maybeCreatePullRequestForLockUpdate', () => {
     cmd(`git clone ${abcDir} ${cloneDir}`);
     makeDirTree(cloneDir, ['x.txt:New file added.']);
 
-    await maybeCreatePullRequestForLockUpdate({} as OctokitFactory, 
+    await maybeCreatePullRequestForLockUpdate(newFakeOctokitFactory(), 
       githubRepoFromOwnerSlashName("googleapis/nodejs-speech"), cloneDir);
   });
 });

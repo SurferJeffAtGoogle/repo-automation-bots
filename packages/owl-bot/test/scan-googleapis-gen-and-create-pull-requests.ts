@@ -25,6 +25,7 @@ import {FakeConfigsStore} from './fake-configs-store';
 import {ConfigsStore} from '../src/configs-store';
 import {makeAbcRepo, makeRepoWithOwlBotYaml} from './make-repos';
 import {newCmd} from '../src/cmd';
+import { FakeIssues, FakePulls, newFakeOctokit } from './fake-octokit';
 
 // Use anys to mock parts of the octokit API.
 // We'll still see compile time errors if in the src/ code if there's a type error
@@ -54,60 +55,6 @@ const bYaml: OwlBotYaml = {
   'deep-remove-regex': ['/src'],
 };
 
-class FakeIssues {
-  issues: any[] = [];
-  updates: any[] = [];
-
-  constructor(issues: any[] = []) {
-    this.issues = issues;
-  }
-
-  listForRepo() {
-    return Promise.resolve({data: this.issues});
-  }
-
-  create(issue: any) {
-    this.issues.push(issue);
-    issue.html_url = `http://github.com/fake/issues/${this.issues.length}`;
-    return Promise.resolve({data: issue});
-  }
-
-  update(issue: any) {
-    this.updates.push(issue);
-    return Promise.resolve();
-  }
-}
-
-class FakePulls {
-  pulls: any[] = [];
-
-  list() {
-    return Promise.resolve({data: this.pulls});
-  }
-
-  create(pull: any) {
-    this.pulls.push(pull);
-    return Promise.resolve({
-      data: {html_url: `http://github.com/fake/pulls/${this.pulls.length}`},
-    });
-  }
-}
-
-function newFakeOctokit(pulls?: FakePulls, issues?: FakeIssues) {
-  return {
-    pulls: pulls ?? new FakePulls(),
-    issues: issues ?? new FakeIssues(),
-    repos: {
-      get() {
-        return {
-          data: {
-            default_branch: 'main',
-          },
-        };
-      },
-    },
-  };
-}
 
 /**
  * Makes a local destination repo where files will be copied to.
