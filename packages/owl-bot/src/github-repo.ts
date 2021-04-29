@@ -53,11 +53,11 @@ export function githubRepoFromOwnerSlashName(arg: string): GithubRepo {
  */
 
 export function githubRepoFromUri(uri: string): GithubRepo {
-  const matchSsh = uri.match(/^git@github.com:([^\/]+)\/(.*)\.git$/);
+  const matchSsh = uri.match(/^git@github.com:([^/]+)\/(.*)\.git$/);
   if (matchSsh) {
     return githubRepo(matchSsh[1], matchSsh[2]);
   }
-  const matchHttps = uri.match(/^https:\/\/[^\/]+\/([^\/]+)\/(.*)\.git$/);
+  const matchHttps = uri.match(/^https:\/\/[^/]+\/([^/]+)\/(.*)\.git$/);
   if (matchHttps) {
     return githubRepo(matchHttps[1], matchHttps[2]);
   }
