@@ -24,13 +24,14 @@ import {GithubRepo} from '../src/github-repo';
 import {FakeConfigsStore} from './fake-configs-store';
 import {ConfigsStore} from '../src/configs-store';
 import {makeAbcRepo, makeRepoWithOwlBotYaml} from './make-repos';
+import {newCmd} from '../src/cmd';
 
 // Use anys to mock parts of the octokit API.
 // We'll still see compile time errors if in the src/ code if there's a type error
 // calling the octokit APIs.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const cmd = cc.newCmd();
+const cmd = newCmd();
 
 function factory(octokit: any): OctokitFactory {
   return {
