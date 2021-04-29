@@ -25,7 +25,7 @@ import {FakeConfigsStore} from './fake-configs-store';
 import {ConfigsStore} from '../src/configs-store';
 import {makeAbcRepo, makeRepoWithOwlBotYaml} from './make-repos';
 import {newCmd} from '../src/cmd';
-import { FakeIssues, FakePulls, newFakeOctokit } from './fake-octokit';
+import {FakeIssues, FakePulls, newFakeOctokit} from './fake-octokit';
 
 // Use anys to mock parts of the octokit API.
 // We'll still see compile time errors if in the src/ code if there's a type error
@@ -54,7 +54,6 @@ const bYaml: OwlBotYaml = {
   ],
   'deep-remove-regex': ['/src'],
 };
-
 
 /**
  * Makes a local destination repo where files will be copied to.

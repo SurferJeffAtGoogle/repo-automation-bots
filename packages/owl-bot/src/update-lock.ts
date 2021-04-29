@@ -25,7 +25,7 @@ export async function maybeCreatePullRequestForLockUpdate(
   logger = console
 ): Promise<void> {
   const cmd = newCmd(logger);
-  const cwd = localRepoDir ?? ".";
+  const cwd = localRepoDir ?? '.';
   const status = cmd('git status --porcelain', {cwd}).toString('utf8').trim();
   if (status) {
     // Commit additional changes.
@@ -40,7 +40,9 @@ export async function maybeCreatePullRequestForLockUpdate(
     if (!githubRepo) {
       githubRepo = githubRepoFromUri(uri);
     }
-    const branch = cmd('git branch --show-current', {cwd}).toString('utf8').trim();
+    const branch = cmd('git branch --show-current', {cwd})
+      .toString('utf8')
+      .trim();
     const octokit = await octokitFactory.getShortLivedOctokit(token);
     await createPullRequestFromLastCommit(
       githubRepo.owner,

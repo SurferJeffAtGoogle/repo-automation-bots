@@ -14,27 +14,28 @@
 
 import {describe, it} from 'mocha';
 import * as assert from 'assert';
-import path from 'path';
-import * as fs from 'fs';
 import tmp from 'tmp';
-import {OwlBotYaml} from '../src/config-files';
-import {collectDirTree, makeDirTree} from './dir-tree';
-import {makeAbcRepo, makeRepoWithOwlBotYaml} from './make-repos';
+import {makeDirTree} from './dir-tree';
+import {makeAbcRepo} from './make-repos';
 import {newCmd} from '../src/cmd';
-import { maybeCreatePullRequestForLockUpdate } from '../src/update-lock';
-import { OctokitFactory, OctokitType } from '../src/octokit-util';
-import { githubRepoFromOwnerSlashName } from '../src/github-repo';
-import { newFakeOctokitFactory } from './fake-octokit';
-import sinon from 'sinon';
+import {maybeCreatePullRequestForLockUpdate} from '../src/update-lock';
+import {OctokitFactory, OctokitType} from '../src/octokit-util';
+import {githubRepoFromOwnerSlashName} from '../src/github-repo';
 
-const sandbox = sinon.createSandbox();
+// Use anys to mock parts of the octokit API.
+// We'll still see compile time errors if in the src/ code if there's a type error
+// calling the octokit APIs.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 describe('maybeCreatePullRequestForLockUpdate', () => {
   const abcDir = makeAbcRepo();
 
   it('does nothing when no files changed', async () => {
-    await maybeCreatePullRequestForLockUpdate({} as OctokitFactory, 
-      githubRepoFromOwnerSlashName("googleapis/nodejs-speech"), abcDir);
+    await maybeCreatePullRequestForLockUpdate(
+      {} as OctokitFactory,
+      githubRepoFromOwnerSlashName('googleapis/nodejs-speech'),
+      abcDir
+    );
   });
 
   it('creates a pull request when a file changed', async () => {
@@ -53,23 +54,29 @@ describe('maybeCreatePullRequestForLockUpdate', () => {
     // Mock the octokit factory:
     const factory: OctokitFactory = {
       getGitHubShortLivedAccessToken: () => Promise.resolve('b4'),
-      getShortLivedOctokit: (token?: string) => Promise.resolve({fake: true} as unknown as OctokitType)
+      getShortLivedOctokit: () =>
+        Promise.resolve(({fake: true} as unknown) as OctokitType),
     };
 
-    await maybeCreatePullRequestForLockUpdate(factory, 
-      githubRepoFromOwnerSlashName("googleapis/nodejs-speech"), cloneDir,
-      recordCall);
+    await maybeCreatePullRequestForLockUpdate(
+      factory,
+      githubRepoFromOwnerSlashName('googleapis/nodejs-speech'),
+      cloneDir,
+      recordCall
+    );
 
     // Confirm createPullRequestFromLastCommit() was called once.
-    assert.deepStrictEqual(calls, [[
-      "googleapis",
-      "nodejs-speech",
-      cloneDir,
-      "main",
-      "https://x-access-token:b4@github.com/googleapis/nodejs-speech.git",
-      [ "owl-bot-update-lock"],
-      { fake: true },
-      console
-    ]]);
+    assert.deepStrictEqual(calls, [
+      [
+        'googleapis',
+        'nodejs-speech',
+        cloneDir,
+        'main',
+        'https://x-access-token:b4@github.com/googleapis/nodejs-speech.git',
+        ['owl-bot-update-lock'],
+        {fake: true},
+        console,
+      ],
+    ]);
   });
 });
