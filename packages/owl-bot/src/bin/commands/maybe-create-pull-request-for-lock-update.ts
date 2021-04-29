@@ -16,7 +16,7 @@
 
 import yargs = require('yargs');
 import {octokitFactoryFrom, OctokitParams} from '../../octokit-util';
-import { maybeCreatePullRequestForLockUpdate } from '../../update-lock';
+import {maybeCreatePullRequestForLockUpdate} from '../../update-lock';
 
 type Args = OctokitParams;
 
@@ -46,6 +46,6 @@ export const maybeCreatePullRequestForLockUpdateCommand: yargs.CommandModule<
       });
   },
   async handler(argv) {
-      await maybeCreatePullRequestForLockUpdate(octokitFactoryFrom(argv));
+    await maybeCreatePullRequestForLockUpdate(octokitFactoryFrom(argv));
   },
 };

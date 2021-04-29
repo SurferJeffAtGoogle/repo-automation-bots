@@ -12,28 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { githubRepoFromUri } from "../src/github-repo";
+import {githubRepoFromUri} from '../src/github-repo';
 import * as assert from 'assert';
 
-describe('githubRepoFromUri()', function () {
-    it('Parses ssh uri.', () => {
-        const repo = githubRepoFromUri('git@github.com:googleapis/synthtool.git');
-        assert.strictEqual(repo.owner, 'googleapis');
-        assert.strictEqual(repo.repo, 'synthtool');
-    });
-    it('Parses https.', () => {
-        const repo = githubRepoFromUri('https://github.com/googleapis/synthtool.git');
-        assert.strictEqual(repo.owner, 'googleapis');
-        assert.strictEqual(repo.repo, 'synthtool');
-    });
-    it('Parses https with token.', () => {
-        const repo = githubRepoFromUri('https://x-access-token:abc123@github.com/googleapis/synthtool.git');
-        assert.strictEqual(repo.owner, 'googleapis');
-        assert.strictEqual(repo.repo, 'synthtool');
-    });
-    it('Parses evil name.', () => {
-        const repo = githubRepoFromUri('https://x-access-token:abc123@github.com/googleapis/synthtool.git.git');
-        assert.strictEqual(repo.owner, 'googleapis');
-        assert.strictEqual(repo.repo, 'synthtool.git');
-    });
+describe('githubRepoFromUri()', () => {
+  it('Parses ssh uri.', () => {
+    const repo = githubRepoFromUri('git@github.com:googleapis/synthtool.git');
+    assert.strictEqual(repo.owner, 'googleapis');
+    assert.strictEqual(repo.repo, 'synthtool');
+  });
+  it('Parses https.', () => {
+    const repo = githubRepoFromUri(
+      'https://github.com/googleapis/synthtool.git'
+    );
+    assert.strictEqual(repo.owner, 'googleapis');
+    assert.strictEqual(repo.repo, 'synthtool');
+  });
+  it('Parses https with token.', () => {
+    const repo = githubRepoFromUri(
+      'https://x-access-token:abc123@github.com/googleapis/synthtool.git'
+    );
+    assert.strictEqual(repo.owner, 'googleapis');
+    assert.strictEqual(repo.repo, 'synthtool');
+  });
+  it('Parses evil name.', () => {
+    const repo = githubRepoFromUri(
+      'https://x-access-token:abc123@github.com/googleapis/synthtool.git.git'
+    );
+    assert.strictEqual(repo.owner, 'googleapis');
+    assert.strictEqual(repo.repo, 'synthtool.git');
+  });
 });

@@ -23,15 +23,14 @@ export interface GithubRepo {
   toString(): string;
 }
 
-
 function githubRepo(owner: string, repo: string): GithubRepo {
   return {
     owner,
     repo,
     getCloneUrl(accessToken?: string): string {
       return accessToken
-      ? `https://x-access-token:${accessToken}@github.com/${owner}/${repo}.git`
-      : `https://github.com/${owner}/${repo}.git`;
+        ? `https://x-access-token:${accessToken}@github.com/${owner}/${repo}.git`
+        : `https://github.com/${owner}/${repo}.git`;
     },
     toString(): string {
       return `${owner}/${repo}`;
@@ -54,11 +53,11 @@ export function githubRepoFromOwnerSlashName(arg: string): GithubRepo {
  */
 
 export function githubRepoFromUri(uri: string): GithubRepo {
-  let matchSsh = uri.match(/^git@github.com:([^\/]+)\/(.*)\.git$/);
+  const matchSsh = uri.match(/^git@github.com:([^\/]+)\/(.*)\.git$/);
   if (matchSsh) {
     return githubRepo(matchSsh[1], matchSsh[2]);
   }
-  let matchHttps = uri.match(/^https:\/\/[^\/]+\/([^\/]+)\/(.*)\.git$/);
+  const matchHttps = uri.match(/^https:\/\/[^\/]+\/([^\/]+)\/(.*)\.git$/);
   if (matchHttps) {
     return githubRepo(matchHttps[1], matchHttps[2]);
   }

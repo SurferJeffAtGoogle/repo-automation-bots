@@ -14,11 +14,12 @@
 import {newCmd} from './cmd';
 import {core} from './core';
 import {createPullRequestFromLastCommit} from './create-pr';
-import { githubRepoFromUri } from './github-repo';
+import {GithubRepo, githubRepoFromUri} from './github-repo';
 import {OctokitFactory} from './octokit-util';
 
 export async function maybeCreatePullRequestForLockUpdate(
   octokitFactory: OctokitFactory,
+  githubRepo?: GithubRepo,
   logger = console
 ): Promise<void> {
   const cmd = newCmd(logger);
@@ -33,7 +34,9 @@ export async function maybeCreatePullRequestForLockUpdate(
 
     // Create the pull request.
     const uri = cmd('git remote get-url origin').toString('utf8').trim();
-    const githubRepo = githubRepoFromUri(uri);
+    if (!githubRepo) {
+      githubRepo = githubRepoFromUri(uri);
+    }
     const branch = cmd('git branch --show-current').toString('utf8').trim();
     const octokit = await octokitFactory.getShortLivedOctokit(token);
     await createPullRequestFromLastCommit(
@@ -47,6 +50,8 @@ export async function maybeCreatePullRequestForLockUpdate(
       logger
     );
   } else {
-      logger.log(`The post processor made no changes; I won't create a pull request.`);
+    logger.log(
+      "The post processor made no changes; I won't create a pull request."
+    );
   }
 }
