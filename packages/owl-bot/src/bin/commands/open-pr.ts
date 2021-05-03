@@ -17,38 +17,20 @@
 
 import {ConfigsStore} from '../../configs-store';
 import yargs = require('yargs');
-import {octokitFrom} from '../../octokit-util';
 import { triggerOneBuildForUpdatingLock } from '../../handlers';
 
 interface Args {
-  'pem-path': string;
-  'app-id': number;
-  installation: number;
   'docker-image': string;
   'docker-digest': string;
   repo: string;
+  project: string | undefined;
 }
 
 export const openPR: yargs.CommandModule<{}, Args> = {
   command: 'open-pr',
-  describe: 'Open a pull request with an updated .OwlBot.lock.yaml',
+  describe: 'Triggers a cloud build with the new .OwlBot.lock.yaml.  Opens a new pull request if the generated code changed.',
   builder(yargs) {
     return yargs
-      .option('pem-path', {
-        describe: 'provide path to private key for requesting JWT',
-        type: 'string',
-        demand: true,
-      })
-      .option('app-id', {
-        describe: 'GitHub AppID',
-        type: 'number',
-        demand: true,
-      })
-      .option('installation', {
-        describe: 'installation ID for GitHub app',
-        type: 'number',
-        demand: true,
-      })
       .option('docker-image', {
         describe:
           'The full path of the docker image that changed.  ex: gcr.io/repo-automation-bots/nodejs-post-processor',
@@ -64,6 +46,11 @@ export const openPR: yargs.CommandModule<{}, Args> = {
         describe: 'repository to run against, e.g., googleapis/foo',
         type: 'string',
         demand: true,
+      })
+      .option('project', {
+        describe: 'google cloud project id in which to create the cloud build',
+        type: 'string',
+        demand: false,
       });
   },
   async handler(argv) {
@@ -71,7 +58,10 @@ export const openPR: yargs.CommandModule<{}, Args> = {
       findPullRequestForUpdatingLock: () => undefined,
       recordPullRequestForUpdatingLock: () => {},
     } as unknown) as ConfigsStore;
-    const octokit = await octokitFrom(argv);
+    const project = argv.project || process.env.PROJECT_ID;
+    if (!project) {
+      throw Error('gcloud project id must be provided via project arg or environment variable PROJECT_ID');
+    }    
     await triggerOneBuildForUpdatingLock(
       fakeConfigStore,
       argv.repo,
