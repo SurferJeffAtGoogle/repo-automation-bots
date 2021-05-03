@@ -44,12 +44,6 @@ steps:
       - -b
       - ${_PR_BRANCH}
     dir: '${_REPOSITORY}'
-  - name: 'gcr.io/cloud-builders/git'
-    args:
-      - pull
-      - origin
-      - ${_PR_BRANCH}
-    dir: '${_REPOSITORY}'
 
   # Write the contents of .Owlbot.lock.yaml with the new digest.
   - name: 'gcr.io/repo-automation-bots/owlbot-cli'
