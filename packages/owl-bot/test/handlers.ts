@@ -37,6 +37,7 @@ import {
 } from '../src/core';
 import {FakeConfigsStore} from './fake-configs-store';
 import {GithubRepo} from '../src/github-repo';
+import { CloudBuildClient } from '@google-cloud/cloudbuild';
 const sandbox = sinon.createSandbox();
 
 type Changes = Array<[string, {content: string; mode: string}]>;
@@ -46,7 +47,7 @@ describe('handlers', () => {
     sandbox.restore();
   });
   describe('triggerOneBuildForUpdatingLock', () => {
-    it('updates .github/.OwlBot.lock.yaml if no pull request found', async () => {
+    it('creates a cloud build if no existing build id found', async () => {
       const lock = {
         docker: {
           image: 'foo-image',
@@ -104,29 +105,54 @@ describe('handlers', () => {
       const fakeConfigStore = new FakeConfigStore();
       // Mock the method from code-suggester that opens the upstream
       // PR on GitHub:
-      let expectedChanges: Changes = [];
+      let calls: any[][] = [];
       sandbox.replace(
-        suggester,
-        'createPullRequest',
-        (_octokit, changes): Promise<number> => {
-          if (changes) {
-            expectedChanges = [...((changes as unknown) as Changes)];
-          }
-          return Promise.resolve(22);
+        core,
+        'getCloudBuildInstance',
+        (): CloudBuildClient => {
+          return {
+            runBuildTrigger: (...args: any[]) => {
+              calls.push(args);
+              return [{
+                metadata: {
+                  build: {
+                    id: "73"
+                  }
+                }
+              }];
+            }
+          } as unknown as CloudBuildClient;
         }
       );
 
-      const expectedURI = await triggerOneBuildForUpdatingLock(
+      const expectedBuildId = await triggerOneBuildForUpdatingLock(
         fakeConfigStore,
         'owl/test',
         lock,
         'test-project'
       );
-      assert.strictEqual(expectedURI, 'https://github.com/owl/test/pull/22');
-      assert.strictEqual(recordedId, 'https://github.com/owl/test/pull/22');
-      assert.strictEqual(expectedChanges[0][1].content, expectedYaml);
+      assert.strictEqual(expectedBuildId, '73');
+      assert.strictEqual(recordedId, '73');
+      assert.deepStrictEqual(calls, [
+          [
+            {
+              "projectId": "test-project",
+              "source": {
+                "projectId": "test-project",
+                "substitutions": {
+                  "_CONTAINER": "foo-image@sha256:abc123",
+                  "_LOCK_FILE_PATH": ".github/.OwlBot.lock.yaml",
+                  "_PR_BRANCH": "owl-bot-update-lock-sha256:abc123",
+                  "_PR_OWNER": "owl",
+                  "_REPOSITORY": "test"
+                }
+              },
+              "triggerId": "42"
+            }
+          ]
+        ]);
     });
-    it('returns existing pull request URI, if PR has already been created', async () => {
+    it('returns existing build Id, if build has already been triggered', async () => {
       const lock = {
         docker: {
           image: 'foo-image',
