@@ -20,7 +20,7 @@ import * as assert from 'assert';
 import {describe, it, afterEach} from 'mocha';
 
 import {
-  createOnePullRequestForUpdatingLock,
+  triggerOneBuildForUpdatingLock,
   refreshConfigs,
   scanGithubForConfigs,
 } from '../src/handlers';
@@ -45,7 +45,7 @@ describe('handlers', () => {
   afterEach(() => {
     sandbox.restore();
   });
-  describe('createOnePullRequestForUpdatingLock', () => {
+  describe('triggerOneBuildForUpdatingLock', () => {
     it('updates .github/.OwlBot.lock.yaml if no pull request found', async () => {
       const lock = {
         docker: {
@@ -54,7 +54,7 @@ describe('handlers', () => {
         },
       };
       const expectedYaml = dump(lock);
-      let recordedURI = '';
+      let recordedId = '';
       // Mock the database helpers used to check for/update existing PRs:
       class FakeConfigStore implements ConfigsStore {
         findReposAffectedByFileChanges(
@@ -82,7 +82,7 @@ describe('handlers', () => {
         ): Promise<[string, Configs][]> {
           throw new Error('Method not implemented.');
         }
-        findPullRequestForUpdatingLock(
+        findBuildIdForUpdatingLock(
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           repo: string,
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -90,15 +90,15 @@ describe('handlers', () => {
         ): Promise<string | undefined> {
           return Promise.resolve(undefined);
         }
-        recordPullRequestForUpdatingLock(
+        recordBuildIdForUpdatingLock(
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           repo: string,
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           lock: OwlBotLock,
-          pullRequestId: string
+          buildId: string
         ): Promise<string> {
-          recordedURI = pullRequestId;
-          return Promise.resolve(recordedURI);
+          recordedId = buildId;
+          return Promise.resolve(recordedId);
         }
       }
       const fakeConfigStore = new FakeConfigStore();
@@ -116,14 +116,14 @@ describe('handlers', () => {
         }
       );
 
-      const expectedURI = await createOnePullRequestForUpdatingLock(
+      const expectedURI = await triggerOneBuildForUpdatingLock(
         fakeConfigStore,
         new Octokit(), // Not actually used.
         'owl/test',
         lock
       );
       assert.strictEqual(expectedURI, 'https://github.com/owl/test/pull/22');
-      assert.strictEqual(recordedURI, 'https://github.com/owl/test/pull/22');
+      assert.strictEqual(recordedId, 'https://github.com/owl/test/pull/22');
       assert.strictEqual(expectedChanges[0][1].content, expectedYaml);
     });
     it('returns existing pull request URI, if PR has already been created', async () => {
@@ -160,7 +160,7 @@ describe('handlers', () => {
         ): Promise<[string, Configs][]> {
           throw new Error('Method not implemented.');
         }
-        findPullRequestForUpdatingLock(
+        findBuildIdForUpdatingLock(
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           repo: string,
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -168,19 +168,19 @@ describe('handlers', () => {
         ): Promise<string | undefined> {
           return Promise.resolve('https://github.com/owl/test/pull/99');
         }
-        recordPullRequestForUpdatingLock(
+        recordBuildIdForUpdatingLock(
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           repo: string,
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           lock: OwlBotLock,
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          pullRequestId: string
+          BuildIdId: string
         ): Promise<string> {
           throw new Error('Method not implemented.');
         }
       }
       const fakeConfigStore = new FakeConfigStore();
-      const expectedURI = await createOnePullRequestForUpdatingLock(
+      const expectedURI = await triggerOneBuildForUpdatingLock(
         fakeConfigStore,
         new Octokit(), // Not actually used.
         'owl/test',

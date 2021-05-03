@@ -16,9 +16,9 @@
 // node ./build/src/bin/owl-bot.js list-repos --docker-image foo
 
 import {ConfigsStore} from '../../configs-store';
-import {createOnePullRequestForUpdatingLock} from '../../handlers';
 import yargs = require('yargs');
 import {octokitFrom} from '../../octokit-util';
+import { triggerOneBuildForUpdatingLock } from '../../handlers';
 
 interface Args {
   'pem-path': string;
@@ -72,16 +72,16 @@ export const openPR: yargs.CommandModule<{}, Args> = {
       recordPullRequestForUpdatingLock: () => {},
     } as unknown) as ConfigsStore;
     const octokit = await octokitFrom(argv);
-    await createOnePullRequestForUpdatingLock(
+    await triggerOneBuildForUpdatingLock(
       fakeConfigStore,
-      octokit,
       argv.repo,
       {
         docker: {
           image: argv['docker-image'],
           digest: argv['docker-digest'],
         },
-      }
+      },
+      project
     );
   },
 };

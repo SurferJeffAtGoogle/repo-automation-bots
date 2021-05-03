@@ -80,7 +80,7 @@ export async function onPostProcessorPublished(
         installation: configs.installationId,
       });
       // TODO(bcoe): switch updatedAt to date from PubSub payload:
-      await createOnePullRequestForUpdatingLock(
+      await triggerOneBuildForUpdatingLock(
         configsStore,
         octokit,
         repo,
