@@ -91,7 +91,7 @@ export async function onPostProcessorPublished(
   }
 }
 
-const UPDATE_LOCK_BUILD_TRIGGER_ID = '42';
+const UPDATE_LOCK_BUILD_TRIGGER_ID = 'd63288e8-3fb9-4469-b11a-9302fbe7783e';
 
 /**
  * Creates a cloud build to update .OwlBot.lock.yaml, if one doesn't already
@@ -119,6 +119,7 @@ export async function triggerOneBuildForUpdatingLock(
   }
   const repo = githubRepoFromOwnerSlashName(repoFull);
   const cb = core.getCloudBuildInstance();
+  const [, digest] = lock.docker.digest.split(':');   // Strip sha256: prefix
   const [resp] = await cb.runBuildTrigger({
     projectId: project,
     triggerId: UPDATE_LOCK_BUILD_TRIGGER_ID,
@@ -127,7 +128,7 @@ export async function triggerOneBuildForUpdatingLock(
       substitutions: {
         _PR_OWNER: repo.owner,
         _REPOSITORY: repo.repo,
-        _PR_BRANCH: `owl-bot-update-lock-${lock.docker.digest}`,
+        _PR_BRANCH: `owl-bot-update-lock-${digest}`,
         _LOCK_FILE_PATH: owlBotLockPath,
         _CONTAINER: `${lock.docker.image}@${lock.docker.digest}`,
       },
