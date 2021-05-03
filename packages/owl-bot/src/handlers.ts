@@ -74,17 +74,15 @@ export async function onPostProcessorPublished(
           image: dockerImageName,
         },
       };
-      const octokit = await getAuthenticatedOctokit({
-        privateKey,
-        appId,
-        installation: configs.installationId,
-      });
-      // TODO(bcoe): switch updatedAt to date from PubSub payload:
+      if (!process.env.PROJECT_ID) {
+        throw Error('must set PROJECT_ID');
+      }
+      const project: string = process.env.PROJECT_ID;
       await triggerOneBuildForUpdatingLock(
         configsStore,
-        octokit,
         repo,
         lock,
+        project,
         configs
       );
       // We were hitting GitHub's abuse detection algorithm,

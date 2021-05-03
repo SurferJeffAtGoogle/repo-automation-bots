@@ -118,9 +118,9 @@ describe('handlers', () => {
 
       const expectedURI = await triggerOneBuildForUpdatingLock(
         fakeConfigStore,
-        new Octokit(), // Not actually used.
         'owl/test',
-        lock
+        lock,
+        "test-project",
       );
       assert.strictEqual(expectedURI, 'https://github.com/owl/test/pull/22');
       assert.strictEqual(recordedId, 'https://github.com/owl/test/pull/22');
@@ -182,9 +182,9 @@ describe('handlers', () => {
       const fakeConfigStore = new FakeConfigStore();
       const expectedURI = await triggerOneBuildForUpdatingLock(
         fakeConfigStore,
-        new Octokit(), // Not actually used.
         'owl/test',
-        lock
+        lock,
+        "test-project"
       );
       assert.strictEqual(expectedURI, 'https://github.com/owl/test/pull/99');
     });
