@@ -13,8 +13,6 @@
 // limitations under the License.
 
 import {logger} from 'gcf-utils';
-import {createPullRequest} from 'code-suggester';
-import {dump} from 'js-yaml';
 import {
   OwlBotLock,
   owlBotLockFrom,
@@ -23,14 +21,13 @@ import {
   owlBotYamlPath,
 } from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
-import {getAuthenticatedOctokit, core} from './core';
-import {Octokit} from '@octokit/rest';
+import {core} from './core';
 import yaml from 'js-yaml';
 // Conflicting linters think the next line is extraneous or necessary.
 // eslint-disable-next-line node/no-extraneous-import
 import {Endpoints} from '@octokit/types';
 import {OctokitType} from './octokit-util';
-import { githubRepoFromOwnerSlashName } from './github-repo';
+import {githubRepoFromOwnerSlashName} from './github-repo';
 
 type ListReposResponse = Endpoints['GET /orgs/{org}/repos']['response'];
 
@@ -94,7 +91,7 @@ export async function onPostProcessorPublished(
   }
 }
 
-const UPDATE_LOCK_BUILD_TRIGGER_ID = "42";
+const UPDATE_LOCK_BUILD_TRIGGER_ID = '42';
 
 /**
  * Creates a cloud build to update .OwlBot.lock.yaml, if one doesn't already

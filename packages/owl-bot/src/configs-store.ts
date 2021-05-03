@@ -87,7 +87,6 @@ export interface ConfigsStore {
     buildId: string
   ): Promise<string>;
 
-
   /**
    * Finds repositories who list one of the changed files as a source in
    * copy-files.

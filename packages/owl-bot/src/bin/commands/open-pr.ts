@@ -17,7 +17,7 @@
 
 import {ConfigsStore} from '../../configs-store';
 import yargs = require('yargs');
-import { triggerOneBuildForUpdatingLock } from '../../handlers';
+import {triggerOneBuildForUpdatingLock} from '../../handlers';
 
 interface Args {
   'docker-image': string;
@@ -28,7 +28,8 @@ interface Args {
 
 export const openPR: yargs.CommandModule<{}, Args> = {
   command: 'open-pr',
-  describe: 'Triggers a cloud build with the new .OwlBot.lock.yaml.  Opens a new pull request if the generated code changed.',
+  describe:
+    'Triggers a cloud build with the new .OwlBot.lock.yaml.  Opens a new pull request if the generated code changed.',
   builder(yargs) {
     return yargs
       .option('docker-image', {
@@ -60,8 +61,10 @@ export const openPR: yargs.CommandModule<{}, Args> = {
     } as unknown) as ConfigsStore;
     const project = argv.project || process.env.PROJECT_ID;
     if (!project) {
-      throw Error('gcloud project id must be provided via project arg or environment variable PROJECT_ID');
-    }    
+      throw Error(
+        'gcloud project id must be provided via project arg or environment variable PROJECT_ID'
+      );
+    }
     await triggerOneBuildForUpdatingLock(
       fakeConfigStore,
       argv.repo,

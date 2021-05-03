@@ -114,7 +114,10 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     return got.docs.map(doc => [decodeId(doc.id), doc.data() as Configs]);
   }
 
-  async findBuildIdForUpdatingLock(repo: string, lock: OwlBotLock): Promise<string | undefined> {
+  async findBuildIdForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock
+  ): Promise<string | undefined> {
     const docRef = this.db
       .collection(this.lockUpdateBuilds)
       .doc(makeUpdateLockKey(repo, lock));
@@ -122,7 +125,11 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     return got.exists ? (got.data() as UpdateBuild).buildId : undefined;
   }
 
-  async recordBuildIdForUpdatingLock(repo: string, lock: OwlBotLock, buildId: string): Promise<string> {
+  async recordBuildIdForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock,
+    buildId: string
+  ): Promise<string> {
     const docRef = this.db
       .collection(this.lockUpdateBuilds)
       .doc(makeUpdateLockKey(repo, lock));

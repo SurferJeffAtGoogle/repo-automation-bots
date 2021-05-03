@@ -26,10 +26,17 @@ export class FakeConfigsStore implements ConfigsStore {
     this.configs = configs ?? new Map<string, Configs>();
     this.githubRepos = new Map();
   }
-  findBuildIdForUpdatingLock(repo: string, lock: OwlBotLock): Promise<string | undefined> {
+  findBuildIdForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock
+  ): Promise<string | undefined> {
     throw new Error('Method not implemented.');
   }
-  recordBuildIdForUpdatingLock(repo: string, lock: OwlBotLock, buildId: string): Promise<string> {
+  recordBuildIdForUpdatingLock(
+    repo: string,
+    lock: OwlBotLock,
+    buildId: string
+  ): Promise<string> {
     throw new Error('Method not implemented.');
   }
   findReposAffectedByFileChanges(

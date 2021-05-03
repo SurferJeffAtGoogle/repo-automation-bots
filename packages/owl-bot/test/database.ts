@@ -179,11 +179,7 @@ describe('database', () => {
 
       // Second one does not.
       assert.strictEqual(
-        await store.recordBuildIdForUpdatingLock(
-          repoA,
-          configsA.lock!,
-          '11'
-        ),
+        await store.recordBuildIdForUpdatingLock(repoA, configsA.lock!, '11'),
         '10'
       );
     } finally {
