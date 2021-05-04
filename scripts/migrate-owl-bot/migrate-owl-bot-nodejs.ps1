@@ -85,9 +85,11 @@ function Get-SourceCommitHash([string]$localPath, [string]$sourceRepoPath) {
 
 function Migrate-Repo([string]$localPath, [string]$sourceRepoPath) {
     # Ask the user to look at synth.py and provide the details we need.
-    $yamlPath = "$localPath/.github/.OwlBot.yaml"
+    $yamlDir = "$localPath/.github"
+    $yamlPath = "$yamlDir/.OwlBot.yaml"
     cat "$localPath/synth.py"
     if ('n' -eq (Query-Yn "Wanna migrate?")) {
+        mkdir -p $yamlDir
         echo $null >> $yamlPath  # So we don't ask the user again.
         return
     }
@@ -143,7 +145,7 @@ begin-after-commit-hash: ${sourceCommitHash}
     $yaml | Out-File $yamlPath -Encoding UTF8
 
     $lock = "docker:
-  digest: sha256:ae81571b8dfb0cea2434a1faff52e3be993aced984cd15b26d45728e7b3355fe
+  digest: sha256:c3eae37a355402067b97cbeb6f5a7d2dd87aecfd064aeb2d2ea0bde40778cf68
   image: gcr.io/repo-automation-bots/owlbot-nodejs:latest  
 "
     $lock | Out-File $lockPath -Encoding UTF8
