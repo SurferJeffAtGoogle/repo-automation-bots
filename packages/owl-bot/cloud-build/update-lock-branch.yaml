@@ -85,9 +85,9 @@ steps:
       - --pem-path
       - /workspace/owl-bot-github-key.pem
       - --app-id
-      - '97063'
+      - '99011'
       - --installation
-      - '14395202'
+      - '14695777'
     dir: '${_REPOSITORY}'
 
 
