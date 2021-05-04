@@ -41,7 +41,8 @@ export const openPR: yargs.CommandModule<{}, Args> = {
         demand: true,
       })
       .option('docker-digest', {
-        describe: 'the docker digest sha.  ex: sha256:bef6add3ddeb96210db83d07560a13b735c532d6f3adaf76dec3d725f6b76f05',
+        describe:
+          'the docker digest sha.  ex: sha256:bef6add3ddeb96210db83d07560a13b735c532d6f3adaf76dec3d725f6b76f05',
         type: 'string',
         demand: true,
       })

@@ -15,6 +15,7 @@
 
 // There are lots of unused args on fake functions, and that's ok.
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as assert from 'assert';
 import {describe, it, afterEach} from 'mocha';
@@ -26,21 +27,14 @@ import {
 } from '../src/handlers';
 import {Configs, ConfigsStore} from '../src/configs-store';
 import {dump} from 'js-yaml';
-import * as suggester from 'code-suggester';
 import {Octokit} from '@octokit/rest';
 import * as sinon from 'sinon';
 import {OwlBotLock} from '../src/config-files';
-import {
-  core,
-  getAuthenticatedOctokit,
-  getGitHubShortLivedAccessToken,
-} from '../src/core';
+import {core} from '../src/core';
 import {FakeConfigsStore} from './fake-configs-store';
 import {GithubRepo} from '../src/github-repo';
-import { CloudBuildClient } from '@google-cloud/cloudbuild';
+import {CloudBuildClient} from '@google-cloud/cloudbuild';
 const sandbox = sinon.createSandbox();
-
-type Changes = Array<[string, {content: string; mode: string}]>;
 
 describe('handlers', () => {
   afterEach(() => {
@@ -105,23 +99,25 @@ describe('handlers', () => {
       const fakeConfigStore = new FakeConfigStore();
       // Mock the method from code-suggester that opens the upstream
       // PR on GitHub:
-      let calls: any[][] = [];
+      const calls: any[][] = [];
       sandbox.replace(
         core,
         'getCloudBuildInstance',
         (): CloudBuildClient => {
-          return {
+          return ({
             runBuildTrigger: (...args: any[]) => {
               calls.push(args);
-              return [{
-                metadata: {
-                  build: {
-                    id: "73"
-                  }
-                }
-              }];
-            }
-          } as unknown as CloudBuildClient;
+              return [
+                {
+                  metadata: {
+                    build: {
+                      id: '73',
+                    },
+                  },
+                },
+              ];
+            },
+          } as unknown) as CloudBuildClient;
         }
       );
 
@@ -135,24 +131,24 @@ describe('handlers', () => {
       assert.strictEqual(expectedBuildId, '73');
       assert.strictEqual(recordedId, '73');
       assert.deepStrictEqual(calls, [
-          [
-            {
-              "projectId": "test-project",
-              "source": {
-                "projectId": "test-project",
-                "substitutions": {
-                  "_CONTAINER": "foo-image@sha256:abc123",
-                  "_LOCK_FILE_PATH": ".github/.OwlBot.lock.yaml",
-                  "_OWL_BOT_CLI": "gcr.io/repo-automation-bots/owlbot-cli",
-                  "_PR_BRANCH": "owl-bot-update-lock-abc123",
-                  "_PR_OWNER": "owl",
-                  "_REPOSITORY": "test"
-                }
+        [
+          {
+            projectId: 'test-project',
+            source: {
+              projectId: 'test-project',
+              substitutions: {
+                _CONTAINER: 'foo-image@sha256:abc123',
+                _LOCK_FILE_PATH: '.github/.OwlBot.lock.yaml',
+                _OWL_BOT_CLI: 'gcr.io/repo-automation-bots/owlbot-cli',
+                _PR_BRANCH: 'owl-bot-update-lock-abc123',
+                _PR_OWNER: 'owl',
+                _REPOSITORY: 'test',
               },
-              "triggerId": "test-trigger"
-            }
-          ]
-        ]);
+            },
+            triggerId: 'test-trigger',
+          },
+        ],
+      ]);
     });
     it('returns existing build Id, if build has already been triggered', async () => {
       const lock = {

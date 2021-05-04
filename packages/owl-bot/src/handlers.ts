@@ -76,7 +76,9 @@ export async function onPostProcessorPublished(
       }
       const project: string = process.env.PROJECT_ID;
       if (!process.env.UPDATE_LOCK_BUILD_TRIGGER_ID) {
-        throw Error('must set environment variable UPDATE_LOCK_BUILD_TRIGGER_ID');
+        throw Error(
+          'must set environment variable UPDATE_LOCK_BUILD_TRIGGER_ID'
+        );
       }
       const triggerId: string = process.env.UPDATE_LOCK_BUILD_TRIGGER_ID;
       await triggerOneBuildForUpdatingLock(
@@ -114,7 +116,7 @@ export async function triggerOneBuildForUpdatingLock(
   project: string,
   triggerId: string,
   configs?: Configs,
-  owlBotCli: string = 'gcr.io/repo-automation-bots/owlbot-cli'
+  owlBotCli = 'gcr.io/repo-automation-bots/owlbot-cli'
 ): Promise<string> {
   const existingBuildId = await configsStore.findBuildIdForUpdatingLock(
     repoFull,
@@ -126,7 +128,7 @@ export async function triggerOneBuildForUpdatingLock(
   }
   const repo = githubRepoFromOwnerSlashName(repoFull);
   const cb = core.getCloudBuildInstance();
-  const [, digest] = lock.docker.digest.split(':');   // Strip sha256: prefix
+  const [, digest] = lock.docker.digest.split(':'); // Strip sha256: prefix
   logger.info(`triggering build for ${repoFull}.`);
   const [resp] = await cb.runBuildTrigger({
     projectId: project,
@@ -139,7 +141,7 @@ export async function triggerOneBuildForUpdatingLock(
         _PR_BRANCH: `owl-bot-update-lock-${digest}`,
         _LOCK_FILE_PATH: owlBotLockPath,
         _CONTAINER: `${lock.docker.image}@${lock.docker.digest}`,
-        _OWL_BOT_CLI: owlBotCli
+        _OWL_BOT_CLI: owlBotCli,
       },
     },
   });
