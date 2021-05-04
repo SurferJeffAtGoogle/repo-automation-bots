@@ -113,7 +113,8 @@ export async function triggerOneBuildForUpdatingLock(
   lock: OwlBotLock,
   project: string,
   triggerId: string,
-  configs?: Configs
+  configs?: Configs,
+  owlBotCli: string = 'gcr.io/repo-automation-bots/owlbot-cli'
 ): Promise<string> {
   const existingBuildId = await configsStore.findBuildIdForUpdatingLock(
     repoFull,
@@ -126,6 +127,7 @@ export async function triggerOneBuildForUpdatingLock(
   const repo = githubRepoFromOwnerSlashName(repoFull);
   const cb = core.getCloudBuildInstance();
   const [, digest] = lock.docker.digest.split(':');   // Strip sha256: prefix
+  logger.info(`triggering build for ${repoFull}.`);
   const [resp] = await cb.runBuildTrigger({
     projectId: project,
     triggerId: triggerId,
@@ -137,6 +139,7 @@ export async function triggerOneBuildForUpdatingLock(
         _PR_BRANCH: `owl-bot-update-lock-${digest}`,
         _LOCK_FILE_PATH: owlBotLockPath,
         _CONTAINER: `${lock.docker.image}@${lock.docker.digest}`,
+        _OWL_BOT_CLI: owlBotCli
       },
     },
   });

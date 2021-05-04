@@ -24,6 +24,7 @@ interface Args {
   'docker-digest': string;
   repo: string;
   project: string | undefined;
+  'owl-bot-cli': string | undefined;
   trigger: string;
 }
 
@@ -58,6 +59,11 @@ export const openPR: yargs.CommandModule<{}, Args> = {
         describe: 'google cloud project id in which to create the cloud build',
         type: 'string',
         demand: false,
+      })
+      .option('owl-bot-cli', {
+        describe: 'docker image for the owl-bot cli',
+        type: 'string',
+        demand: false,
       });
   },
   async handler(argv) {
@@ -81,7 +87,9 @@ export const openPR: yargs.CommandModule<{}, Args> = {
         },
       },
       project,
-      argv.trigger
+      argv.trigger,
+      undefined,
+      argv['owl-bot-cli']
     );
   },
 };

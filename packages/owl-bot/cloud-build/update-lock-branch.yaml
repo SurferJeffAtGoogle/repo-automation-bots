@@ -46,7 +46,7 @@ steps:
     dir: '${_REPOSITORY}'
 
   # Write the contents of .Owlbot.lock.yaml with the new digest.
-  - name: 'gcr.io/repo-automation-bots/owlbot-cli'
+  - name: ${_OWL_BOT_CLI}
     args:
       - write-lock
       - --lock-file-path
@@ -79,7 +79,7 @@ steps:
     args: [ '-c', "gcloud secrets versions access latest --secret=owl_bot_github_key --format='get(payload.data)' | tr '_-' '/+' | base64 -d > /workspace/owl-bot-github-key.pem" ]
 
   # Examine the changed files and possibly create a pull request.
-  - name: 'gcr.io/repo-automation-bots/owlbot-cli'
+  - name: ${_OWL_BOT_CLI}
     args:
       - maybe-create-pull-request-for-lock-update
       - --pem-path

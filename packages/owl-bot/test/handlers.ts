@@ -143,6 +143,7 @@ describe('handlers', () => {
                 "substitutions": {
                   "_CONTAINER": "foo-image@sha256:abc123",
                   "_LOCK_FILE_PATH": ".github/.OwlBot.lock.yaml",
+                  "_OWL_BOT_CLI": "gcr.io/repo-automation-bots/owlbot-cli",
                   "_PR_BRANCH": "owl-bot-update-lock-abc123",
                   "_PR_OWNER": "owl",
                   "_REPOSITORY": "test"
