@@ -129,7 +129,8 @@ describe('handlers', () => {
         fakeConfigStore,
         'owl/test',
         lock,
-        'test-project'
+        'test-project',
+        'test-trigger'
       );
       assert.strictEqual(expectedBuildId, '73');
       assert.strictEqual(recordedId, '73');
@@ -142,12 +143,12 @@ describe('handlers', () => {
                 "substitutions": {
                   "_CONTAINER": "foo-image@sha256:abc123",
                   "_LOCK_FILE_PATH": ".github/.OwlBot.lock.yaml",
-                  "_PR_BRANCH": "owl-bot-update-lock-sha256:abc123",
+                  "_PR_BRANCH": "owl-bot-update-lock-abc123",
                   "_PR_OWNER": "owl",
                   "_REPOSITORY": "test"
                 }
               },
-              "triggerId": "42"
+              "triggerId": "test-trigger"
             }
           ]
         ]);
@@ -210,7 +211,8 @@ describe('handlers', () => {
         fakeConfigStore,
         'owl/test',
         lock,
-        'test-project'
+        'test-project',
+        'test-trigger'
       );
       assert.strictEqual(expectedURI, 'https://github.com/owl/test/pull/99');
     });

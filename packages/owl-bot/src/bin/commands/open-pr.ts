@@ -24,6 +24,7 @@ interface Args {
   'docker-digest': string;
   repo: string;
   project: string | undefined;
+  trigger: string;
 }
 
 export const openPR: yargs.CommandModule<{}, Args> = {
@@ -45,6 +46,11 @@ export const openPR: yargs.CommandModule<{}, Args> = {
       })
       .option('repo', {
         describe: 'repository to run against, e.g., googleapis/foo',
+        type: 'string',
+        demand: true,
+      })
+      .option('trigger', {
+        describe: 'cloud build trigger id to invoke',
         type: 'string',
         demand: true,
       })
@@ -74,7 +80,8 @@ export const openPR: yargs.CommandModule<{}, Args> = {
           digest: argv['docker-digest'],
         },
       },
-      project
+      project,
+      argv.trigger
     );
   },
 };

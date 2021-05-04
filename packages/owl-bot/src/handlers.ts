@@ -72,14 +72,19 @@ export async function onPostProcessorPublished(
         },
       };
       if (!process.env.PROJECT_ID) {
-        throw Error('must set PROJECT_ID');
+        throw Error('must set environment variable PROJECT_ID');
       }
       const project: string = process.env.PROJECT_ID;
+      if (!process.env.UPDATE_LOCK_BUILD_TRIGGER_ID) {
+        throw Error('must set environment variable UPDATE_LOCK_BUILD_TRIGGER_ID');
+      }
+      const triggerId: string = process.env.UPDATE_LOCK_BUILD_TRIGGER_ID;
       await triggerOneBuildForUpdatingLock(
         configsStore,
         repo,
         lock,
         project,
+        triggerId,
         configs
       );
       // We were hitting GitHub's abuse detection algorithm,
@@ -91,7 +96,7 @@ export async function onPostProcessorPublished(
   }
 }
 
-const UPDATE_LOCK_BUILD_TRIGGER_ID = 'd63288e8-3fb9-4469-b11a-9302fbe7783e';
+// const UPDATE_LOCK_BUILD_TRIGGER_ID = 'd63288e8-3fb9-4469-b11a-9302fbe7783e';
 
 /**
  * Creates a cloud build to update .OwlBot.lock.yaml, if one doesn't already
@@ -107,6 +112,7 @@ export async function triggerOneBuildForUpdatingLock(
   repoFull: string,
   lock: OwlBotLock,
   project: string,
+  triggerId: string,
   configs?: Configs
 ): Promise<string> {
   const existingBuildId = await configsStore.findBuildIdForUpdatingLock(
@@ -122,7 +128,7 @@ export async function triggerOneBuildForUpdatingLock(
   const [, digest] = lock.docker.digest.split(':');   // Strip sha256: prefix
   const [resp] = await cb.runBuildTrigger({
     projectId: project,
-    triggerId: UPDATE_LOCK_BUILD_TRIGGER_ID,
+    triggerId: triggerId,
     source: {
       projectId: project,
       substitutions: {
