@@ -378,7 +378,7 @@ describe('owlBot', () => {
       pull_request: {
         number: 33,
         draft: true,
-        labels: [],
+        labels: [{name: 'owl-bot-copy'}],
         head: {
           repo: {
             full_name: 'bcoe/owl-bot-testing',
