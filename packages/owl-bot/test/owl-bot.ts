@@ -191,9 +191,11 @@ describe('owlBot', () => {
             full_name: 'bcoe/owl-bot-testing',
           },
         },
-        labels: [{
-          name: 'owl-bot-copy'
-        }]
+        labels: [
+          {
+            name: 'owl-bot-copy',
+          },
+        ],
       },
     };
     const config = `docker:
@@ -257,11 +259,14 @@ describe('owlBot', () => {
             full_name: 'bcoe/owl-bot-testing',
           },
         },
-        labels: [{
-          name: 'owl-bot-copy'
-        }, {
-          name: 'owl-bot-ignore'
-        }]
+        labels: [
+          {
+            name: 'owl-bot-copy',
+          },
+          {
+            name: 'owl-bot-ignore',
+          },
+        ],
       },
     };
     const config = `docker:
@@ -278,7 +283,7 @@ describe('owlBot', () => {
       .reply(200, {
         content: Buffer.from(config).toString('base64'),
         encoding: 'base64',
-      })
+      });
     const triggerBuildStub = sandbox
       .stub(core, 'triggerPostProcessBuild')
       .resolves({
@@ -319,7 +324,7 @@ describe('owlBot', () => {
             full_name: 'bcoe/owl-bot-testing',
           },
         },
-        labels: []
+        labels: [],
       },
     };
     const config = `docker:
@@ -336,7 +341,7 @@ describe('owlBot', () => {
       .reply(200, {
         content: Buffer.from(config).toString('base64'),
         encoding: 'base64',
-      })
+      });
     const triggerBuildStub = sandbox
       .stub(core, 'triggerPostProcessBuild')
       .resolves({

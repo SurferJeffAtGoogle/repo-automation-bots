@@ -29,7 +29,7 @@ import {OctokitType, OctokitFactory} from './octokit-util';
 import tmp from 'tmp';
 import glob from 'glob';
 import {GithubRepo} from './github-repo';
-import { OWL_BOT_COPY } from './core';
+import {OWL_BOT_COPY} from './core';
 
 // This code generally uses Sync functions because:
 // 1. None of our current designs including calling this code from a web

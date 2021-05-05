@@ -76,7 +76,6 @@ export const OWL_BOT_LOCK_UPDATE = 'owl-bot-update-lock';
 export const OWL_BOT_COPY = 'owl-bot-copy';
 export const OWL_BOT_IGNORE = 'owl-bot-ignore';
 
-
 export async function triggerPostProcessBuild(
   args: BuildArgs,
   octokit?: OctokitType
@@ -489,13 +488,17 @@ async function updatePullRequestAfterPostProcessor(
   });
   // If someone asked owl bot to ignore this PR, never close or promote it.
   if (pull.labels.find(label => label.name === OWL_BOT_IGNORE)) {
-    logger.info(`Ignoring ${owner}/${repo} #${prNumber} because it's labeled with ${OWL_BOT_IGNORE}.`);
+    logger.info(
+      `Ignoring ${owner}/${repo} #${prNumber} because it's labeled with ${OWL_BOT_IGNORE}.`
+    );
     return;
   }
   // If the pull request was not created by owl bot, never close or promote it.
   const owlBotLabels = [OWL_BOT_LOCK_UPDATE, OWL_BOT_COPY];
-  if (!pull.labels.find(label => owlBotLabels.indexOf(label.name ?? "") >= 0)) {
-    logger.info(`Ignoring ${owner}/${repo} #${prNumber} because it's not labled with ${owlBotLabels}.`);
+  if (!pull.labels.find(label => owlBotLabels.indexOf(label.name ?? '') >= 0)) {
+    logger.info(
+      `Ignoring ${owner}/${repo} #${prNumber} because it's not labled with ${owlBotLabels}.`
+    );
     return;
   }
   // If running post-processor has created a noop change, close the
