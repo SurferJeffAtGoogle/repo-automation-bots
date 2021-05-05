@@ -88,6 +88,7 @@ describe('owlBot', () => {
           id: 12345,
         },
         pull_request: {
+          labels: [],
           number: 33,
           head: {
             repo: {
@@ -115,8 +116,6 @@ describe('owlBot', () => {
           content: Buffer.from(config).toString('base64'),
           encoding: 'base64',
         })
-        .get('/repos/bcoe/owl-bot-testing/pulls/33/files')
-        .reply(200, [{filename: 'foo.txt'}])
         .get('/repos/bcoe/owl-bot-testing/pulls/33')
         .reply(200, payload.pull_request);
       const triggerBuildStub = sandbox
