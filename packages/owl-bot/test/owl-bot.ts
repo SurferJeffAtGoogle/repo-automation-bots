@@ -192,12 +192,17 @@ describe('owlBot', () => {
             full_name: 'bcoe/owl-bot-testing',
           },
         },
+        labels: [{
+          name: 'owl-bot-copy'
+        }]
       },
     };
     const config = `docker:
     image: node
     digest: sha256:9205bb385656cd196f5303b03983282c95c2dfab041d275465c525b501574e5c`;
     const githubMock = nock('https://api.github.com')
+      .get('/repos/bcoe/owl-bot-testing/pulls/33')
+      .reply(200, payload.pull_request)
       .get('/repos/bcoe/owl-bot-testing/pulls/33')
       .reply(200, payload.pull_request)
       .get(
