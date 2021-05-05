@@ -557,5 +557,5 @@ export const core = {
   owlBotLockPath,
   triggerPostProcessBuild,
   updatePullRequestAfterPostProcessor,
-  UPDATE_LOCK_PULL_REQUEST_LABEL: OWL_BOT_LOCK_UPDATE,
+  OWL_BOT_LOCK_UPDATE: OWL_BOT_LOCK_UPDATE,
 };
