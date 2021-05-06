@@ -15,11 +15,16 @@
 import {OwlBotLock, OwlBotYaml} from './config-files';
 import {GithubRepo} from './github-repo';
 
+export interface OwlBotYamlAndPath {
+  // The path in the repository where the .OwlBot.yaml was found.
+  path: string;
+  // The contents of the .OwlBot.yaml.
+  yaml: OwlBotYaml;
+}
 export interface Configs {
-  // The body of .Owlbot.lock.yaml.
   lock?: OwlBotLock;
   // The body of .Owlbot.yaml.
-  yaml?: OwlBotYaml;
+  yamls?: OwlBotYamlAndPath[];
   // The commit hash from which the config files were retrieved.
   commitHash: string;
   // The branch name from which the config files were retrieved.

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
-import {OwlBotLock, toFrontMatchRegExp} from './config-files';
+import {OwlBotLock, OwlBotYaml, owlBotYamlPath, toFrontMatchRegExp} from './config-files';
 import {Configs, ConfigsStore} from './configs-store';
 import {CopyTasksStore} from './copy-tasks-store';
 import {GithubRepo, githubRepoFromOwnerSlashName} from './github-repo';
@@ -164,12 +164,34 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     await docRef.delete();
   }
 
+  /**
+   * Unpacks a Configs from the database.
+   * 
+   * Configs used to have a `yaml?: string` field.  Now, it has a
+   * `yamls?:  string []` field.  Some configs in the database may be stored
+   * with the old field, so convert them.
+   */
+  unpackConfigs(data: FirebaseFirestore.DocumentData): Configs | undefined {
+    if (data === undefined) {
+      return undefined;
+    }
+    else if (data.yaml) {
+      const yaml = data.yaml as OwlBotYaml;
+      const configs = data as Configs;
+      configs.yamls = [ { path: owlBotYamlPath, yaml }];
+      return configs;
+    }
+    else {
+      return data as Configs;
+    }
+  }
+
   async findReposAffectedByFileChanges(
     changedFilePaths: string[]
   ): Promise<GithubRepo[]> {
     // This loop runs in time O(n*m), where
     // n = changedFilePaths.length
-    // m = # repos stored in config store.
+    // m = # .OwlBot.yaml files stored in config store.
     // It scans all the values in the collection.  There are many opportunities
     // to optimize if performance becomes a problem.
     const snapshot = await this.db.collection(this.yamls).get();
@@ -178,12 +200,14 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     snapshot.forEach(doc => {
       i++;
       const configs = doc.data() as Configs | undefined;
-      match_loop: for (const copy of configs?.yaml?.['deep-copy-regex'] ?? []) {
-        const regExp = toFrontMatchRegExp(copy.source);
-        for (const path of changedFilePaths) {
-          if (regExp.test(path)) {
-            result.push(githubRepoFromOwnerSlashName(decodeId(doc.id)));
-            break match_loop;
+      match_loop: for (const yaml of configs?.yamls ?? []) {
+        for (const copy of yaml.yaml['deep-copy-regex'] ?? []) {
+          const regExp = toFrontMatchRegExp(copy.source);
+          for (const path of changedFilePaths) {
+            if (regExp.test(path)) {
+              result.push(githubRepoFromOwnerSlashName(decodeId(doc.id)));
+              break match_loop;
+            }
           }
         }
       }
