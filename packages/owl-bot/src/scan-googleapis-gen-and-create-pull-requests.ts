@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ConfigsStore, OwlBotYamlAndPath} from './configs-store';
+import {AffectedRepo, ConfigsStore, OwlBotYamlAndPath} from './configs-store';
 import {OctokitType, OctokitFactory} from './octokit-util';
 import tmp from 'tmp';
 import {
@@ -26,7 +26,7 @@ import {OwlBotYaml} from './config-files';
 import {newCmd} from './cmd';
 
 interface Todo {
-  repo: GithubRepo;
+  repo: AffectedRepo;
   commitHash: string;
 }
 
@@ -45,6 +45,7 @@ function isCommitHashTooOld(
   commitIndex: number,
   commitHashes: string[]
 ): boolean {
+  // Compare to begin-after-commit-hash declared in .OwlBot.yaml.
   let beginAfterCommitHash = '';
   for (const yaml of yamls ?? []) {
     const hash =  yaml.yaml['begin-after-commit-hash']?.trim();
@@ -56,7 +57,17 @@ function isCommitHashTooOld(
   const beginIndex = beginAfterCommitHash
     ? commitHashes.indexOf(beginAfterCommitHash)
     : -1;
-  return beginIndex >= 0 && beginIndex <= commitIndex;
+  if (beginIndex >= 0 && beginIndex <= commitIndex) {
+    return true;
+  }
+  // Compare to environment variable.
+  if (process.env.OWL_BOT_BEGIN_AFTER_COMMIT_HASH) {
+      const beginIndex = commitHashes.indexOf(process.env.OWL_BOT_BEGIN_AFTER_COMMIT_HASH);
+      if (beginIndex >= 0 && beginIndex <= commitIndex) {
+        return true;
+      }
+  }
+  return false;
 }
 
 /**
