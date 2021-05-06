@@ -16,7 +16,7 @@ import admin from 'firebase-admin';
 import {OwlBotLock, OwlBotYaml, owlBotYamlPath, toFrontMatchRegExp} from './config-files';
 import {AffectedRepo, Configs, ConfigsStore} from './configs-store';
 import {CopyTasksStore} from './copy-tasks-store';
-import {GithubRepo, githubRepoFromOwnerSlashName} from './github-repo';
+import {githubRepoFromOwnerSlashName} from './github-repo';
 
 export type Db = admin.firestore.Firestore;
 
