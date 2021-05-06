@@ -16,7 +16,6 @@ import {promisify} from 'util';
 import {readFile} from 'fs';
 import * as crypto from 'crypto';
 import {
-  owlBotYamlPath,
   owlBotYamlFromText,
   OwlBotYaml,
   toFrontMatchRegExp,
@@ -28,7 +27,6 @@ import * as fse from 'fs-extra';
 import {OctokitType, OctokitFactory} from './octokit-util';
 import tmp from 'tmp';
 import glob from 'glob';
-import {GithubRepo} from './github-repo';
 import {OWL_BOT_COPY} from './core';
 import {newCmd} from './cmd';
 import {createPullRequestFromLastCommit} from './create-pr';
@@ -82,7 +80,7 @@ export async function copyCodeAndCreatePullRequest(
   let yaml: OwlBotYaml;
   const copyTagLine = 'copy-tag: ' + copyTagFrom(destRepo.yamlPath, sourceRepoCommitHash) + "\n";
   try {
-    yaml = await loadOwlBotYaml(destDir);
+    yaml = await loadOwlBotYaml(path.join(destDir, destRepo.yamlPath));
   } catch (err) {
     logger.error(err);
     // Create a github issue.
@@ -91,11 +89,11 @@ export async function copyCodeAndCreatePullRequest(
     const issue = await octokit.issues.create({
       owner,
       repo,
-      title: `${owlBotYamlPath} is missing or defective`,
+      title: `${destRepo.yamlPath} is missing or defective`,
       body: `While attempting to copy files from
 ${sourceLink}
 
-After fixing ${owlBotYamlPath}, re-attempt this copy by running the following
+After fixing ${destRepo.yamlPath}, re-attempt this copy by running the following
 command in a local clone of this repo:
 \`\`\`
   docker run -v /repo:$(pwd) -w /repo gcr.io/repo-automation-bots/owl-bot -- copy-code \
@@ -145,9 +143,8 @@ ${copyTagLine}`,
  * Loads the OwlBot yaml from the dest directory.  Throws an exception if not found
  * or invalid.
  */
-export async function loadOwlBotYaml(destDir: string): Promise<OwlBotYaml> {
+export async function loadOwlBotYaml(yamlPath: string): Promise<OwlBotYaml> {
   // Load the OwlBot.yaml file in dest.
-  const yamlPath = path.join(destDir, owlBotYamlPath);
   const text = await readFileAsync(yamlPath, 'utf8');
   return owlBotYamlFromText(text);
 }
