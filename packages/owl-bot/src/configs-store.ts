@@ -33,6 +33,15 @@ export interface Configs {
   installationId: number;
 }
 
+/**
+ * A repo affected by a change and the path to .OwlBot.yaml
+ */
+export interface AffectedRepo {
+  repo: GithubRepo;
+  // path to .OwlBot.yaml
+  yamlPath: string;
+};
+
 export interface ConfigsStore {
   /**
    * Gets the configuration files contents for the given repo.
@@ -102,5 +111,5 @@ export interface ConfigsStore {
    */
   findReposAffectedByFileChanges(
     changedFilePaths: string[]
-  ): Promise<GithubRepo[]>;
+  ): Promise<AffectedRepo[]>;
 }

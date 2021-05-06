@@ -14,7 +14,7 @@
 
 import admin from 'firebase-admin';
 import {OwlBotLock, OwlBotYaml, owlBotYamlPath, toFrontMatchRegExp} from './config-files';
-import {Configs, ConfigsStore} from './configs-store';
+import {AffectedRepo, Configs, ConfigsStore} from './configs-store';
 import {CopyTasksStore} from './copy-tasks-store';
 import {GithubRepo, githubRepoFromOwnerSlashName} from './github-repo';
 
@@ -38,6 +38,24 @@ interface UpdateBuild {
 
 interface CopyTask {
   pubsubMessageId: string;
+}
+
+interface PackedConfigs extends Configs {
+  dockerImage?: string;
+}
+
+function packConfigs(configs: Configs): PackedConfigs {
+  const packed: PackedConfigs = configs;
+  for (const yaml of configs.yamls ?? []) {
+    if (yaml.yaml.docker?.image) {
+      packed.dockerImage = yaml.yaml.docker?.image;
+    }
+  }
+  return packed;
+}
+
+function unpackConfigs(packed: PackedConfigs): Configs {
+  return packed;
 }
 
 /**
@@ -66,7 +84,7 @@ function makeUpdateFilesKey(
 
 export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
   private db: Db;
-  readonly yamls: string;
+  readonly repoConfigs: string;
   readonly lockUpdateBuilds: string;
   readonly copyTasks: string;
 
@@ -75,16 +93,16 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
    */
   constructor(db: Db, collectionsPrefix = 'owl-bot-') {
     this.db = db;
-    this.yamls = collectionsPrefix + 'yamls';
+    this.repoConfigs = collectionsPrefix + 'repo-configs';
     this.lockUpdateBuilds = collectionsPrefix + 'lock-update-builds';
     this.copyTasks = collectionsPrefix + 'copy-tasks';
   }
 
   async getConfigs(repo: string): Promise<Configs | undefined> {
-    const docRef = this.db.collection(this.yamls).doc(encodeId(repo));
+    const docRef = this.db.collection(this.repoConfigs).doc(encodeId(repo));
     const doc = await docRef.get();
     // Should we verify the data?
-    return doc.data() as Configs;
+    return unpackConfigs(doc.data() as PackedConfigs);
   }
 
   async storeConfigs(
@@ -92,16 +110,16 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     configs: Configs,
     replaceCommitHash: string | null
   ): Promise<boolean> {
-    const docRef = this.db.collection(this.yamls).doc(encodeId(repo));
+    const docRef = this.db.collection(this.repoConfigs).doc(encodeId(repo));
     let updatedDoc = false;
     await this.db.runTransaction(async t => {
       const doc = await t.get(docRef);
-      const prevConfigs = doc.data() as Configs | undefined;
+      const prevConfigs = doc.data() as PackedConfigs | undefined;
       if (
         (prevConfigs && prevConfigs.commitHash === replaceCommitHash) ||
         (!prevConfigs && replaceCommitHash === null)
       ) {
-        t.set(docRef, configs);
+        t.set(docRef, packConfigs(configs));
         updatedDoc = true;
       }
     });
@@ -109,16 +127,16 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
   }
 
   async clearConfigs(repo: string): Promise<void> {
-    const docRef = this.db.collection(this.yamls).doc(encodeId(repo));
+    const docRef = this.db.collection(this.repoConfigs).doc(encodeId(repo));
     await docRef.delete();
   }
 
   async findReposWithPostProcessor(
     dockerImageName: string
   ): Promise<[string, Configs][]> {
-    const ref = this.db.collection(this.yamls);
+    const ref = this.db.collection(this.repoConfigs);
     const got = await ref
-      .where('yaml.docker.image', '==', dockerImageName)
+      .where('dockerImage', '==', dockerImageName)
       .get();
     return got.docs.map(doc => [decodeId(doc.id), doc.data() as Configs]);
   }
@@ -165,13 +183,13 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
   }
 
   /**
-   * Unpacks a Configs from the database.
+   * Migrates a Configs from the database.
    * 
    * Configs used to have a `yaml?: string` field.  Now, it has a
    * `yamls?:  string []` field.  Some configs in the database may be stored
    * with the old field, so convert them.
    */
-  unpackConfigs(data: FirebaseFirestore.DocumentData): Configs | undefined {
+  migrateConfigs(data: FirebaseFirestore.DocumentData): Configs | undefined {
     if (data === undefined) {
       return undefined;
     }
@@ -188,24 +206,27 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
 
   async findReposAffectedByFileChanges(
     changedFilePaths: string[]
-  ): Promise<GithubRepo[]> {
+  ): Promise<AffectedRepo[]> {
     // This loop runs in time O(n*m), where
     // n = changedFilePaths.length
     // m = # .OwlBot.yaml files stored in config store.
     // It scans all the values in the collection.  There are many opportunities
     // to optimize if performance becomes a problem.
-    const snapshot = await this.db.collection(this.yamls).get();
-    const result: GithubRepo[] = [];
+    const snapshot = await this.db.collection(this.repoConfigs).get();
+    const result: AffectedRepo[] = [];
     let i = 0;
     snapshot.forEach(doc => {
       i++;
       const configs = doc.data() as Configs | undefined;
-      match_loop: for (const yaml of configs?.yamls ?? []) {
-        for (const copy of yaml.yaml['deep-copy-regex'] ?? []) {
+      for (const yaml of configs?.yamls ?? []) {
+        match_loop: for (const copy of yaml.yaml['deep-copy-regex'] ?? []) {
           const regExp = toFrontMatchRegExp(copy.source);
           for (const path of changedFilePaths) {
             if (regExp.test(path)) {
-              result.push(githubRepoFromOwnerSlashName(decodeId(doc.id)));
+              result.push({
+                repo: githubRepoFromOwnerSlashName(decodeId(doc.id)),
+                yamlPath: yaml.path
+              });
               break match_loop;
             }
           }
