@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ConfigsStore} from './configs-store';
+import {ConfigsStore, OwlBotYamlAndPath} from './configs-store';
 import {OctokitType, OctokitFactory} from './octokit-util';
 import tmp from 'tmp';
 import {
@@ -41,11 +41,18 @@ interface Todo {
  *                     in order from newest to oldest.
  */
 function isCommitHashTooOld(
-  yaml: OwlBotYaml | undefined,
+  yamls: OwlBotYamlAndPath[] | undefined,
   commitIndex: number,
   commitHashes: string[]
 ): boolean {
-  const beginAfterCommitHash = yaml?.['begin-after-commit-hash']?.trim() ?? '';
+  let beginAfterCommitHash = '';
+  for (const yaml of yamls ?? []) {
+    const hash =  yaml.yaml['begin-after-commit-hash']?.trim();
+    if (hash) {
+      beginAfterCommitHash = hash;
+      break;
+    }
+  }
   const beginIndex = beginAfterCommitHash
     ? commitHashes.indexOf(beginAfterCommitHash)
     : -1;
@@ -104,7 +111,7 @@ export async function scanGoogleapisGenAndCreatePullRequests(
       octokit = octokit ?? (await octokitFactory.getShortLivedOctokit());
       if (
         isCommitHashTooOld(
-          (await configsStore.getConfigs(repo.toString()))?.yaml,
+          (await configsStore.getConfigs(repo.toString()))?.yamls,
           commitIndex,
           commitHashes
         )
