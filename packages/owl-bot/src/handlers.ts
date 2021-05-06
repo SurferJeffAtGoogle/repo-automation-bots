@@ -253,6 +253,13 @@ export async function refreshConfigs(
     commitHash: commitHash,
   };
 
+  const response = await octokit.repos.downloadZipballArchive({
+    owner: githubOrg,
+    repo: repoName,
+    ref: commitHash});
+  // WIP
+  
+
   // Query github for the contents of the lock file.
   const lockContent = await core.getFileContent(
     githubOrg,
