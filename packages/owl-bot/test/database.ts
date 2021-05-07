@@ -58,6 +58,7 @@ describe('database', () => {
 
     // Insert some configs.
     const configsA: Configs = {
+      yamls: [{
       yaml: {
         docker: {
           image: dockerImageA,
@@ -69,6 +70,8 @@ describe('database', () => {
           },
         ],
       },
+      path: "/q/r/.OwlBot.yaml"
+    }],
       lock: {
         docker: {
           image: dockerImageA,
@@ -81,6 +84,7 @@ describe('database', () => {
     };
     assert.ok(await store.storeConfigs(repoA, configsA, null));
     const configsB: Configs = {
+      yamls: [{
       yaml: {
         'deep-copy-regex': [
           {
@@ -89,6 +93,8 @@ describe('database', () => {
           },
         ],
       },
+      path: "w/x/.OwlBot.yaml",
+    }],
       commitHash: 'def',
       branchName: 'master',
       installationId: 53,
