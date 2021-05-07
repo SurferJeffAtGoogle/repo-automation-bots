@@ -20,7 +20,7 @@ import {
   owlBotYamlFromText,
   owlBotYamlPath,
 } from './config-files';
-import {Configs, ConfigsStore} from './configs-store';
+import {collectConfigs, Configs, ConfigsStore} from './configs-store';
 import {core} from './core';
 import yaml from 'js-yaml';
 // Conflicting linters think the next line is extraneous or necessary.
@@ -257,45 +257,15 @@ export async function refreshConfigs(
     owner: githubOrg,
     repo: repoName,
     ref: commitHash});
-  // WIP
-  
 
-  // Query github for the contents of the lock file.
-  const lockContent = await core.getFileContent(
-    githubOrg,
-    repoName,
-    owlBotLockPath,
-    commitHash,
-    octokit
-  );
-  if (lockContent) {
-    try {
-      newConfigs.lock = owlBotLockFrom(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        yaml.load(lockContent) as Record<string, any>
-      );
-    } catch (e) {
-      logger.error(
-        `${repoFull} has an invalid ${owlBotLockPath} file: ${e.message}`
-      );
-    }
+  if (<any> true) {
+    throw "TODO: unzip the file into a directory";
   }
 
-  // Query github for the contents of the yaml file.
-  const yamlContent = await core.getFileContent(
-    githubOrg,
-    repoName,
-    owlBotYamlPath,
-    commitHash,
-    octokit
-  );
-  if (yamlContent) {
-    try {
-      newConfigs.yaml = owlBotYamlFromText(yamlContent);
-    } catch (e) {
-      logger.error(`${repoFull} has an invalid ${owlBotYamlPath} file: ${e}`);
-    }
-  }
+  const [lock, yamls] = collectConfigs('/tmp');
+  newConfigs.lock = lock;
+  newConfigs.yamls = yamls;
+
   // Store the new configs back into the database.
   const stored = await configsStore.storeConfigs(
     repoFull,
