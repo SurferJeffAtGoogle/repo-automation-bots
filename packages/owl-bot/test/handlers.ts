@@ -34,6 +34,7 @@ import {core} from '../src/core';
 import {FakeConfigsStore} from './fake-configs-store';
 import {GithubRepo} from '../src/github-repo';
 import {CloudBuildClient} from '@google-cloud/cloudbuild';
+import AdmZip from 'adm-zip';
 const sandbox = sinon.createSandbox();
 
 describe('handlers', () => {
@@ -232,6 +233,11 @@ describe('refreshConfigs', () => {
           },
         };
       },
+      downloadZipballArchive() {
+        const zip = new AdmZip();
+        zip.addZipComment("This is a test.");
+        return { data: zip.toBuffer() };
+      }
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any) as InstanceType<typeof Octokit>;

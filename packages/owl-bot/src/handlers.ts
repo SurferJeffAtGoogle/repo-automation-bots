@@ -22,7 +22,9 @@ import {
 } from './config-files';
 import {collectConfigs, Configs, ConfigsStore} from './configs-store';
 import {core} from './core';
+import tmp from 'tmp';
 import yaml from 'js-yaml';
+import AdmZip from 'adm-zip';
 // Conflicting linters think the next line is extraneous or necessary.
 // eslint-disable-next-line node/no-extraneous-import
 import {Endpoints} from '@octokit/types';
@@ -259,11 +261,11 @@ export async function refreshConfigs(
     ref: commitHash,
   });
 
-  if (<any>true) {
-    throw 'TODO: unzip the file into a directory';
-  }
+  const tmpDir = tmp.dirSync().name;
+  const zip = new AdmZip(response.data as Buffer);
+  zip.extractAllTo(tmpDir);
 
-  const [lock, yamls] = collectConfigs('/tmp');
+  const [lock, yamls] = collectConfigs(tmpDir);
   newConfigs.lock = lock;
   newConfigs.yamls = yamls;
 
