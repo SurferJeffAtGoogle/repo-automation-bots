@@ -25,7 +25,7 @@ import {
   refreshConfigs,
   scanGithubForConfigs,
 } from '../src/handlers';
-import {Configs, ConfigsStore} from '../src/configs-store';
+import {AffectedRepo, Configs, ConfigsStore} from '../src/configs-store';
 import {dump} from 'js-yaml';
 import {Octokit} from '@octokit/rest';
 import * as sinon from 'sinon';
@@ -54,7 +54,7 @@ describe('handlers', () => {
       class FakeConfigStore implements ConfigsStore {
         findReposAffectedByFileChanges(
           changedFilePaths: string[]
-        ): Promise<GithubRepo[]> {
+        ): Promise<AffectedRepo[]> {
           throw new Error('Method not implemented.');
         }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -161,7 +161,7 @@ describe('handlers', () => {
       class FakeConfigStore implements ConfigsStore {
         findReposAffectedByFileChanges(
           changedFilePaths: string[]
-        ): Promise<GithubRepo[]> {
+        ): Promise<AffectedRepo[]> {
           throw new Error('Method not implemented.');
         }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
