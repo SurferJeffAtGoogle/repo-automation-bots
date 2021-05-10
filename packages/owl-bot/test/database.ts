@@ -58,20 +58,22 @@ describe('database', () => {
 
     // Insert some configs.
     const configsA: Configs = {
-      yamls: [{
-      yaml: {
-        docker: {
-          image: dockerImageA,
-        },
-        'deep-copy-regex': [
-          {
-            source: '/alpha/.*',
-            dest: '/beta',
+      yamls: [
+        {
+          yaml: {
+            docker: {
+              image: dockerImageA,
+            },
+            'deep-copy-regex': [
+              {
+                source: '/alpha/.*',
+                dest: '/beta',
+              },
+            ],
           },
-        ],
-      },
-      path: "/q/r/.OwlBot.yaml"
-    }],
+          path: '/q/r/.OwlBot.yaml',
+        },
+      ],
       lock: {
         docker: {
           image: dockerImageA,
@@ -84,17 +86,19 @@ describe('database', () => {
     };
     assert.ok(await store.storeConfigs(repoA, configsA, null));
     const configsB: Configs = {
-      yamls: [{
-      yaml: {
-        'deep-copy-regex': [
-          {
-            source: '/gamma/.*',
-            dest: '/omega',
+      yamls: [
+        {
+          yaml: {
+            'deep-copy-regex': [
+              {
+                source: '/gamma/.*',
+                dest: '/omega',
+              },
+            ],
           },
-        ],
-      },
-      path: "w/x/.OwlBot.yaml",
-    }],
+          path: 'w/x/.OwlBot.yaml',
+        },
+      ],
       commitHash: 'def',
       branchName: 'master',
       installationId: 53,
@@ -113,7 +117,7 @@ describe('database', () => {
       assert.ok(!(await store.storeConfigs(repoA, configsA, 'xyz')));
 
       // Specify a new docker image and store again.
-      configsA.yaml!.docker!.image = dockerImageB;
+      configsA.yamls![0].yaml.docker!.image = dockerImageB;
       configsA.commitHash = 'def';
       assert.ok(await store.storeConfigs(repoA, configsA, 'abc'));
 
@@ -129,7 +133,9 @@ describe('database', () => {
       const reposAffected = await store.findReposAffectedByFileChanges([
         '/alpha/source.js',
       ]);
-      const repoNamesAffected = reposAffected.map(x => `${x.owner}/${x.repo}`);
+      const repoNamesAffected = reposAffected.map(
+        x => `${x.repo.owner}/${x.repo.repo}`
+      );
       assert.deepStrictEqual(repoNamesAffected, [repoA]);
     } finally {
       await store.clearConfigs(repoA);
@@ -142,17 +148,22 @@ describe('database', () => {
     const repoA = 'googleapis/' + uuidv4();
     const dockerImageA = uuidv4();
     const configsA: Configs = {
-      yaml: {
-        docker: {
-          image: dockerImageA,
-        },
-        'deep-copy-regex': [
-          {
-            source: '/alpha',
-            dest: '/beta',
+      yamls: [
+        {
+          path: '.github/.OwlBot.yaml',
+          yaml: {
+            docker: {
+              image: dockerImageA,
+            },
+            'deep-copy-regex': [
+              {
+                source: '/alpha',
+                dest: '/beta',
+              },
+            ],
           },
-        ],
-      },
+        },
+      ],
       lock: {
         docker: {
           image: dockerImageA,

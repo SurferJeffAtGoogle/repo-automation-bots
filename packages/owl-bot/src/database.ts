@@ -13,7 +13,12 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
-import {OwlBotLock, OwlBotYaml, owlBotYamlPath, toFrontMatchRegExp} from './config-files';
+import {
+  OwlBotLock,
+  OwlBotYaml,
+  owlBotYamlPath,
+  toFrontMatchRegExp,
+} from './config-files';
 import {AffectedRepo, Configs, ConfigsStore} from './configs-store';
 import {CopyTasksStore} from './copy-tasks-store';
 import {githubRepoFromOwnerSlashName} from './github-repo';
@@ -135,9 +140,7 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     dockerImageName: string
   ): Promise<[string, Configs][]> {
     const ref = this.db.collection(this.repoConfigs);
-    const got = await ref
-      .where('dockerImage', '==', dockerImageName)
-      .get();
+    const got = await ref.where('dockerImage', '==', dockerImageName).get();
     return got.docs.map(doc => [decodeId(doc.id), doc.data() as Configs]);
   }
 
@@ -184,7 +187,7 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
 
   /**
    * Migrates a Configs from the database.
-   * 
+   *
    * Configs used to have a `yaml?: string` field.  Now, it has a
    * `yamls?:  string []` field.  Some configs in the database may be stored
    * with the old field, so convert them.
@@ -192,14 +195,12 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
   migrateConfigs(data: FirebaseFirestore.DocumentData): Configs | undefined {
     if (data === undefined) {
       return undefined;
-    }
-    else if (data.yaml) {
+    } else if (data.yaml) {
       const yaml = data.yaml as OwlBotYaml;
       const configs = data as Configs;
-      configs.yamls = [ { path: owlBotYamlPath, yaml }];
+      configs.yamls = [{path: owlBotYamlPath, yaml}];
       return configs;
-    }
-    else {
+    } else {
       return data as Configs;
     }
   }
@@ -225,7 +226,7 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
             if (regExp.test(path)) {
               result.push({
                 repo: githubRepoFromOwnerSlashName(decodeId(doc.id)),
-                yamlPath: yaml.path
+                yamlPath: yaml.path,
               });
               break match_loop;
             }

@@ -256,10 +256,11 @@ export async function refreshConfigs(
   const response = await octokit.repos.downloadZipballArchive({
     owner: githubOrg,
     repo: repoName,
-    ref: commitHash});
+    ref: commitHash,
+  });
 
-  if (<any> true) {
-    throw "TODO: unzip the file into a directory";
+  if (<any>true) {
+    throw 'TODO: unzip the file into a directory';
   }
 
   const [lock, yamls] = collectConfigs('/tmp');

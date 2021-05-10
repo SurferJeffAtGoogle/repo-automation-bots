@@ -30,7 +30,7 @@ import glob from 'glob';
 import {OWL_BOT_COPY} from './core';
 import {newCmd} from './cmd';
 import {createPullRequestFromLastCommit} from './create-pr';
-import { AffectedRepo } from './configs-store';
+import {AffectedRepo} from './configs-store';
 
 // This code generally uses Sync functions because:
 // 1. None of our current designs including calling this code from a web
@@ -78,7 +78,8 @@ export async function copyCodeAndCreatePullRequest(
   const owner = destRepo.repo.owner;
   const repo = destRepo.repo.repo;
   let yaml: OwlBotYaml;
-  const copyTagLine = 'copy-tag: ' + copyTagFrom(destRepo.yamlPath, sourceRepoCommitHash) + "\n";
+  const copyTagLine =
+    'copy-tag: ' + copyTagFrom(destRepo.yamlPath, sourceRepoCommitHash) + '\n';
   try {
     yaml = await loadOwlBotYaml(path.join(destDir, destRepo.yamlPath));
   } catch (err) {
@@ -329,10 +330,10 @@ export function copyDirs(
  */
 function copyTagFrom(owlBotYamlPath: string, sourceCommitHash: string) {
   return crypto
-    .createHash("sha256")
+    .createHash('sha256')
     .update(owlBotYamlPath)
     .update(sourceCommitHash)
-    .digest("hex");
+    .digest('hex');
 }
 
 /**

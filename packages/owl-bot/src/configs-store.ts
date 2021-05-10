@@ -12,12 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {OwlBotLock, owlBotLockFrom, owlBotLockPath, OwlBotYaml, owlBotYamlFromText} from './config-files';
+import {
+  OwlBotLock,
+  owlBotLockFrom,
+  owlBotLockPath,
+  OwlBotYaml,
+  owlBotYamlFromText,
+} from './config-files';
 import {GithubRepo} from './github-repo';
 import * as fs from 'fs';
 import path from 'path';
-import { load } from 'js-yaml';
-import { glob } from 'glob';
+import {load} from 'js-yaml';
+import {glob} from 'glob';
 
 export interface OwlBotYamlAndPath {
   // The path in the repository where the .OwlBot.yaml was found.
@@ -45,7 +51,7 @@ export interface AffectedRepo {
   repo: GithubRepo;
   // path to .OwlBot.yaml
   yamlPath: string;
-};
+}
 
 export interface ConfigsStore {
   /**
@@ -123,9 +129,11 @@ export interface ConfigsStore {
  * Examines the contents of a local repo directory and collects owl bot config
  * files.
  */
-export function collectConfigs(dir: string): [OwlBotLock | undefined, OwlBotYamlAndPath[]] {
+export function collectConfigs(
+  dir: string
+): [OwlBotLock | undefined, OwlBotYamlAndPath[]] {
   let lock: OwlBotLock | undefined;
-  let yamls: OwlBotYamlAndPath[] = [];
+  const yamls: OwlBotYamlAndPath[] = [];
 
   // .OwlBot.lock.yaml is always in a known location.
   const lockPath = path.join(dir, owlBotLockPath);
@@ -135,13 +143,13 @@ export function collectConfigs(dir: string): [OwlBotLock | undefined, OwlBotYaml
     lock = owlBotLockFrom(lockYaml);
   }
   // .OwlBot.yamls may be scattered throughout the directory.  Find them.
-  const yamlPaths = glob.sync('**/.OwlBot.yaml', { cwd: dir });
-  yamlPaths.sort();  // For deterministic return values.
+  const yamlPaths = glob.sync('**/.OwlBot.yaml', {cwd: dir});
+  yamlPaths.sort(); // For deterministic return values.
   for (const yamlPath of yamlPaths) {
     const yamlText = fs.readFileSync(path.join(dir, yamlPath), 'utf8');
     yamls.push({
       path: yamlPath,
-      yaml: owlBotYamlFromText(yamlText)
+      yaml: owlBotYamlFromText(yamlText),
     });
   }
   return [lock, yamls];

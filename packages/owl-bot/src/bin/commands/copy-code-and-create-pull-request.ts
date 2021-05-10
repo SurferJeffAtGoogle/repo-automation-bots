@@ -71,7 +71,7 @@ export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<
         describe:
           'Relative directory to the .OwlBot.yaml file specifying which files to copy.  Example: .github/.OwlBot.yaml',
         type: 'string',
-        default: ".github/.OwlBot.yaml",
+        default: '.github/.OwlBot.yaml',
         demand: false,
       });
   },
@@ -79,14 +79,20 @@ export const copyCodeAndCreatePullRequestCommand: yargs.CommandModule<
     const octokitFactory = await octokitFactoryFrom(argv);
     const exists = await cc.copyExists(
       await octokitFactory.getShortLivedOctokit(),
-      { repo: githubRepoFromOwnerSlashName(argv['dest-repo']), yamlPath: argv['dest-owlbot-yaml']},
+      {
+        repo: githubRepoFromOwnerSlashName(argv['dest-repo']),
+        yamlPath: argv['dest-owlbot-yaml'],
+      },
       argv['source-repo-commit-hash']
     );
     if (!exists) {
       await cc.copyCodeAndCreatePullRequest(
         argv['source-repo'],
         argv['source-repo-commit-hash'],
-        {repo: githubRepoFromOwnerSlashName(argv['dest-repo']), yamlPath: argv['dest-owlbot-yaml']},
+        {
+          repo: githubRepoFromOwnerSlashName(argv['dest-repo']),
+          yamlPath: argv['dest-owlbot-yaml'],
+        },
         octokitFactory
       );
     }

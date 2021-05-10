@@ -64,7 +64,7 @@ export const copyExists: yargs.CommandModule<{}, Args> = {
         describe:
           'Relative directory to the .OwlBot.yaml file specifying which files to copy.  Example: .github/.OwlBot.yaml',
         type: 'string',
-        default: ".github/.OwlBot.yaml",
+        default: '.github/.OwlBot.yaml',
         demand: false,
       });
   },
@@ -72,7 +72,10 @@ export const copyExists: yargs.CommandModule<{}, Args> = {
     const octokit = await octokitFrom(argv);
     await copyCode.copyExists(
       octokit,
-      {repo: githubRepoFromOwnerSlashName(argv['dest-repo']), yamlPath: argv['dest-owlbot-yaml']},
+      {
+        repo: githubRepoFromOwnerSlashName(argv['dest-repo']),
+        yamlPath: argv['dest-owlbot-yaml'],
+      },
       argv['source-repo-commit-hash']
     );
   },

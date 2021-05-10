@@ -48,7 +48,7 @@ function isCommitHashTooOld(
   // Compare to begin-after-commit-hash declared in .OwlBot.yaml.
   let beginAfterCommitHash = '';
   for (const yaml of yamls ?? []) {
-    const hash =  yaml.yaml['begin-after-commit-hash']?.trim();
+    const hash = yaml.yaml['begin-after-commit-hash']?.trim();
     if (hash) {
       beginAfterCommitHash = hash;
       break;
@@ -62,10 +62,12 @@ function isCommitHashTooOld(
   }
   // Compare to environment variable.
   if (process.env.OWL_BOT_BEGIN_AFTER_COMMIT_HASH) {
-      const beginIndex = commitHashes.indexOf(process.env.OWL_BOT_BEGIN_AFTER_COMMIT_HASH);
-      if (beginIndex >= 0 && beginIndex <= commitIndex) {
-        return true;
-      }
+    const beginIndex = commitHashes.indexOf(
+      process.env.OWL_BOT_BEGIN_AFTER_COMMIT_HASH
+    );
+    if (beginIndex >= 0 && beginIndex <= commitIndex) {
+      return true;
+    }
   }
   return false;
 }
