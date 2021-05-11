@@ -278,7 +278,6 @@ describe('refreshConfigs', () => {
             branchName: 'main',
             commitHash: '123',
             installationId: 42,
-            lock: undefined,
             yamls: [{
               path: '.github/.OwlBot.yaml',
             yaml: {
@@ -327,8 +326,7 @@ describe('refreshConfigs', () => {
                 image:
                   'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
               },
-            },
-            yamls: []
+            }
           },
         ],
       ])

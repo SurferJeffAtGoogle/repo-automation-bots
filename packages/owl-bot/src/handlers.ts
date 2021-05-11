@@ -266,8 +266,12 @@ export async function refreshConfigs(
   zip.extractAllTo(tmpDir);
 
   const [lock, yamls] = collectConfigs(tmpDir);
-  newConfigs.lock = lock;
-  newConfigs.yamls = yamls;
+  if (lock) {
+    newConfigs.lock = lock;
+  }
+  if (yamls && yamls.length > 0) {
+    newConfigs.yamls = yamls;
+  }
 
   // Store the new configs back into the database.
   const stored = await configsStore.storeConfigs(
