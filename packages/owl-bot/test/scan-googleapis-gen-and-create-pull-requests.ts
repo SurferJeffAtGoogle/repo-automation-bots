@@ -91,7 +91,10 @@ function makeDestRepoAndConfigsStore(
       ],
     ])
   );
-  configsStore.githubRepos.set(destRepo.toString(), { repo: destRepo, yamlPath: '.github/.OwlBot.yaml'});
+  configsStore.githubRepos.set(destRepo.toString(), {
+    repo: destRepo,
+    yamlPath: '.github/.OwlBot.yaml',
+  });
   return [destRepo, configsStore];
 }
 

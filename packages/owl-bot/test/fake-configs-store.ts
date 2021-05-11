@@ -49,9 +49,10 @@ export class FakeConfigsStore implements ConfigsStore {
           const regexp = toFrontMatchRegExp(deepCopy.source);
           for (const filePath of changedFilePaths) {
             if (regexp.test(filePath)) {
-              const repo = this.githubRepos.get(repoName)?.repo ??
+              const repo =
+                this.githubRepos.get(repoName)?.repo ??
                 githubRepoFromOwnerSlashName(repoName);
-              result.push( { repo, yamlPath: yaml.path} );
+              result.push({repo, yamlPath: yaml.path});
               break repoLoop;
             }
           }

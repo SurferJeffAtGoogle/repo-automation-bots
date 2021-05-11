@@ -222,37 +222,47 @@ describe('refreshConfigs', () => {
     sandbox.restore();
   });
 
-  const octokitSha123 = ({
-    repos: {
-      getBranch() {
-        return {
-          data: {
-            commit: {
-              sha: '123',
+  const octokitSha123 = (zip?: AdmZip): InstanceType<typeof Octokit> => {
+    return ({
+      repos: {
+        getBranch() {
+          return {
+            data: {
+              commit: {
+                sha: '123',
+              },
             },
-          },
-        };
+          };
+        },
+        downloadZipballArchive() {
+          if (!zip) {
+            zip = new AdmZip();
+            zip.addZipComment('This is a test.');
+          }
+          return {data: zip.toBuffer()};
+        },
       },
-      downloadZipballArchive() {
-        const zip = new AdmZip();
-        zip.addZipComment("This is a test.");
-        return { data: zip.toBuffer() };
-      }
-    },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any) as InstanceType<typeof Octokit>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any) as InstanceType<typeof Octokit>;
+  };
+
+  const zipWithOwlBotYaml = (): AdmZip => {
+    const zip = new AdmZip();
+    zip.addZipComment('This is a test.');
+    zip.addFile(".github/.OwlBot.yaml", Buffer.from(`
+      docker:
+        image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
+    `, 'utf8'));
+    return zip;
+  };
 
   it('stores a good yaml', async () => {
     const configsStore = new FakeConfigsStore();
-    sandbox.stub(core, 'getFileContent').resolves(`
-      docker:
-        image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
-    `);
 
     await refreshConfigs(
       configsStore,
       undefined,
-      octokitSha123,
+      octokitSha123(zipWithOwlBotYaml()),
       'googleapis',
       'nodejs-vision',
       'main',
@@ -268,12 +278,15 @@ describe('refreshConfigs', () => {
             branchName: 'main',
             commitHash: '123',
             installationId: 42,
+            lock: undefined,
+            yamls: [{
+              path: '.github/.OwlBot.yaml',
             yaml: {
               docker: {
                 image:
                   'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
               },
-            },
+            }}],
           },
         ],
       ])
@@ -282,16 +295,17 @@ describe('refreshConfigs', () => {
 
   it('stores a good lock.yaml', async () => {
     const configsStore = new FakeConfigsStore();
-    sandbox.stub(core, 'getFileContent').resolves(`
+    const zip = new AdmZip();
+    zip.addFile('.github/.OwlBot.lock.yaml', Buffer.from(`
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
         digest: sha256:abcdef
-    `);
+    `, 'utf8'));
 
     await refreshConfigs(
       configsStore,
       undefined,
-      octokitSha123,
+      octokitSha123(zip),
       'googleapis',
       'nodejs-vision',
       'main',
@@ -314,6 +328,7 @@ describe('refreshConfigs', () => {
                   'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
               },
             },
+            yamls: []
           },
         ],
       ])
@@ -327,7 +342,7 @@ describe('refreshConfigs', () => {
     await refreshConfigs(
       configsStore,
       undefined,
-      octokitSha123,
+      octokitSha123(),
       'googleapis',
       'nodejs-vision',
       'main',
@@ -367,7 +382,7 @@ describe('refreshConfigs', () => {
     await refreshConfigs(
       configsStore,
       undefined,
-      octokitSha123,
+      octokitSha123(),
       'googleapis',
       'nodejs-vision',
       'main',
@@ -401,7 +416,7 @@ describe('refreshConfigs', () => {
     await refreshConfigs(
       configsStore,
       configs,
-      octokitSha123,
+      octokitSha123(),
       'googleapis',
       'nodejs-vision',
       'main',
