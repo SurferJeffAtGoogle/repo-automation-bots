@@ -217,6 +217,22 @@ describe('handlers', () => {
   });
 });
 
+function zipWithOwlBotYaml(): AdmZip {
+  const zip = new AdmZip();
+  zip.addZipComment('This is a test.');
+  zip.addFile(
+    '.github/.OwlBot.yaml',
+    Buffer.from(
+      `
+    docker:
+      image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
+  `,
+      'utf8'
+    )
+  );
+  return zip;
+}
+
 describe('refreshConfigs', () => {
   afterEach(() => {
     sandbox.restore();
@@ -246,16 +262,6 @@ describe('refreshConfigs', () => {
     } as any) as InstanceType<typeof Octokit>;
   };
 
-  const zipWithOwlBotYaml = (): AdmZip => {
-    const zip = new AdmZip();
-    zip.addZipComment('This is a test.');
-    zip.addFile(".github/.OwlBot.yaml", Buffer.from(`
-      docker:
-        image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
-    `, 'utf8'));
-    return zip;
-  };
-
   it('stores a good yaml', async () => {
     const configsStore = new FakeConfigsStore();
 
@@ -278,14 +284,17 @@ describe('refreshConfigs', () => {
             branchName: 'main',
             commitHash: '123',
             installationId: 42,
-            yamls: [{
-              path: '.github/.OwlBot.yaml',
-            yaml: {
-              docker: {
-                image:
-                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+            yamls: [
+              {
+                path: '.github/.OwlBot.yaml',
+                yaml: {
+                  docker: {
+                    image:
+                      'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+                  },
+                },
               },
-            }}],
+            ],
           },
         ],
       ])
@@ -295,11 +304,17 @@ describe('refreshConfigs', () => {
   it('stores a good lock.yaml', async () => {
     const configsStore = new FakeConfigsStore();
     const zip = new AdmZip();
-    zip.addFile('.github/.OwlBot.lock.yaml', Buffer.from(`
+    zip.addFile(
+      '.github/.OwlBot.lock.yaml',
+      Buffer.from(
+        `
       docker:
         image: gcr.io/repo-automation-bots/nodejs-post-processor:latest
         digest: sha256:abcdef
-    `, 'utf8'));
+    `,
+        'utf8'
+      )
+    );
 
     await refreshConfigs(
       configsStore,
@@ -326,7 +341,7 @@ describe('refreshConfigs', () => {
                 image:
                   'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
               },
-            }
+            },
           },
         ],
       ])
@@ -448,6 +463,10 @@ describe('scanGithubForConfigs', () => {
           },
         },
       },
+      downloadZipballArchive() {
+        const zip = zipWithOwlBotYaml();
+        return {data: zip.toBuffer()};
+      },
     },
     paginate: {
       iterator() {
@@ -521,12 +540,17 @@ describe('scanGithubForConfigs', () => {
             branchName: 'master',
             commitHash: '123',
             installationId: 45,
-            yaml: {
-              docker: {
-                image:
-                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+            yamls: [
+              {
+                path: '.github/.OwlBot.yaml',
+                yaml: {
+                  docker: {
+                    image:
+                      'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+                  },
+                },
               },
-            },
+            ],
           },
         ],
         [
@@ -535,12 +559,17 @@ describe('scanGithubForConfigs', () => {
             branchName: 'main',
             commitHash: '123',
             installationId: 45,
-            yaml: {
-              docker: {
-                image:
-                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+            yamls: [
+              {
+                path: '.github/.OwlBot.yaml',
+                yaml: {
+                  docker: {
+                    image:
+                      'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+                  },
+                },
               },
-            },
+            ],
           },
         ],
         [
@@ -549,12 +578,17 @@ describe('scanGithubForConfigs', () => {
             branchName: 'master',
             commitHash: '123',
             installationId: 45,
-            yaml: {
-              docker: {
-                image:
-                  'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+            yamls: [
+              {
+                path: '.github/.OwlBot.yaml',
+                yaml: {
+                  docker: {
+                    image:
+                      'gcr.io/repo-automation-bots/nodejs-post-processor:latest',
+                  },
+                },
               },
-            },
+            ],
           },
         ],
       ])
