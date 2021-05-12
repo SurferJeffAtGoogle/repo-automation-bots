@@ -122,15 +122,16 @@ export async function scanGoogleapisGenAndCreatePullRequests(
     const stackSize = todoStack.length;
     for (const repo of repos) {
       octokit = octokit ?? (await octokitFactory.getShortLivedOctokit());
+      const repoFullName = repo.repo.toString();
       if (
         isCommitHashTooOld(
-          (await configsStore.getConfigs(repo.toString()))?.yamls,
+          (await configsStore.getConfigs(repoFullName))?.yamls,
           commitIndex,
           commitHashes
         )
       ) {
         logger.info(
-          `Ignoring ${repo.toString()} because ${commitHash} is too old.`
+          `Ignoring ${repoFullName} because ${commitHash} is too old.`
         );
       } else if (!(await copyExists(octokit, repo, commitHash, logger))) {
         const todo: Todo = {repo, commitHash};
