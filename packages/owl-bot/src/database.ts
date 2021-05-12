@@ -185,26 +185,6 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     await docRef.delete();
   }
 
-  /**
-   * Migrates a Configs from the database.
-   *
-   * Configs used to have a `yaml?: string` field.  Now, it has a
-   * `yamls?:  string []` field.  Some configs in the database may be stored
-   * with the old field, so convert them.
-   */
-  migrateConfigs(data: FirebaseFirestore.DocumentData): Configs | undefined {
-    if (data === undefined) {
-      return undefined;
-    } else if (data.yaml) {
-      const yaml = data.yaml as OwlBotYaml;
-      const configs = data as Configs;
-      configs.yamls = [{path: owlBotYamlPath, yaml}];
-      return configs;
-    } else {
-      return data as Configs;
-    }
-  }
-
   async findReposAffectedByFileChanges(
     changedFilePaths: string[]
   ): Promise<AffectedRepo[]> {
