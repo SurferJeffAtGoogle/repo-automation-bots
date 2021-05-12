@@ -146,9 +146,11 @@ describe('scanGoogleapisGenAndCreatePullRequests', function () {
     assert.strictEqual(pull.repo, 'nodejs-spell-check');
     assert.strictEqual(pull.title, 'b');
     assert.strictEqual(pull.base, 'main');
+    const copyTag = cc.copyTagFrom('.github/.OwlBot.yaml', abcCommits[1]);
     assert.strictEqual(
       pull.body,
-      `Source-Link: https://github.com/googleapis/googleapis-gen/commit/${abcCommits[1]}`
+      `Source-Link: https://github.com/googleapis/googleapis-gen/commit/${abcCommits[1]}
+copy-tag: ${copyTag}`
     );
 
     // Confirm it set the label.

@@ -328,7 +328,7 @@ export function copyDirs(
  * Creates a unique tag we can easily search for in pull request and issue
  * bodies that identifies a copy operation.
  */
-function copyTagFrom(owlBotYamlPath: string, sourceCommitHash: string) {
+export function copyTagFrom(owlBotYamlPath: string, sourceCommitHash: string) {
   return crypto
     .createHash('sha256')
     .update(owlBotYamlPath)
