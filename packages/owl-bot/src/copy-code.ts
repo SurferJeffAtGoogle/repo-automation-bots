@@ -362,15 +362,25 @@ export async function copyExists(
     state: 'all',
   });
   const copyTag = copyTagFrom(destRepo.yamlPath, sourceCommitHash);
-  for (const pull of pulls.data) {
-    const pos: number = pull.body?.indexOf(copyTag) ?? -1;
-    if (pos >= 0) {
-      logger.info(
-        `Pull request ${pull.number} with ${sourceCommitHash} exists in ${owner}/${repo}.`
-      );
-      return true;
+
+  // A generic function that finds matches in either pull request or issue
+  // bodies.
+  const findInBodies = (kind: "Pull request" | "Issue", response: { data: {number: number, body?: string | null}[]}): boolean => {
+    for (const issue of response.data) {
+      const pos: number = issue.body?.indexOf(copyTag) ?? -1;
+      if (pos >= 0) {
+        logger.info(
+          `${kind} ${issue.number} with ${sourceCommitHash} exists in ${owner}/${repo}.`
+        );
+        return true;
+      }
     }
+    return false;
   }
+
+  if (findInBodies('Pull request', pulls))
+    return true;
+
   // And enumerate recent issues too.
   const issues = await octokit.issues.listForRepo({
     owner,
@@ -378,15 +388,9 @@ export async function copyExists(
     per_page: 100,
     state: 'all',
   });
-  for (const issue of issues.data) {
-    const pos: number = issue.body?.indexOf(copyTag) ?? -1;
-    if (pos >= 0) {
-      logger.info(
-        `Issue ${issue.number} with ${sourceCommitHash} exists in ${owner}/${repo}.`
-      );
-      return true;
-    }
-  }
+
+  if (findInBodies('Issue', issues))
+    return true;
 
   logger.info(`${sourceCommitHash} not found in ${owner}/${repo}.`);
   return false;
