@@ -88,7 +88,7 @@ function makeDestRepoAndConfigsStore(
           installationId: 42,
           yamls: [{
             yaml: yaml,
-            path: 'some-api/.OwlBot.yaml'
+            path: '.github/.OwlBot.yaml'
           }],
         },
       ],
