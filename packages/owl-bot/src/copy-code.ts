@@ -79,7 +79,7 @@ export async function copyCodeAndCreatePullRequest(
   const repo = destRepo.repo.repo;
   let yaml: OwlBotYaml;
   const copyTagLine =
-    'copy-tag: ' + copyTagFrom(destRepo.yamlPath, sourceRepoCommitHash) + '\n';
+    'Copy-Tag: ' + copyTagFrom(destRepo.yamlPath, sourceRepoCommitHash) + '\n';
   try {
     yaml = await loadOwlBotYaml(path.join(destDir, destRepo.yamlPath));
   } catch (err) {

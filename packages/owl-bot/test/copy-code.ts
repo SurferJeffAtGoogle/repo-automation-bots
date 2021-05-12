@@ -14,7 +14,7 @@
 
 import {describe, it} from 'mocha';
 import * as assert from 'assert';
-import {copyCode, copyDirs, copyExists, stat} from '../src/copy-code';
+import {copyCode, copyDirs, copyExists, copyTagFrom, stat} from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
 import tmp from 'tmp';
@@ -28,17 +28,26 @@ import { githubRepoFromOwnerSlashName } from '../src/github-repo';
 import { FakeIssues, FakePulls } from './fake-octokit';
 
 describe('copyExists', function () {
-  it("doesn't find existing pull request", async () => {
+  async function fakeOctokit(): Promise<OctokitType> {
     const pulls = new FakePulls();
-    await pulls.create({data: { body: "abc123"}});
-    const issues = new FakeIssues();
+    const copyTag = copyTagFrom('some-api/.OwlBot.yaml', 'abc123');
+    await pulls.create({ body: `blah blah blah
+Source-Link: https://github.com/googleapis/googleapis/abc123
+Copy-Tag: ${copyTag}
+`});
 
+    const issues = new FakeIssues();
     const octokit = { pulls, issues } as unknown as OctokitType;
+    return octokit;
+  }
+
+  it("finds existing pull request", async () => {
+    const octokit = await fakeOctokit();
     const destRepo: AffectedRepo = {
-      yamlPath: ".github/.OwlBot.yaml",
+      yamlPath: "some-api/.OwlBot.yaml",
       repo: githubRepoFromOwnerSlashName("googleapis/spell-checker")
     };
-    assert.strictEqual(false, await copyExists(octokit, destRepo, "abc123"));
+    assert.strictEqual(true, await copyExists(octokit, destRepo, "abc123"));
   });
 });
 
