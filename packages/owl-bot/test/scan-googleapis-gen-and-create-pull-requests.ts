@@ -86,10 +86,12 @@ function makeDestRepoAndConfigsStore(
           branchName: 'main',
           commitHash: '456',
           installationId: 42,
-          yamls: [{
-            yaml: yaml,
-            path: '.github/.OwlBot.yaml'
-          }],
+          yamls: [
+            {
+              yaml: yaml,
+              path: '.github/.OwlBot.yaml',
+            },
+          ],
         },
       ],
     ])

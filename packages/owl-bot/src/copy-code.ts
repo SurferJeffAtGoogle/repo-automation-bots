@@ -365,12 +365,16 @@ export async function copyExists(
 
   // A generic function that finds matches in either pull request or issue
   // bodies.
-  const findInBodies = (kind: "Pull request" | "Issue", response: { data: {number: number, body?: string | null}[]}): boolean => {
+  const findInBodies = (
+    kind: 'Pull request' | 'Issue',
+    response: {data: {number: number; body?: string | null}[]}
+  ): boolean => {
     for (const issue of response.data) {
-      const copyTagPos = issue.body?.indexOf("\nCopy-Tag: ") ?? -1;
-      const needle = copyTagPos >= 0  // Find the needle in a haystack.
-        ? copyTag  // It's a new issue with a copy tag.
-        : sourceCommitHash;  // It's an old issue without a copy tag.
+      const copyTagPos = issue.body?.indexOf('\nCopy-Tag: ') ?? -1;
+      const needle =
+        copyTagPos >= 0 // Find the needle in a haystack.
+          ? copyTag // It's a new issue with a copy tag.
+          : sourceCommitHash; // It's an old issue without a copy tag.
       const pos: number = issue.body?.indexOf(needle) ?? -1;
       if (pos >= 0) {
         logger.info(
@@ -380,10 +384,9 @@ export async function copyExists(
       }
     }
     return false;
-  }
+  };
 
-  if (findInBodies('Pull request', pulls))
-    return true;
+  if (findInBodies('Pull request', pulls)) return true;
 
   // And enumerate recent issues too.
   const issues = await octokit.issues.listForRepo({
@@ -393,8 +396,7 @@ export async function copyExists(
     state: 'all',
   });
 
-  if (findInBodies('Issue', issues))
-    return true;
+  if (findInBodies('Issue', issues)) return true;
 
   logger.info(`${sourceCommitHash} not found in ${owner}/${repo}.`);
   return false;
