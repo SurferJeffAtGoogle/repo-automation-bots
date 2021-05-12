@@ -34,7 +34,7 @@ describe('copyExists', function () {
     return { pulls, issues };
   }
 
-  it("finds existing pull request", async () => {
+  it("finds pull request with copy tag", async () => {
     const octokit = await fakeOctokit();
     const copyTag = copyTagFrom('some-api/.OwlBot.yaml', 'abc123');
     await octokit.pulls.create({ body: `blah blah blah
@@ -47,6 +47,21 @@ Copy-Tag: ${copyTag}
     };
     assert.strictEqual(true, await copyExists(octokit as unknown as OctokitType, destRepo, "abc123"));
   });
+
+  it("finds issue with copy tag", async () => {
+    const octokit = await fakeOctokit();
+    const copyTag = copyTagFrom('some-api/.OwlBot.yaml', 'abc123');
+    await octokit.issues.create({ body: `blah blah blah
+Source-Link: https://github.com/googleapis/googleapis/abc123
+Copy-Tag: ${copyTag}
+`});
+    const destRepo: AffectedRepo = {
+      yamlPath: "some-api/.OwlBot.yaml",
+      repo: githubRepoFromOwnerSlashName("googleapis/spell-checker")
+    };
+    assert.strictEqual(true, await copyExists(octokit as unknown as OctokitType, destRepo, "abc123"));
+  });
+
 });
 
 
