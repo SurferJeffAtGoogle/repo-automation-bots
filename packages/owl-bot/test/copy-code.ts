@@ -98,6 +98,17 @@ Copy-Tag: ${copyTag}
     assert.strictEqual(false, await copyExists(octokit as unknown as OctokitType, destRepo, "def456"));
   });
 
+  it("finds old pull request without copy-tag", async () => {
+    const octokit = await fakeOctokit();
+    await octokit.pulls.create({ body: `blah blah blah
+Source-Link: https://github.com/googleapis/googleapis/abc123
+`});
+    const destRepo: AffectedRepo = {
+      yamlPath: ".github/.OwlBot.yaml",
+      repo: githubRepoFromOwnerSlashName("googleapis/spell-checker")
+    };
+    assert.strictEqual(true, await copyExists(octokit as unknown as OctokitType, destRepo, "abc123"));
+  });
 });
 
 
