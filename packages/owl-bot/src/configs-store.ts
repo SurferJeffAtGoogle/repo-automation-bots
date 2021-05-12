@@ -139,6 +139,7 @@ export function collectConfigs(
   const lockPath = path.join(dir, owlBotLockPath);
   if (fs.existsSync(lockPath)) {
     const lockText = fs.readFileSync(lockPath, 'utf8');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const lockYaml = load(lockText) as Record<string, any>;
     lock = owlBotLockFrom(lockYaml);
   }

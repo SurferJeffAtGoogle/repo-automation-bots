@@ -13,17 +13,10 @@
 // limitations under the License.
 
 import {logger} from 'gcf-utils';
-import {
-  OwlBotLock,
-  owlBotLockFrom,
-  owlBotLockPath,
-  owlBotYamlFromText,
-  owlBotYamlPath,
-} from './config-files';
+import {OwlBotLock, owlBotLockPath} from './config-files';
 import {collectConfigs, Configs, ConfigsStore} from './configs-store';
 import {core} from './core';
 import tmp from 'tmp';
-import yaml from 'js-yaml';
 import AdmZip from 'adm-zip';
 // Conflicting linters think the next line is extraneous or necessary.
 // eslint-disable-next-line node/no-extraneous-import

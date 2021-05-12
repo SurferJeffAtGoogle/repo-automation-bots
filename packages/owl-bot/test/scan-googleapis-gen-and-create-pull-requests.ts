@@ -152,7 +152,7 @@ describe('scanGoogleapisGenAndCreatePullRequests', function () {
     assert.strictEqual(
       pull.body,
       `Source-Link: https://github.com/googleapis/googleapis-gen/commit/${abcCommits[1]}
-copy-tag: ${copyTag}`
+Copy-Tag: ${copyTag}`
     );
 
     // Confirm it set the label.

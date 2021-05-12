@@ -21,8 +21,6 @@ import {
   toLocalRepo,
 } from './copy-code';
 import {getFilesModifiedBySha} from '.';
-import {GithubRepo} from './github-repo';
-import {OwlBotYaml} from './config-files';
 import {newCmd} from './cmd';
 
 interface Todo {
