@@ -28,26 +28,24 @@ import { githubRepoFromOwnerSlashName } from '../src/github-repo';
 import { FakeIssues, FakePulls } from './fake-octokit';
 
 describe('copyExists', function () {
-  async function fakeOctokit(): Promise<OctokitType> {
+  async function fakeOctokit() {
     const pulls = new FakePulls();
-    const copyTag = copyTagFrom('some-api/.OwlBot.yaml', 'abc123');
-    await pulls.create({ body: `blah blah blah
-Source-Link: https://github.com/googleapis/googleapis/abc123
-Copy-Tag: ${copyTag}
-`});
-
     const issues = new FakeIssues();
-    const octokit = { pulls, issues } as unknown as OctokitType;
-    return octokit;
+    return { pulls, issues };
   }
 
   it("finds existing pull request", async () => {
     const octokit = await fakeOctokit();
+    const copyTag = copyTagFrom('some-api/.OwlBot.yaml', 'abc123');
+    await octokit.pulls.create({ body: `blah blah blah
+Source-Link: https://github.com/googleapis/googleapis/abc123
+Copy-Tag: ${copyTag}
+`});
     const destRepo: AffectedRepo = {
       yamlPath: "some-api/.OwlBot.yaml",
       repo: githubRepoFromOwnerSlashName("googleapis/spell-checker")
     };
-    assert.strictEqual(true, await copyExists(octokit, destRepo, "abc123"));
+    assert.strictEqual(true, await copyExists(octokit as unknown as OctokitType, destRepo, "abc123"));
   });
 });
 
