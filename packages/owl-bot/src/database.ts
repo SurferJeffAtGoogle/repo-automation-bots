@@ -20,7 +20,6 @@ import {
   toFrontMatchRegExp,
 } from './config-files';
 import {AffectedRepo, Configs, ConfigsStore} from './configs-store';
-import {CopyTasksStore} from './copy-tasks-store';
 import {githubRepoFromOwnerSlashName} from './github-repo';
 
 export type Db = admin.firestore.Firestore;
@@ -87,12 +86,11 @@ function makeUpdateFilesKey(
   return [repo, googleapisGenCommitHash].map(encodeId).join('+');
 }
 
-export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
+export class FirestoreConfigsStore implements ConfigsStore {
   private db: Db;
   readonly repoConfigs: string;
   readonly lockUpdateBuilds: string;
-  readonly copyTasks: string;
-
+ 
   /**
    * @param collectionsPrefix should only be overridden in tests.
    */
@@ -100,7 +98,6 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     this.db = db;
     this.repoConfigs = collectionsPrefix + 'repo-configs';
     this.lockUpdateBuilds = collectionsPrefix + 'lock-update-builds';
-    this.copyTasks = collectionsPrefix + 'copy-tasks';
   }
 
   async getConfigs(repo: string): Promise<Configs | undefined> {
@@ -216,62 +213,5 @@ export class FirestoreConfigsStore implements ConfigsStore, CopyTasksStore {
     });
     console.info(`walked ${i} configs`);
     return result;
-  }
-
-  async findPubsubMessageIdForCopyTask(
-    repo: string,
-    googleapisGenCommitHash: string
-  ): Promise<string | undefined> {
-    const docRef = this.db
-      .collection(this.copyTasks)
-      .doc(makeUpdateFilesKey(repo, googleapisGenCommitHash));
-    const got = await docRef.get();
-    return got.exists ? (got.data() as CopyTask).pubsubMessageId : undefined;
-  }
-
-  async recordPubsubMessageIdForCopyTask(
-    repo: string,
-    googleapisGenCommitHash: string,
-    pubsubMessageId: string
-  ): Promise<string> {
-    const docRef = this.db
-      .collection(this.copyTasks)
-      .doc(makeUpdateFilesKey(repo, googleapisGenCommitHash));
-    const data: CopyTask = {pubsubMessageId};
-    await this.db.runTransaction(async t => {
-      const got = await t.get(docRef);
-      if (got.exists) {
-        pubsubMessageId = (got.data() as CopyTask).pubsubMessageId;
-      } else {
-        t.set(docRef, data);
-      }
-    });
-    return pubsubMessageId;
-  }
-
-  async filterMissingCopyTasks(
-    repos: string[],
-    googleapisGenCommitHash: string
-  ): Promise<string[]> {
-    const snapshot = this.db.collection(this.copyTasks);
-    const result: string[] = [];
-    for (const repo of repos) {
-      const docId = makeUpdateFilesKey(repo, googleapisGenCommitHash);
-      const got = await snapshot.doc(docId).get();
-      if (!got.exists) {
-        result.push(repo);
-      }
-    }
-    return result;
-  }
-
-  async clearPubsubMessageIdForCopyTask(
-    repo: string,
-    googleapisGenCommitHash: string
-  ): Promise<void> {
-    const docRef = this.db
-      .collection(this.copyTasks)
-      .doc(makeUpdateFilesKey(repo, googleapisGenCommitHash));
-    await docRef.delete();
   }
 }
