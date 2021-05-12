@@ -46,6 +46,12 @@ function sourceLinkFrom(sourceCommitHash: string): string {
   return `https://github.com/googleapis/googleapis-gen/commit/${sourceCommitHash}`;
 }
 
+const copyTagFooter = 'Copy-Tag: ';
+
+export function indexOfCopyTagFooter(body: string): number {
+  return body.indexOf('\n' + copyTagFooter);
+}
+
 /**
  * Copies the code from googleapis-gen to the dest repo, and creates a
  * pull request.
@@ -79,7 +85,7 @@ export async function copyCodeAndCreatePullRequest(
   const repo = destRepo.repo.repo;
   let yaml: OwlBotYaml;
   const copyTagLine =
-    'Copy-Tag: ' + copyTagFrom(destRepo.yamlPath, sourceRepoCommitHash) + '\n';
+    copyTagFooter + copyTagFrom(destRepo.yamlPath, sourceRepoCommitHash) + '\n';
   try {
     yaml = await loadOwlBotYaml(path.join(destDir, destRepo.yamlPath));
   } catch (err) {
@@ -370,7 +376,7 @@ export async function copyExists(
     response: {data: {number: number; body?: string | null}[]}
   ): boolean => {
     for (const issue of response.data) {
-      const copyTagPos = issue.body?.indexOf('\nCopy-Tag: ') ?? -1;
+      const copyTagPos = indexOfCopyTagFooter(issue.body ?? '');
       const needle =
         copyTagPos >= 0 // Find the needle in a haystack.
           ? copyTag // It's a new issue with a copy tag.
