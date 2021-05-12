@@ -367,7 +367,11 @@ export async function copyExists(
   // bodies.
   const findInBodies = (kind: "Pull request" | "Issue", response: { data: {number: number, body?: string | null}[]}): boolean => {
     for (const issue of response.data) {
-      const pos: number = issue.body?.indexOf(copyTag) ?? -1;
+      const copyTagPos = issue.body?.indexOf("\nCopy-Tag: ") ?? -1;
+      const needle = copyTagPos >= 0  // Find the needle in a haystack.
+        ? copyTag  // It's a new issue with a copy tag.
+        : sourceCommitHash;  // It's an old issue without a copy tag.
+      const pos: number = issue.body?.indexOf(needle) ?? -1;
       if (pos >= 0) {
         logger.info(
           `${kind} ${issue.number} with ${sourceCommitHash} exists in ${owner}/${repo}.`
