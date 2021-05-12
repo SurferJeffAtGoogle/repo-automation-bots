@@ -14,7 +14,7 @@
 
 import {describe, it} from 'mocha';
 import * as assert from 'assert';
-import {copyCode, copyDirs, stat} from '../src/copy-code';
+import {copyCode, copyDirs, copyExists, stat} from '../src/copy-code';
 import path from 'path';
 import * as fs from 'fs';
 import tmp from 'tmp';
@@ -22,6 +22,26 @@ import {OwlBotYaml} from '../src/config-files';
 import {collectDirTree, makeDirTree} from './dir-tree';
 import {makeAbcRepo, makeRepoWithOwlBotYaml} from './make-repos';
 import {newCmd} from '../src/cmd';
+import { OctokitType } from '../src/octokit-util';
+import { AffectedRepo } from '../src/configs-store';
+import { githubRepoFromOwnerSlashName } from '../src/github-repo';
+import { FakeIssues, FakePulls } from './fake-octokit';
+
+describe('copyExists', function () {
+  it("doesn't find existing pull request", async () => {
+    const pulls = new FakePulls();
+    await pulls.create({data: { body: "abc123"}});
+    const issues = new FakeIssues();
+
+    const octokit = { pulls, issues } as unknown as OctokitType;
+    const destRepo: AffectedRepo = {
+      yamlPath: ".github/.OwlBot.yaml",
+      repo: githubRepoFromOwnerSlashName("googleapis/spell-checker")
+    };
+    assert.strictEqual(false, await copyExists(octokit, destRepo, "abc123"));
+  });
+});
+
 
 describe('copyDirs', () => {
   /**
