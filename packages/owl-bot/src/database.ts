@@ -13,12 +13,7 @@
 // limitations under the License.
 
 import admin from 'firebase-admin';
-import {
-  OwlBotLock,
-  OwlBotYaml,
-  owlBotYamlPath,
-  toFrontMatchRegExp,
-} from './config-files';
+import {OwlBotLock, toFrontMatchRegExp} from './config-files';
 import {AffectedRepo, Configs, ConfigsStore} from './configs-store';
 import {githubRepoFromOwnerSlashName} from './github-repo';
 
@@ -38,10 +33,6 @@ interface UpdateBuild {
   // Maybe a link to a github issue or pull request.  Mainly for debugging
   // purposes.
   buildResult?: string;
-}
-
-interface CopyTask {
-  pubsubMessageId: string;
 }
 
 interface PackedConfigs extends Configs {
@@ -79,18 +70,11 @@ function makeUpdateLockKey(repo: string, lock: OwlBotLock): string {
   return [repo, lock.docker.image, lock.docker.digest].map(encodeId).join('+');
 }
 
-function makeUpdateFilesKey(
-  repo: string,
-  googleapisGenCommitHash: string
-): string {
-  return [repo, googleapisGenCommitHash].map(encodeId).join('+');
-}
-
 export class FirestoreConfigsStore implements ConfigsStore {
   private db: Db;
   readonly repoConfigs: string;
   readonly lockUpdateBuilds: string;
- 
+
   /**
    * @param collectionsPrefix should only be overridden in tests.
    */
