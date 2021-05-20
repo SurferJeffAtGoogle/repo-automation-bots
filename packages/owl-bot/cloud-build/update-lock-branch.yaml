@@ -65,6 +65,7 @@ steps:
   - name: 'gcr.io/cloud-builders/git'
     args:
       - commit
+      - --allow-empty
       - -m
       - "chore: new owl bot post processor docker image\n\n${_CONTAINER}"
     dir: '${_REPOSITORY}'
