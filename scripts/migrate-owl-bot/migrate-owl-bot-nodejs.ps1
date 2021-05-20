@@ -13,7 +13,8 @@
 # limitations under the License.
 
 param (
-    [string]$workDir
+    [string]$workDir,
+    $repo
 )
 
 function New-TemporaryDirectory {
@@ -227,7 +228,7 @@ begin-after-commit-hash: ${sourceCommitHash}
 }
 
 
-function Migrate-All([string]$lang, $workDir) {
+function Migrate-All([string]$lang, $workDir, $repos) {
     pushd .
     try {
         if (!$workDir) {
@@ -239,10 +240,12 @@ function Migrate-All([string]$lang, $workDir) {
         $sourceRepoPath = CloneOrPull-Repo googleapis/googleapis-gen
         $currentHash = git -C googleapis-gen log -1 --format=%H
 
-        # Get the list of repos from github.
-        $allRepos = gh repo list googleapis --limit 1000
-        $matchInfos = $allRepos | Select-String -Pattern "^googleapis/${lang}-[^ \r\n\t]+"
-        $repos = $matchInfos.matches.value
+        if (-not $repos) {
+            # Get the list of repos from github.
+            $allRepos = gh repo list googleapis --limit 1000
+            $matchInfos = $allRepos | Select-String -Pattern "^googleapis/${lang}-[^ \r\n\t]+"
+            $repos = $matchInfos.matches.value
+        }
 
         foreach ($repo in $repos) {
             $name = CloneOrPull-Repo $repo
@@ -254,10 +257,9 @@ function Migrate-All([string]$lang, $workDir) {
                 Migrate-Repo $name $sourceRepoPath
             }
         }
-
     } finally {
         popd
     }
 }
 
-Migrate-All nodejs $workDir
+Migrate-All nodejs $workDir $repo
