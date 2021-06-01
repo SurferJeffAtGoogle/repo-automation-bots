@@ -44,7 +44,8 @@ export async function createPullRequestFromLastCommit(
   pushUrl: string,
   labels: string[],
   octokit: OctokitType,
-  logger = console
+  logger = console,
+  comments: string[] = []
 ): Promise<void> {
   const cmd = newCmd(logger);
   const githubRepo = await octokit.repos.get({owner, repo});
@@ -82,6 +83,14 @@ export async function createPullRequestFromLastCommit(
       repo,
       issue_number: pull.data.number,
       labels,
+    });
+  }
+  for (const comment of comments) {
+    await octokit.issues.createComment({
+      owner,
+      repo,
+      issue_number: pull.data.number,
+      body: comment,
     });
   }
 }
