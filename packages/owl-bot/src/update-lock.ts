@@ -53,7 +53,10 @@ export async function maybeCreatePullRequestForLockUpdate(
       githubRepo.getCloneUrl(token),
       [core.OWL_BOT_LOCK_UPDATE],
       octokit,
-      logger
+      logger,
+      [
+        'https://github.com/googleapis/repo-automation-bots/blob/master/packages/owl-bot/UpdateLock.md explains why this pull request was created.',
+      ]
     );
   } else {
     logger.log(

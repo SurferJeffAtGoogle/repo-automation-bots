@@ -76,6 +76,9 @@ describe('maybeCreatePullRequestForLockUpdate', () => {
         ['owl-bot-update-lock'],
         {fake: true},
         console,
+        [
+          'https://github.com/googleapis/repo-automation-bots/blob/master/packages/owl-bot/UpdateLock.md explains why this pull request was created.',
+        ],
       ],
     ]);
   });

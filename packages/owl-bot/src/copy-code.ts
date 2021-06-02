@@ -133,7 +133,10 @@ ${err}`,
     destRepo.getCloneUrl(token),
     [OWL_BOT_COPY],
     octokit,
-    logger
+    logger,
+    [
+      'https://github.com/googleapis/repo-automation-bots/blob/master/packages/owl-bot/CopyCode.md explains why this pull request was created.',
+    ]
   );
 }
 
