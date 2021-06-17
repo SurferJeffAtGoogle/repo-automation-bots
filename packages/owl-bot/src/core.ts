@@ -80,7 +80,7 @@ export const OWL_BOT_IGNORE = 'owl-bot-ignore';
 export async function triggerPostProcessBuild(
   args: BuildArgs,
   octokit?: OctokitType
-): Promise<BuildResponse> {
+): Promise<BuildResponse | null> {
   const token = await core.getGitHubShortLivedAccessToken(
     args.privateKey,
     args.appId,
@@ -100,6 +100,15 @@ export async function triggerPostProcessBuild(
     repo,
     pull_number: args.pr,
   });
+
+  // See if someone asked owl bot to ignore this PR.
+  if (prData.labels.find(label => label.name === OWL_BOT_IGNORE)) {
+    logger.info(
+      `Ignoring ${owner}/${repo} #${args.pr} because it's labeled with ${OWL_BOT_IGNORE}.`
+    );
+    return null;
+  }
+
   const [prOwner, prRepo] = prData.head.repo.full_name.split('/');
   const [resp] = await cb.runBuildTrigger({
     projectId: project,

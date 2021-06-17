@@ -113,8 +113,8 @@ describe('core', () => {
         trigger: 'abc123',
       });
       assert.ok(triggerRequest);
-      assert.strictEqual(build.conclusion, 'success');
-      assert.strictEqual(build.summary, 'successfully ran 1 steps 🎉!');
+      assert.strictEqual(build!.conclusion, 'success');
+      assert.strictEqual(build!.summary, 'successfully ran 1 steps 🎉!');
     });
     it('returns with failure if build fails', async () => {
       const successfulBuild = {
@@ -160,8 +160,8 @@ describe('core', () => {
         trigger: 'abc123',
       });
       assert.ok(triggerRequest);
-      assert.strictEqual(build.conclusion, 'failure');
-      assert.strictEqual(build.summary, '1 steps failed 🙁');
+      assert.strictEqual(build!.conclusion, 'failure');
+      assert.strictEqual(build!.summary, '1 steps failed 🙁');
     });
   });
   describe('getOwlBotLock', () => {
