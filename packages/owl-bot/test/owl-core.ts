@@ -39,6 +39,7 @@ describe('core', () => {
             full_name: 'bcoe/example',
           },
         },
+        labels: []
       },
     };
     sandbox.stub(core, 'getGitHubShortLivedAccessToken').resolves({
