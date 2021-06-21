@@ -66,9 +66,6 @@ function newPrData(labels: string[] = []): unknown {
 }
 
 describe('core', () => {
-  beforeEach(() => {
-    initSandbox(newPrData());
-  });
   afterEach(() => {
     sandbox.restore();
   });
@@ -83,6 +80,7 @@ describe('core', () => {
   });
   describe('triggerBuild', () => {
     it('returns with success if build succeeds', async () => {
+      initSandbox(newPrData());
       const successfulBuild = {
         status: 'SUCCESS',
         steps: [
@@ -130,6 +128,7 @@ describe('core', () => {
       assert.strictEqual(build!.summary, 'successfully ran 1 steps 🎉!');
     });
     it('returns with failure if build fails', async () => {
+      initSandbox(newPrData());
       const successfulBuild = {
         status: 'FAILURE',
         steps: [
