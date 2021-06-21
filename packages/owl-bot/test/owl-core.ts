@@ -59,7 +59,7 @@ function newPrData(labels: string[] = []): unknown {
           full_name: 'bcoe/example',
         },
       },
-      labels
+      labels : labels.map(name => { return {name}; })
     },
   };
   return prData;
@@ -127,6 +127,22 @@ describe('core', () => {
       assert.strictEqual(build!.conclusion, 'success');
       assert.strictEqual(build!.summary, 'successfully ran 1 steps 🎉!');
     });
+
+    it("doesn't trigger build when labled with owl-bot-ignore", async () => {
+      initSandbox(newPrData(['owl-bot-ignore']));
+      const build = await core.triggerPostProcessBuild({
+        image: 'node@abc123',
+        appId: 12345,
+        privateKey: 'abc123',
+        installation: 12345,
+        repo: 'bcoe/example',
+        pr: 99,
+        project: 'fake-project',
+        trigger: 'abc123',
+      });
+      assert.strictEqual(build, null);
+    });
+
     it('returns with failure if build fails', async () => {
       initSandbox(newPrData());
       const successfulBuild = {

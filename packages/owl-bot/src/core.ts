@@ -90,7 +90,6 @@ export async function triggerPostProcessBuild(
   if (!project) {
     throw Error('gcloud project must be provided');
   }
-  const cb = core.getCloudBuildInstance();
   const [owner, repo] = args.repo.split('/');
   if (!octokit) {
     octokit = await core.getAuthenticatedOctokit(token.token);
@@ -110,6 +109,7 @@ export async function triggerPostProcessBuild(
   }
 
   const [prOwner, prRepo] = prData.head.repo.full_name.split('/');
+  const cb = core.getCloudBuildInstance();
   const [resp] = await cb.runBuildTrigger({
     projectId: project,
     triggerId: args.trigger,
