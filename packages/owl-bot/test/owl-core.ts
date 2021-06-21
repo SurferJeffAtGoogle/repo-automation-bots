@@ -30,7 +30,7 @@ nock.disableNetConnect();
 const sandbox = sinon.createSandbox();
 
 /**
- * Stubs out core.getGitHubShortLivedAccessToken and 
+ * Stubs out core.getGitHubShortLivedAccessToken and
  * core.getAuthenticatedOctokit with test values.
  */
 function initSandbox(prData: unknown) {
@@ -59,7 +59,9 @@ function newPrData(labels: string[] = []): unknown {
           full_name: 'bcoe/example',
         },
       },
-      labels : labels.map(name => { return {name}; })
+      labels: labels.map(name => {
+        return {name};
+      }),
     },
   };
   return prData;
