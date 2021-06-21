@@ -29,33 +29,45 @@ import {Octokit} from '@octokit/rest';
 nock.disableNetConnect();
 const sandbox = sinon.createSandbox();
 
+/**
+ * Stubs out core.getGitHubShortLivedAccessToken and 
+ * core.getAuthenticatedOctokit with test values.
+ */
+function initSandbox(prData: unknown) {
+  sandbox.stub(core, 'getGitHubShortLivedAccessToken').resolves({
+    token: 'abc123',
+    expires_at: '2021-01-13T23:37:43.707Z',
+    permissions: {},
+    repository_selection: 'included',
+  });
+  sandbox.stub(core, 'getAuthenticatedOctokit').resolves({
+    pulls: {
+      get() {
+        return prData;
+      },
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any as InstanceType<typeof Octokit>);
+}
+
+function newPrData(labels: string[] = []): unknown {
+  const prData = {
+    data: {
+      head: {
+        ref: 'my-feature-branch',
+        repo: {
+          full_name: 'bcoe/example',
+        },
+      },
+      labels
+    },
+  };
+  return prData;
+}
+
 describe('core', () => {
   beforeEach(() => {
-    const prData = {
-      data: {
-        head: {
-          ref: 'my-feature-branch',
-          repo: {
-            full_name: 'bcoe/example',
-          },
-        },
-        labels: []
-      },
-    };
-    sandbox.stub(core, 'getGitHubShortLivedAccessToken').resolves({
-      token: 'abc123',
-      expires_at: '2021-01-13T23:37:43.707Z',
-      permissions: {},
-      repository_selection: 'included',
-    });
-    sandbox.stub(core, 'getAuthenticatedOctokit').resolves({
-      pulls: {
-        get() {
-          return prData;
-        },
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any as InstanceType<typeof Octokit>);
+    initSandbox(newPrData());
   });
   afterEach(() => {
     sandbox.restore();
